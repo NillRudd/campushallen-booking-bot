@@ -1,0 +1,42 @@
+# Python environments and packaging output.
+.venv/
+venv/
+ENV/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Test, type-checker, and formatter caches.
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.coverage*
+htmlcov/
+
+# Local configuration and credentials.
+.env
+.env.*
+!.env.example
+config.yaml
+*.local.yaml
+
+# Runtime state, logs, diagnostics, and browser captures.
+state/
+logs/
+diagnostics/
+*.log
+*.har
+
+# Playwright/browser authentication data. These may contain cookies or tokens.
+storage-state*.json
+cookies*.json
+playwright/.auth/
+
+# Local editor/OS files.
+.DS_Store
+.idea/
+.vscode/

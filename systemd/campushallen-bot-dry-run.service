@@ -1,0 +1,15 @@
+[Unit]
+Description=Campushallen booking bot dry-run
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=__PROJECT_DIR__
+Environment=CAMPUSHALLEN_CONFIG=__PROJECT_DIR__/config.yaml
+ExecStart=__PROJECT_DIR__/.venv/bin/python -m campushallen.booking --dry-run --wait
+TimeoutStartSec=900
+Nice=5
+
+[Install]
+WantedBy=default.target

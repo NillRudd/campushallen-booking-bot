@@ -1,0 +1,47 @@
+timezone: Europe/Stockholm
+base_url: https://campushallen.goactivebooking.com/
+
+auth:
+  storage_state_path: state/storage-state.json
+  token_state_path: state/auth-token.json
+  env_path: .env
+  login_timeout_seconds: 300
+
+booking:
+  # Campushallen states that group and ball sport activities can be booked
+  # no earlier than seven days before the activity.
+  opens_days_before: 7
+  opens_at_same_time_as_activity: true
+  pre_open_start_minutes: 10
+  final_precision_seconds: 2
+  dry_run_default: true
+  allow_waitlist: false
+  verify_after_booking: true
+
+schedule:
+  lookahead_days: 21
+  activity_url: null
+  # Optional CSS selectors can be filled in after inspect_schedule has captured
+  # the live HTML. The default implementation also uses accessible text queries.
+  selectors:
+    schedule_root: null
+    class_card: null
+    booking_button: null
+
+bookings:
+  - name: "Tuesday group activity"
+    activity: "Group activity name"
+    product_name: "Product name shown by Campushallen"
+    weekday: "Tuesday"
+    booking_type: group_activity
+    web_category_id: 40
+    facility_contains: ["Facility name"]
+    preferred_start_time: "18:45"
+    allowed_start_window:
+      earliest: "17:00"
+      latest: "21:00"
+
+logging:
+  level: INFO
+  file: logs/campushallen-bot.log
+  diagnostics_dir: diagnostics

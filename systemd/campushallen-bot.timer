@@ -1,0 +1,12 @@
+[Unit]
+Description=Run Campushallen booking bot before configured booking opens
+
+[Timer]
+# The service discovers the API-provided bookableEarliest and waits until then.
+OnCalendar=Tue *-*-* 18:30:00 Europe/Stockholm
+OnCalendar=Thu *-*-* 18:30:00 Europe/Stockholm
+Persistent=true
+Unit=campushallen-bot.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Campushallen booking bot dry-run before configured booking opens
+
+[Timer]
+OnCalendar=Tue *-*-* 18:35:00 Europe/Stockholm
+OnCalendar=Thu *-*-* 18:35:00 Europe/Stockholm
+Persistent=true
+Unit=campushallen-bot-dry-run.service
+
+[Install]
+WantedBy=timers.target

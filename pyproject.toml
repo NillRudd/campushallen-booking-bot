@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "campushallen-bot"
+version = "0.1.0"
+description = "Local Campushallen booking automation with Playwright"
+requires-python = ">=3.10"
+dependencies = [
+  "playwright>=1.47,<2",
+  "httpx>=0.27,<1",
+  "PyYAML>=6,<7",
+  "beautifulsoup4>=4.10,<5",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=6,<9"]
+
+[project.scripts]
+campushallen-login = "campushallen.auth:main"
+campushallen-book = "campushallen.booking:main"
+campushallen-inspect-schedule = "campushallen.inspect_schedule:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
