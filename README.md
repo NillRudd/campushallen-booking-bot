@@ -1,9 +1,6 @@
 # Campushallen Booking Bot
 
 Local automation for booking configured Campushallen Go Active Booking activities.
-The bot is intentionally conservative: it stores authentication only in local
-Playwright storage state, supports dry-run, avoids aggressive polling, and never
-stores cookies or passwords in git.
 
 ## Status
 
@@ -45,9 +42,6 @@ cp config.example.yaml config.yaml
 chmod 600 config.yaml
 ```
 
-The host already has Google Chrome installed, and the code prefers that channel
-when available. Installing Playwright's Chromium is still useful as a fallback.
-
 ## Initial Login
 
 ```bash
@@ -60,9 +54,6 @@ session is saved to `state/storage-state.json` with `0600` permissions.
 
 Refresh the session with the same command whenever the bot reports that login is
 required.
-
-If a headed browser is unavailable on the machine, use local `.env` credentials
-instead. Do not put credentials in shell history or chat:
 
 ```bash
 cp .env.example .env
