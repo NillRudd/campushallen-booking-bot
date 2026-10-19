@@ -10,8 +10,10 @@ from campushallen.database.models import (
     BookingRule,
     CampushallenAccount,
     CampushallenCredential,
+    Invitation,
     User,
     WebSession,
+    utcnow,
 )
 from campushallen.services.credentials import remember
 from campushallen.services.logging import InviteAccessFilter
@@ -165,6 +167,16 @@ def test_full_account_deletion_cascades_and_last_admin_is_protected(web):
         account.auth_state = "opaque-token"
         remember(db, app.state.credential_vault, account, "opaque-password")
         db.commit()
+    with app.state.sessions() as db:
+        invitation = Invitation(
+            token_hash="used-tombstone",
+            label="Identifying label",
+            used_at=utcnow(),
+            used_by_user_id=app.state.alice_id,
+        )
+        db.add(invitation)
+        db.commit()
+        invite_id = invitation.id
     data = {"password": "correct-horse-battery", "confirmation": "DELETE"}
     assert post(client, "/settings/delete", data).status_code == 422
     with app.state.sessions() as db:
@@ -174,6 +186,8 @@ def test_full_account_deletion_cascades_and_last_admin_is_protected(web):
     assert post(client, "/settings/delete", data).status_code == 303
     with app.state.sessions() as db:
         assert db.get(User, app.state.alice_id) is None
+        invitation = db.get(Invitation, invite_id)
+        assert invitation.used_at and invitation.used_by_user_id is None and invitation.label == ""
         assert db.get(CampushallenAccount, account_id) is None
         assert not db.scalars(select(CampushallenCredential)).all()
         assert not db.scalars(select(WebSession)).all()

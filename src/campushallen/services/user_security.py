@@ -7,7 +7,7 @@ from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.engine import CursorResult
 from sqlalchemy.orm import Session
 
-from campushallen.database.models import AuditEvent, User, WebSession
+from campushallen.database.models import AuditEvent, Invitation, User, WebSession
 
 from .audit import Event, audit
 from .authentication import PASSWORDS, validate_password
@@ -95,6 +95,8 @@ def delete_user(db: Session, user: User, password: str, confirmation: str) -> No
             or_(AuditEvent.user_id == user.id, AuditEvent.actor_user_id == user.id)
         )
     )
+    # Keep the consumed tombstone, but remove its potentially identifying operator label.
+    db.execute(update(Invitation).where(Invitation.used_by_user_id == user.id).values(label=""))
     db.delete(user)
     audit(db, Event.USER_DELETED)
     db.commit()
