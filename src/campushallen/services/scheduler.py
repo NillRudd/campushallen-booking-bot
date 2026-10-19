@@ -9,6 +9,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from campushallen.database.models import (
     BookingAttempt,
+    BookingOpportunity,
     BookingRule,
     CampushallenAccount,
     Outcome,
@@ -98,6 +99,32 @@ class Scheduler:
                 is not None
             )
 
+    def mark_processed(self, plan: Plan) -> None:
+        if plan.slot is None:
+            return
+        with self.engine.sessions() as db:
+            row = db.scalar(
+                select(BookingOpportunity).where(
+                    BookingOpportunity.campushallen_account_id == plan.account_id,
+                    BookingOpportunity.booking_rule_id == plan.rule_id,
+                    BookingOpportunity.activity_id == plan.slot.id,
+                )
+            )
+            if row:
+                latest = db.scalar(
+                    select(BookingAttempt.result)
+                    .where(
+                        BookingAttempt.campushallen_account_id == plan.account_id,
+                        BookingAttempt.booking_rule_id == plan.rule_id,
+                        BookingAttempt.activity_id == plan.slot.id,
+                    )
+                    .order_by(BookingAttempt.id.desc())
+                    .limit(1)
+                )
+                row.next_action_at = None
+                row.worker_status = latest.lower() if latest else "completed"
+                db.commit()
+
     async def execute(self, plan: Plan, *, wait: bool) -> None:
         try:
             if wait and plan.slot and plan.slot.bookable_earliest:
@@ -166,7 +193,12 @@ class Scheduler:
                     plan.slot.bookable_earliest,
                     plan.target_date,
                 )
-                if key in self.tasks or await asyncio.to_thread(self.already_processed, plan):
+                if key in self.tasks:
+                    if self.tasks[key].done():
+                        await asyncio.to_thread(self.mark_processed, plan)
+                    continue
+                if await asyncio.to_thread(self.already_processed, plan):
+                    await asyncio.to_thread(self.mark_processed, plan)
                     continue
                 if (
                     not wait

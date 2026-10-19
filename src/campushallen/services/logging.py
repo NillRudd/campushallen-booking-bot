@@ -25,7 +25,9 @@ class InviteAccessFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
         if isinstance(record.args, tuple) and len(record.args) >= 3:
             args = list(record.args)
-            if isinstance(args[2], str) and args[2].split("?")[0].startswith("/invite/"):
+            from urllib.parse import unquote
+
+            if isinstance(args[2], str) and unquote(args[2]).lstrip("/").startswith("invite/"):
                 args[2] = "/invite/[redacted]"
                 record.args = tuple(args)
         return True

@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import TypeAdapter, ValidationError
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 from starlette.datastructures import FormData
 from starlette.responses import RedirectResponse
@@ -189,6 +189,7 @@ def save_rule(rule_id, request, db, user, form):
         rule = BookingRule(campushallen_account_id=account_id, **data.model_dump())
         db.add(rule)
     else:
+        db.execute(delete(BookingOpportunity).where(BookingOpportunity.booking_rule_id == rule.id))
         rule.campushallen_account_id = account_id
         for name, value in data.model_dump().items():
             setattr(rule, name, value)

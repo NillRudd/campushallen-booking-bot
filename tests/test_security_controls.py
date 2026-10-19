@@ -196,3 +196,33 @@ def test_invite_access_logs_redact_bearer_tokens():
     InviteAccessFilter().filter(record)
     assert "private-token-value" not in record.getMessage()
     assert "[redacted]" in record.getMessage()
+
+
+def test_form_body_size_limit_handles_declared_and_streamed_bodies(web):
+    client, app = web
+    assert client.post("/login", content=b"x" * 262145).status_code == 413
+    chunks = (b"x" * 65536 for _ in range(5))
+    assert client.post("/login", content=chunks).status_code == 413
+
+
+def test_expired_token_status_is_visible_without_triggering_network(web):
+    from datetime import timedelta
+
+    from campushallen.database.models import utcnow
+
+    client, app = web
+    login(client)
+    account_id = own_account(client, app)
+    with app.state.sessions() as db:
+        account = db.get(CampushallenAccount, account_id)
+        account.auth_status = "connected"
+        account.auth_state = app.state.gateway.vault.seal(
+            {
+                "access_token": "private-token",
+                "customer_id": 100,
+                "expires_at": (utcnow() - timedelta(minutes=1)).timestamp(),
+            }
+        )
+        db.commit()
+    assert "Token expired; reconnection needed" in client.get(f"/accounts/{account_id}").text
+    assert "private-token" not in client.get("/").text

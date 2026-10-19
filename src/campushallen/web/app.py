@@ -24,6 +24,7 @@ from campushallen.services.notifications import NoopNotifier
 from campushallen.services.secrets import CredentialVault, TokenVault, runtime_key
 from campushallen.settings import Settings
 from campushallen.web.dependencies import LoginRequired, render
+from campushallen.web.middleware import FormBodyLimit
 from campushallen.web.presentation import connection_status, friendly_result, verification_label
 from campushallen.web.routes import accounts, admin, auth, invites, pages, rules, security
 
@@ -49,6 +50,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         redoc_url=None,
         openapi_url=None,
     )
+    app.add_middleware(FormBodyLimit)
     app.state.settings = settings
     app.state.sessions = session_factory(engine)
     app.state.secret = runtime_key(settings, "secret_key")
@@ -75,7 +77,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.templates.env.filters["clock"] = lambda value: (
         value.strftime("%H:%M") if hasattr(value, "strftime") else str(value or "")
     )
-    app.state.templates.env.filters["connection_status"] = connection_status
+    app.state.templates.env.filters["connection_status"] = lambda account: connection_status(
+        account, tokens
+    )
     app.state.templates.env.filters["friendly_result"] = friendly_result
     app.state.templates.env.filters["verification_label"] = verification_label
     app.state.templates.env.filters["invite_status"] = invite_status

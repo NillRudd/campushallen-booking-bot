@@ -1,7 +1,8 @@
-from campushallen.database.models import CampushallenAccount
+from campushallen.database.models import CampushallenAccount, utcnow
+from campushallen.services.secrets import ReconnectRequired, TokenVault
 
 
-def connection_status(account: CampushallenAccount) -> str:
+def connection_status(account: CampushallenAccount, vault: TokenVault | None = None) -> str:
     if not account.enabled:
         return "Disabled"
     if account.auth_status in ("authentication_error", "reauth_failed"):
@@ -10,6 +11,13 @@ def connection_status(account: CampushallenAccount) -> str:
         return "Reconnection required"
     if account.auth_status == "token_expired":
         return "Token expired; reconnecting"
+    if account.auth_state and vault:
+        try:
+            state = vault.open(account.auth_state)
+            if state.get("expires_at") and float(state["expires_at"]) <= utcnow().timestamp():
+                return "Token expired; reconnection needed"
+        except (ReconnectRequired, ValueError, TypeError):
+            return "Reconnection required"
     return "Connected" if account.auth_state else "Not connected"
 
 

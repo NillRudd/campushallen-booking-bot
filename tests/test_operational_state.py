@@ -228,3 +228,21 @@ def test_dashboard_history_filters_and_activity_rule_prefill(web):
     assert 'name="activity_id"' not in response.text
     assert 'name="product_ids" value=""' in response.text
     assert client.get("/rules/from-activity/999999").status_code == 404
+
+
+def test_processed_targets_do_not_display_a_phantom_next_action(booking):
+    b = booking
+
+    async def run():
+        scheduler = Scheduler(b.engine)
+        await scheduler.once()
+        # A later discovery refreshes availability but must not invent a new queued action.
+        await scheduler.refresh(wait=False)
+        with b.sessions() as db:
+            rows = db.scalars(select(BookingOpportunity)).all()
+            assert len(rows) == 2
+            assert all(
+                row.next_action_at is None and row.worker_status == "dry_run" for row in rows
+            )
+
+    asyncio.run(run())
