@@ -8,7 +8,6 @@ version = "0.1.0"
 description = "Local Campushallen booking automation with Playwright"
 requires-python = ">=3.12"
 dependencies = [
-  "playwright>=1.47,<2",
   "httpx>=0.27,<1",
   "PyYAML>=6,<7",
   "beautifulsoup4>=4.10,<5",
@@ -21,13 +20,14 @@ dependencies = [
   "Babel>=2.17,<3",
   "python-multipart>=0.0.20,<1",
   "argon2-cffi>=23.1,<26",
-  "cryptography>=44,<49",
+  "cryptography>=50.0.2,<51",
   "itsdangerous>=2.2,<3",
 ]
 
 [project.optional-dependencies]
+browser = ["playwright>=1.47,<2"]
 test = ["pytest>=8,<9"]
-dev = ["pytest>=8,<9", "ruff>=0.11,<1", "mypy>=1.15,<2", "types-PyYAML", "types-beautifulsoup4"]
+dev = ["playwright>=1.47,<2", "pytest>=8,<9", "ruff>=0.11,<1", "mypy>=1.15,<2", "types-PyYAML", "types-beautifulsoup4"]
 
 [project.scripts]
 campushallen-admin = "campushallen.cli:main"
@@ -51,7 +51,7 @@ select = ["E4", "E7", "E9", "F", "I"]
 
 [tool.mypy]
 python_version = "3.12"
-files = ["src/campushallen/settings.py", "src/campushallen/database", "src/campushallen/services", "src/campushallen/web", "src/campushallen/cli.py", "src/campushallen/worker.py"]
+files = ["src/campushallen/settings.py", "src/campushallen/database", "src/campushallen/services", "src/campushallen/web", "src/campushallen/cli.py", "src/campushallen/worker.py", "src/campushallen/healthcheck.py"]
 check_untyped_defs = true
 ignore_missing_imports = true
 follow_imports = "silent"

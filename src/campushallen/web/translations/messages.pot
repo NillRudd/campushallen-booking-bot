@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Campushallen Booker 0.1.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-19 20:37+0200\n"
+"POT-Creation-Date: 2026-10-19 21:30+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,19 +18,20 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: src/campushallen/web/app.py:118
+#: src/campushallen/web/app.py:135
 msgid "Page not found."
 msgstr ""
 
-#: src/campushallen/web/app.py:119
+#: src/campushallen/web/app.py:136
 msgid "This action is not allowed."
 msgstr ""
 
-#: src/campushallen/web/app.py:128 src/campushallen/web/app.py:134
+#: src/campushallen/web/app.py:145 src/campushallen/web/app.py:151
+#: src/campushallen/web/ingress.py:31
 msgid "Invalid request. Check the form and try again."
 msgstr ""
 
-#: src/campushallen/web/app.py:140
+#: src/campushallen/web/app.py:157
 msgid "Something went wrong. Please try again later."
 msgstr ""
 
@@ -76,6 +77,14 @@ msgstr ""
 
 #: src/campushallen/web/dependencies.py:112
 msgid "Administrator access required."
+msgstr ""
+
+#: src/campushallen/web/ingress.py:37
+msgid "Use HTTPS to access this website."
+msgstr ""
+
+#: src/campushallen/web/ingress.py:56
+msgid "The form origin could not be verified. Reload the page and try again."
 msgstr ""
 
 #: src/campushallen/web/middleware.py:23 src/campushallen/web/middleware.py:35
@@ -437,146 +446,162 @@ msgid "See the result and check Campushallen if you are unsure."
 msgstr ""
 
 #: src/campushallen/web/presentation.py:175
-msgid "User registered"
+msgid "Website sign-in failed"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:176
-msgid "User created"
+msgid "Website sign-in temporarily locked"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:177
-msgid "User deleted"
+msgid "Website sign-in successful"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:178
-msgid "Admin promoted"
+msgid "Website sign-in lock expired"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:179
-msgid "Admin demoted"
+msgid "User registered"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:180
-msgid "Login success"
+msgid "User created"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:181
-msgid "Login failed"
+msgid "User deleted"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:182
-msgid "Logout"
+msgid "Admin promoted"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:183
-msgid "Sessions revoked"
+msgid "Admin demoted"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:184
-msgid "Password changed"
+msgid "Login success"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:185
-msgid "Campushallen connected"
+msgid "Login failed"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:186
-msgid "Campushallen reconnected"
+msgid "Logout"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:187
-msgid "Account disabled"
+msgid "Sessions revoked"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:188
-msgid "Account enabled"
+msgid "Password changed"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:189
-msgid "Account disconnected"
+msgid "Campushallen connected"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:190
-msgid "Account deleted"
+msgid "Campushallen reconnected"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:191
-msgid "Stored credential enabled"
+msgid "Account disabled"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:192
-msgid "Stored credential removed"
+msgid "Account enabled"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:193
-msgid "Stored credential replaced"
+msgid "Account disconnected"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:194
-msgid "Booking rule created"
+msgid "Account deleted"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:195
-msgid "Booking rule updated"
+msgid "Stored credential enabled"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:196
-msgid "Booking rule deleted"
+msgid "Stored credential removed"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:197
-msgid "Invite created"
+msgid "Stored credential replaced"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:198
-msgid "Invite used"
+msgid "Booking rule created"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:199
-msgid "Invite revoked"
+msgid "Booking rule updated"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:200
-msgid "Token expired"
+msgid "Booking rule deleted"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:201
-msgid "Reauth success"
+msgid "Invite created"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:202
-msgid "Reauth failed"
+msgid "Invite used"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:203
+msgid "Invite revoked"
+msgstr ""
+
+#: src/campushallen/web/presentation.py:204
+msgid "Token expired"
+msgstr ""
+
+#: src/campushallen/web/presentation.py:205
+msgid "Reauth success"
+msgstr ""
+
+#: src/campushallen/web/presentation.py:206
+msgid "Reauth failed"
+msgstr ""
+
+#: src/campushallen/web/presentation.py:207
 msgid "Reconnect required"
 msgstr ""
 
-#: src/campushallen/web/presentation.py:208
+#: src/campushallen/web/presentation.py:212
 msgid "Security event"
 msgstr ""
 
-#: src/campushallen/web/presentation.py:223
+#: src/campushallen/web/presentation.py:227
 msgid "Enter a rule name (1–120 characters) and an activity (1–200 characters)."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:226
+#: src/campushallen/web/presentation.py:230
 msgid "Choose a weekday from Monday to Sunday."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:228
+#: src/campushallen/web/presentation.py:232
 msgid "Choose a valid booking type."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:230
+#: src/campushallen/web/presentation.py:234
 msgid "Enter numeric IDs. The category ID must be greater than zero."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:232
+#: src/campushallen/web/presentation.py:236
 msgid "Use at most 30 facility filters."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:234
+#: src/campushallen/web/presentation.py:238
 msgid "Enter valid local times, for example 18:45, without a timezone."
 msgstr ""
 
@@ -620,20 +645,19 @@ msgid ""
 " means no expiry)."
 msgstr ""
 
-#: src/campushallen/web/routes/auth.py:23
-msgid "Too many login attempts. Try again in five minutes."
+#: src/campushallen/web/routes/auth.py:44
+msgid "Too many failed sign-in attempts. Try again in 30 minutes."
 msgstr ""
 
-#: src/campushallen/web/routes/auth.py:26
-#: src/campushallen/web/routes/auth.py:31
+#: src/campushallen/web/routes/auth.py:46
 msgid "Invalid username or password."
 msgstr ""
 
-#: src/campushallen/web/routes/auth.py:43
+#: src/campushallen/web/routes/auth.py:61
 msgid "Login state changed. Please sign in again."
 msgstr ""
 
-#: src/campushallen/web/routes/invites.py:15
+#: src/campushallen/web/routes/invites.py:16
 msgid "Too many attempts. Try again in five minutes."
 msgstr ""
 

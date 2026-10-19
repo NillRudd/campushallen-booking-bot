@@ -172,6 +172,10 @@ def reason(message: str) -> str:
 
 
 EVENT_LABELS = {
+    "WEBSITE_LOGIN_FAILED": N_("Website sign-in failed"),
+    "WEBSITE_LOGIN_LOCKED": N_("Website sign-in temporarily locked"),
+    "WEBSITE_LOGIN_SUCCESS": N_("Website sign-in successful"),
+    "WEBSITE_LOGIN_LOCK_EXPIRED": N_("Website sign-in lock expired"),
     "USER_REGISTERED": N_("User registered"),
     "USER_CREATED": N_("User created"),
     "USER_DELETED": N_("User deleted"),

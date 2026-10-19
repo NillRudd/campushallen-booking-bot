@@ -247,3 +247,15 @@ class BookingOpportunity(Base):
     observed_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     next_action_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
     worker_status: Mapped[str] = mapped_column(String(32), default="discovered")
+
+
+class WebsiteLoginBucket(Base):
+    """HMAC-keyed account/IP limits, including nonexistent usernames; no raw IP/name."""
+
+    __tablename__ = "website_login_buckets"
+    __table_args__ = (CheckConstraint("attempts >= 0", name="nonnegative_login_attempts"),)
+    key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    window_started_at: Mapped[datetime] = mapped_column(UTCDateTime())
+    locked_until: Mapped[datetime | None] = mapped_column(UTCDateTime())
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), index=True)

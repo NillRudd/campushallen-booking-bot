@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///state/web.db"
     secret_key: SecretStr | None = None
     encryption_key: SecretStr | None = None
+    secret_key_file: Path | None = None
+    encryption_key_file: Path | None = None
+    allowed_hosts: list[str] = []
+    trusted_tunnel_ips: list[str] = []
     campushallen_timezone: str = "Europe/Stockholm"
     secure_cookies: bool = False
     session_hours: int = 12
@@ -30,6 +34,13 @@ class Settings(BaseSettings):
     state_dir: Path = Path("state")
     worker_poll_seconds: float = 60
     worker_concurrency: int = 8
+
+    @field_validator("trusted_tunnel_ips")
+    @classmethod
+    def valid_tunnel_ips(cls, values: list[str]) -> list[str]:
+        from ipaddress import ip_address
+
+        return [str(ip_address(value)) for value in values]
 
     @field_validator("public_base_url")
     @classmethod

@@ -16,6 +16,16 @@ class ReconnectRequired(Exception):
 
 def runtime_key(settings: Settings, name: str) -> str:
     configured = getattr(settings, name)
+    secret_file = getattr(settings, name + "_file", None)
+    if not configured and secret_file is not None:
+        from pydantic import SecretStr
+
+        try:
+            configured = SecretStr(secret_file.read_text(encoding="utf-8").strip())
+        except OSError:
+            raise ValueError(f"Cannot read {name.upper()} secret file") from None
+        if not configured.get_secret_value():
+            raise ValueError(f"{name.upper()} secret file is empty")
     if configured:
         value = configured.get_secret_value()
         if name == "secret_key" and len(value) < 32:

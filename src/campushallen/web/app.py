@@ -8,6 +8,7 @@ from itsdangerous import URLSafeTimedSerializer
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from starlette.exceptions import HTTPException
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.responses import JSONResponse, RedirectResponse
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
@@ -24,6 +25,7 @@ from campushallen.settings import Settings
 from campushallen.web import i18n, presentation
 from campushallen.web.dependencies import LoginRequired, render
 from campushallen.web.i18n import gettext as _
+from campushallen.web.ingress import TrustedIngress
 from campushallen.web.middleware import FormBodyLimit
 from campushallen.web.presentation import connection_status
 from campushallen.web.routes import accounts, admin, auth, invites, pages, rules, security
@@ -50,12 +52,25 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         redoc_url=None,
         openapi_url=None,
     )
+    if settings.app_env == "production":
+        from urllib.parse import urlsplit
+
+        if not settings.secure_cookies or not settings.public_base_url.startswith("https://"):
+            raise ValueError("Production requires HTTPS PUBLIC_BASE_URL and SECURE_COOKIES=true")
+        if settings.allowed_hosts != [urlsplit(settings.public_base_url).hostname]:
+            raise ValueError("Production ALLOWED_HOSTS must contain only the public hostname")
     app.add_middleware(FormBodyLimit)
+    app.add_middleware(TrustedIngress, settings=settings)
+    if settings.allowed_hosts:
+        app.add_middleware(
+            TrustedHostMiddleware, allowed_hosts=settings.allowed_hosts, www_redirect=False
+        )
     app.state.settings = settings
     app.state.sessions = session_factory(engine)
     app.state.secret = runtime_key(settings, "secret_key")
     app.state.csrf_signer = URLSafeTimedSerializer(app.state.secret, salt="browser-csrf")
     app.state.limiter = LoginLimiter()
+    app.state.login_limiter = LoginLimiter(limit=20, window=900)
     master_key = runtime_key(settings, "encryption_key")
     tokens = TokenVault(master_key)
     app.state.credential_vault = CredentialVault(master_key)
@@ -105,7 +120,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; style-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'self'"
         )
-        response.headers["Cache-Control"] = "no-store"
+        response.headers["Cache-Control"] = "private, no-store"
+        if settings.app_env == "production":
+            response.headers["Strict-Transport-Security"] = "max-age=31536000"
         return response
 
     @app.exception_handler(LoginRequired)

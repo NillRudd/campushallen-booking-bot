@@ -137,7 +137,7 @@ def test_csrf_and_login_rate_limit(web):
     assert client.post("/login", data={"username": "alice"}).status_code == 403
     token = csrf(client)
     assert client.post("/login", data={"csrf_token": token + "tampered"}).status_code == 403
-    app.state.limiter.limit = 2
+    app.state.login_limiter.limit = 2
     for _ in range(2):
         assert (
             post(client, "/login", {"username": "absent", "password": "bad"}, "/login").status_code

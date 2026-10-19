@@ -4,13 +4,14 @@ from starlette.responses import RedirectResponse
 from campushallen.services.invitations import InvalidInvitation, consume_invite, validate_invite
 from campushallen.web.dependencies import DB, Form, render
 from campushallen.web.i18n import gettext as _
+from campushallen.web.ingress import client_ip
 from campushallen.web.presentation import safe_error
 
 router = APIRouter()
 
 
 def limited(request: Request, action: str) -> None:
-    host = request.client.host if request.client else "local"
+    host = client_ip(request)
     if not request.app.state.limiter.allow(f"{action}:{host}"):
         raise HTTPException(429, _("Too many attempts. Try again in five minutes."))
 
