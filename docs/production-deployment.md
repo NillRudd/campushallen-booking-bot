@@ -2,12 +2,19 @@
 
 ## Current status
 
-**Prepared locally; production deployment is not complete.** The Mac's SSH attempts
-against `niklas@192.168.1.127` and `raspberrypi.local` returned “No route to host”.
-Host preflight, secret provisioning, admin bootstrap, Cloudflare account setup,
-public HTTPS checks and the Pi reboot test require restored LAN access. No Pi
-files, legacy timers, Cloudflare account settings or DNS records have been changed.
+**Prepared locally; production deployment is not complete.** SSH access to
+`niklas@192.168.1.127` now works. Read-only preflight found current undervoltage
+and throttling (`get_throttled=0x50005`) on two checks. Installation is held until
+power is stable. Both legacy timers are enabled and waiting; neither booking
+service was active when checked. Docker is not installed. No Pi configuration,
+legacy units/auth files, Cloudflare account settings or DNS records were changed.
 
+The host is Debian 13.7 (trixie), arm64, UID/GID 1000, with 11 GB free disk and
+738 MiB available RAM out of 905 MiB at the observation. NTP is synchronized and
+Europe/Stockholm is configured. Existing user lingering is enabled. Production
+code/data/config directories do not yet exist. Privileged port inspection remains
+pending; passwordless sudo is unavailable. Resolve the power condition before
+installing Docker or adding the production workload.
 The verified application baseline is local `main` at `45cc370` (the feature
 branches were linear descendants and were fast-forwarded once). Deployment work
 is on `deployment/raspberry-pi`. Neither branch has been pushed. This document is

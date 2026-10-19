@@ -46,8 +46,8 @@ scanning is not an OS/container vulnerability assessment or a penetration test.
 | Required fact | Actual evidence / current state |
 | --- | --- |
 | Deployed Git commit | None; only local source/images have been prepared |
-| Pi preflight and resources | Unknown; SSH to the specified IPv4 and local hostname returns “No route to host” |
-| Legacy timer health | Not remotely verified; no timer/unit/config/auth file was modified or triggered |
+| Pi preflight and resources | SSH now works; Debian 13.7 trixie/arm64, 11 GB free, 905 MiB total / 738 MiB available RAM, synchronized Stockholm time |
+| Legacy timer health | Both timers enabled and active/waiting; next run 20 October 18:30 CEST; both associated services inactive when checked; no modifications or manual triggers |
 | Production containers / tunnel | Not installed or started by this task |
 | Public URL | Mac HTTPS probe could not resolve campushallenbot.se; no DNS change was made |
 | Persistent production directory | Planned `~/campushallenbot-data`; not created on the Pi |
@@ -56,11 +56,27 @@ scanning is not an OS/container vulnerability assessment or a penetration test.
 | Production backup / off-Pi key | Not created; local temporary smoke is not a production recovery copy |
 | Pi reboot / recovery | Not attempted; still requires resource/timer checks and a completed initial stack |
 | Real website admin/invite smoke | Pending authenticated public application |
-| Hardware warnings | Undervoltage, disk space, memory, time sync and exposed host ports cannot yet be assessed |
+| Hardware warnings | Current undervoltage and throttling: 0x50005 on two checks; installation held until power is stable. Privileged port inspection still pending |
 | New live bookings | Not enabled; active production worker command has neither real-booking flag |
 | Future cutover | Documented separately; no cutover action authorized or executed in this phase |
 
-Restore LAN/SSH access first. Then perform the Pi preflight before any install,
-provision production keys, bootstrap the admin, have the user supply the tunnel
-token privately, publish the apex hostname and complete all real acceptance and
-reboot checks. Do not treat this local verification record as production signoff.
+SSH connectivity is restored. Resolve current undervoltage first, then repeat
+power/resource/timer checks and finish privileged port inspection before installing
+Docker. Next provision production keys, bootstrap the admin, have the user supply
+the tunnel token privately, publish the apex hostname and complete all real
+acceptance and reboot checks. Do not treat this local verification record as production signoff.
+
+## Read-only Pi follow-up
+
+SSH preflight at approximately 21:38 CEST on 19 October confirmed the host is
+reachable as niklas, UID/GID 1000. `get_throttled=0x50005` has bits 0 and 2 set
+(current undervoltage and throttling), plus historical bits 16 and 18. The
+[official flag table](https://www.raspberrypi.com/documentation/computers/os.html#get_throttled)
+was consulted. Historical bits may remain after the supply is corrected; acceptance
+requires the current condition bits to clear and remain clear. Do not reboot just
+to hide historical flags.
+
+Docker/Compose are absent. `Linger=yes`; both legacy timers remain enabled and
+waiting. New deployment, data and configuration paths are absent. No credentials
+from either old checkout were read. Passwords were not written to scripts, files,
+Git or environment variables. No packages were installed or host settings changed.
