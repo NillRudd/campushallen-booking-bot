@@ -48,3 +48,10 @@ playwright/.auth/
 *.sqlite3
 *.sqlite3-*
 data/
+
+# Additional local secret files.
+auth-token*.json
+*.key
+secret_key
+encryption_key
+sessions/
