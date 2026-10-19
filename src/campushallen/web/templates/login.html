@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
-{% block title %}Log in · Campushallen Booker{% endblock %}
-{% block content %}<section class="login card"><p class="eyebrow">YOUR WEEK, BOOKED</p><h1>Welcome back.</h1><p>Manage your Campushallen accounts and booking rules.</p>
-{% if registered %}<p role="status">Account created. Log in to start connecting Campushallen.</p>{% endif %}<form action="/login" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-<label>Application username<input name="username" autocomplete="username" maxlength="254" required autofocus></label>
-<label>Password<input type="password" name="password" autocomplete="current-password" maxlength="4096" required></label>
-<button>Log in</button></form><p class="muted">Ask the application owner to create your login.</p></section>{% endblock %}
+{% block title %}{{ _("Log in · Campushallen Booker") }}{% endblock %}
+{% block content %}<section class="login card"><p class="eyebrow">{{ _("YOUR WEEK, BOOKED") }}</p><h1>{{ _("Welcome back.") }}</h1><p>{{ _("Manage your Campushallen accounts and booking rules.") }}</p>
+{% if registered %}<p role="status">{{ _("Account created. Log in to start connecting Campushallen.") }}</p>{% endif %}<form action="/login" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<label>{{ _("Application username") }}<input name="username" autocomplete="username" maxlength="254" required autofocus></label>
+<label>{{ _("Password") }}<input type="password" name="password" autocomplete="current-password" maxlength="4096" required></label>
+<button>{{ _("Log in") }}</button></form><p class="muted">{{ _("Ask the application owner to create your login.") }}</p></section>{% endblock %}

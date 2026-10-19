@@ -1,14 +1,15 @@
 <!doctype html>
-<html lang="en">
+<html lang="{{ request.app.state.settings.default_locale[:2] }}">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Campushallen Booker{% endblock %}</title>
+  <title>{% block title %}{{ _("Campushallen Booker") }}{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', path='app.css') }}">
+  <script src="{{ url_for('static', path='app.js') }}" defer></script>
 </head>
 <body>
-<header><a class="brand" href="/">Campushallen <span>Booker</span></a>
-{% if user %}<nav aria-label="Main"><a href="/">Overview</a><a href="/accounts">Accounts</a><a href="/rules">Rules</a><a href="/history">History</a><a href="/settings">Security</a>{% if user.is_admin %}<a href="/admin">Admin</a>{% endif %}</nav>
-<form action="/logout" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="quiet">Log out · {{ user.username }}</button></form>{% endif %}</header>
+<header><a class="brand" href="/">{{ _("Campushallen") }} <span>{{ _("Booker") }}</span></a>
+{% if user %}<nav aria-label="{{ _('Main') }}"><a href="/">{{ _("Overview") }}</a><a href="/accounts">{{ _("Accounts") }}</a><a href="/rules">{{ _("Rules") }}</a><a href="/history">{{ _("History") }}</a><a href="/settings">{{ _("Security") }}</a>{% if user.is_admin %}<a href="/admin">{{ _("Admin") }}</a>{% endif %}</nav>
+<form action="/logout" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="quiet">{{ _("Log out ·") }} {{ user.username }}</button></form>{% endif %}</header>
 <main>{% if notice %}<div class="notice" role="status">{{ notice }}</div>{% endif %}{% if error %}<div class="error" role="alert">{{ error }}</div>{% endif %}{% block content %}{% endblock %}</main>
-<footer>{% if user %}<a href="/onboarding">Get started</a> · {% endif %}Development · Booking previews are read-only · Times shown in {{ request.app.state.settings.campushallen_timezone }}</footer>
+<footer>{% if user %}<a href="/onboarding">{{ _("Get started") }}</a> · {% endif %}{{ _("Development · Booking previews are read-only · Times shown in") }} {{ request.app.state.settings.campushallen_timezone }}</footer>
 </body></html>

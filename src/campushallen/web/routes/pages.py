@@ -14,6 +14,7 @@ from campushallen.database.models import (
 )
 from campushallen.services.operations import account_cards, worker_health
 from campushallen.web.dependencies import DB, CurrentUser, owned_account, render
+from campushallen.web.i18n import gettext as _
 
 router = APIRouter()
 
@@ -135,12 +136,12 @@ def history(
         try:
             selected_account = int(account_id)
         except ValueError:
-            raise HTTPException(422, "Invalid account filter.") from None
+            raise HTTPException(422, _("Invalid account filter.")) from None
         owned_account(db, user.id, selected_account)
         query = query.where(BookingAttempt.campushallen_account_id == selected_account)
     if result:
         if result not in {x.value for x in Outcome}:
-            raise HTTPException(422, "Unknown booking result.")
+            raise HTTPException(422, _("Unknown booking result."))
         query = query.where(BookingAttempt.result == result)
     if activity_date:
         try:
@@ -150,7 +151,7 @@ def history(
                 ZoneInfo(request.app.state.settings.campushallen_timezone),
             )
         except ValueError:
-            raise HTTPException(422, "Invalid activity date.") from None
+            raise HTTPException(422, _("Invalid activity date.")) from None
         query = query.where(
             BookingAttempt.activity_start >= start,
             BookingAttempt.activity_start < start + timedelta(days=1),

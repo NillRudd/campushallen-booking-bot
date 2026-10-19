@@ -5,6 +5,8 @@ from starlette.responses import RedirectResponse
 from campushallen.database.models import AuditEvent, WebSession
 from campushallen.services.user_security import change_password, delete_user, logout_all
 from campushallen.web.dependencies import DB, CurrentUser, Form, render
+from campushallen.web.i18n import gettext as _
+from campushallen.web.presentation import safe_error
 
 router = APIRouter()
 
@@ -31,7 +33,7 @@ def settings_page(request: Request, db: DB, user: CurrentUser):
 @router.post("/settings/password")
 def password_change(request: Request, db: DB, user: CurrentUser, form: Form):
     if not request.app.state.limiter.allow(f"password:{user.id}"):
-        raise HTTPException(429, "Too many attempts. Try again shortly.")
+        raise HTTPException(429, _("Too many attempts. Try again shortly."))
     try:
         change_password(
             db,
@@ -41,7 +43,7 @@ def password_change(request: Request, db: DB, user: CurrentUser, form: Form):
             str(form.get("confirmation", "")),
         )
     except ValueError as exc:
-        raise HTTPException(422, str(exc)) from None
+        raise HTTPException(422, safe_error(str(exc))) from None
     return logged_out()
 
 
@@ -54,9 +56,9 @@ def all_sessions(request: Request, db: DB, user: CurrentUser, form: Form):
 @router.post("/settings/delete")
 def remove_user(request: Request, db: DB, user: CurrentUser, form: Form):
     if not request.app.state.limiter.allow(f"delete-user:{user.id}"):
-        raise HTTPException(429, "Too many attempts. Try again shortly.")
+        raise HTTPException(429, _("Too many attempts. Try again shortly."))
     try:
         delete_user(db, user, str(form.get("password", "")), str(form.get("confirmation", "")))
     except ValueError as exc:
-        raise HTTPException(422, str(exc)) from None
+        raise HTTPException(422, safe_error(str(exc))) from None
     return logged_out()

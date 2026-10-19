@@ -1,0 +1,1763 @@
+# Swedish translations for Campushallen Booker.
+# Distributed under the same license as the project.
+msgid ""
+msgstr ""
+"Project-Id-Version: Campushallen Booker 0.1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-19 20:37+0200\n"
+"PO-Revision-Date: 2026-10-19 20:30+0200\n"
+"Last-Translator: Campushallen Booker contributors\n"
+"Language: sv_SE\n"
+"Language-Team: Swedish\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: src/campushallen/web/app.py:118
+msgid "Page not found."
+msgstr "Sidan hittades inte."
+
+#: src/campushallen/web/app.py:119
+msgid "This action is not allowed."
+msgstr "Åtgärden är inte tillåten."
+
+#: src/campushallen/web/app.py:128 src/campushallen/web/app.py:134
+msgid "Invalid request. Check the form and try again."
+msgstr "Kontrollera formuläret och försök igen."
+
+#: src/campushallen/web/app.py:140
+msgid "Something went wrong. Please try again later."
+msgstr "Något gick fel. Försök igen senare."
+
+#: src/campushallen/web/dependencies.py:47
+msgid "Account not found"
+msgstr "Kontot hittades inte"
+
+#: src/campushallen/web/dependencies.py:58
+msgid "Rule not found"
+msgstr "Bokningsregeln hittades inte"
+
+#: src/campushallen/web/dependencies.py:67
+msgid "Invalid CSRF token. Reload the form and try again."
+msgstr "Formuläret kunde inte verifieras. Ladda om sidan och försök igen."
+
+#: src/campushallen/web/dependencies.py:71
+msgid "Expired CSRF token. Reload the form and try again."
+msgstr "Formuläret har gått ut. Ladda om sidan och försök igen."
+
+#: src/campushallen/web/dependencies.py:85
+msgid "Campushallen connection updated."
+msgstr "Anslutningen till Campushallen har uppdaterats."
+
+#: src/campushallen/web/dependencies.py:86
+msgid "Saved password removed. Your current token is kept."
+msgstr "Det sparade lösenordet har tagits bort. Du är fortfarande ansluten."
+
+#: src/campushallen/web/dependencies.py:87
+msgid "Local authentication data removed. Campushallen bookings were kept."
+msgstr "Anslutningen har tagits bort lokalt. Dina bokningar hos Campushallen finns kvar."
+
+#: src/campushallen/web/dependencies.py:88
+msgid "Booking rule saved."
+msgstr "Bokningsregeln har sparats."
+
+#: src/campushallen/web/dependencies.py:89
+msgid "Local data removed."
+msgstr "Lokala uppgifter har tagits bort."
+
+#: src/campushallen/web/dependencies.py:90
+msgid "Settings updated."
+msgstr "Inställningarna har uppdaterats."
+
+#: src/campushallen/web/dependencies.py:112
+msgid "Administrator access required."
+msgstr "Du behöver vara administratör för att öppna sidan."
+
+#: src/campushallen/web/middleware.py:23 src/campushallen/web/middleware.py:35
+msgid "Request body too large."
+msgstr "Formuläret är för stort. Minska innehållet och försök igen."
+
+#: src/campushallen/web/presentation.py:12 src/campushallen/web/presentation.py:41
+#: src/campushallen/web/templates/account.html:4 src/campushallen/web/templates/accounts.html:2
+#: src/campushallen/web/templates/admin.html:11 src/campushallen/web/templates/dashboard.html:5
+#: src/campushallen/web/templates/dashboard.html:8 src/campushallen/web/templates/rules.html:2
+msgid "Disabled"
+msgstr "Inaktiv"
+
+#: src/campushallen/web/presentation.py:14 src/campushallen/web/presentation.py:65
+msgid "Authentication error"
+msgstr "Inloggningen misslyckades"
+
+#: src/campushallen/web/presentation.py:16 src/campushallen/web/presentation.py:25
+#: src/campushallen/web/presentation.py:64 src/campushallen/web/presentation.py:68
+msgid "Reconnection required"
+msgstr "Återanslutning krävs"
+
+#: src/campushallen/web/presentation.py:18 src/campushallen/web/presentation.py:67
+msgid "Token expired; reconnecting"
+msgstr "Anslutningen har gått ut. Återansluter"
+
+#: src/campushallen/web/presentation.py:23
+msgid "Token expired; reconnection needed"
+msgstr "Anslutningen har gått ut. Återanslutning krävs"
+
+#: src/campushallen/web/presentation.py:26 src/campushallen/web/presentation.py:62
+msgid "Connected"
+msgstr "Ansluten"
+
+#: src/campushallen/web/presentation.py:26
+msgid "Not connected"
+msgstr "Inte ansluten"
+
+#: src/campushallen/web/presentation.py:30
+msgid "Booked"
+msgstr "Bokad"
+
+#: src/campushallen/web/presentation.py:31
+msgid "Already booked"
+msgstr "Redan bokad"
+
+#: src/campushallen/web/presentation.py:32
+msgid "No matching activity found"
+msgstr "Inget matchande pass hittades"
+
+#: src/campushallen/web/presentation.py:33
+msgid "Several possible activities found"
+msgstr "Flera möjliga pass hittades"
+
+#: src/campushallen/web/presentation.py:34
+msgid "Activity could not be verified safely"
+msgstr "Passet kunde inte verifieras säkert"
+
+#: src/campushallen/web/presentation.py:35
+msgid "Only waiting-list spots available"
+msgstr "Endast reservlista tillgänglig"
+
+#: src/campushallen/web/presentation.py:36 src/campushallen/web/presentation.py:66
+#: src/campushallen/web/presentation.py:69
+msgid "Campushallen sign-in failed"
+msgstr "Inloggningen mot Campushallen misslyckades"
+
+#: src/campushallen/web/presentation.py:37
+msgid "Booking failed"
+msgstr "Bokningen misslyckades"
+
+#: src/campushallen/web/presentation.py:38
+msgid "Booking could not be verified"
+msgstr "Bokningen kunde inte verifieras"
+
+#: src/campushallen/web/presentation.py:39
+msgid "Dry run – no booking made"
+msgstr "Testkörning – ingen bokning gjordes"
+
+#: src/campushallen/web/presentation.py:40
+msgid "Booking has not opened yet"
+msgstr "Bokningen har inte öppnat ännu"
+
+#: src/campushallen/web/presentation.py:42
+msgid "Booking is already being processed"
+msgstr "Bokningen behandlas redan"
+
+#: src/campushallen/web/presentation.py:43
+msgid "Not supported"
+msgstr "Stöds inte"
+
+#: src/campushallen/web/presentation.py:48
+msgid "Unknown result"
+msgstr "Okänt resultat"
+
+#: src/campushallen/web/presentation.py:53
+msgid "Confirmed by independent bookings check"
+msgstr "Bekräftad genom en separat kontroll av bokningarna"
+
+#: src/campushallen/web/presentation.py:55
+msgid "Unconfirmed; check Campushallen before any retry"
+msgstr "Inte bekräftad. Kontrollera Campushallen innan du försöker igen"
+
+#: src/campushallen/web/presentation.py:57
+msgid "Pending or interrupted; inspect later results"
+msgstr "Pågår eller avbröts. Kontrollera senare resultat"
+
+#: src/campushallen/web/presentation.py:58
+msgid "No booking confirmed by this attempt"
+msgstr "Ingen bokning bekräftades vid detta försök"
+
+#: src/campushallen/web/presentation.py:63
+msgid "Disconnected"
+msgstr "Frånkopplad"
+
+#: src/campushallen/web/presentation.py:70
+msgid "Temporary connection problem"
+msgstr "Tillfälligt anslutningsproblem"
+
+#: src/campushallen/web/presentation.py:76
+msgid "None"
+msgstr "Inget"
+
+#: src/campushallen/web/presentation.py:78
+msgid "Check the connection"
+msgstr "Kontrollera anslutningen"
+
+#: src/campushallen/web/presentation.py:82
+msgid "Used"
+msgstr "Använd"
+
+#: src/campushallen/web/presentation.py:83
+msgid "Revoked"
+msgstr "Återkallad"
+
+#: src/campushallen/web/presentation.py:84
+msgid "Expired"
+msgstr "Utgången"
+
+#: src/campushallen/web/presentation.py:85
+msgid "Available"
+msgstr "Tillgänglig"
+
+#: src/campushallen/web/presentation.py:94
+msgid "Worker healthy"
+msgstr "Bokningsmotorn fungerar"
+
+#: src/campushallen/web/presentation.py:95
+msgid "Worker hasn't reported recently"
+msgstr "Bokningsmotorn har inte rapporterat nyligen"
+
+#: src/campushallen/web/presentation.py:96 src/campushallen/web/presentation.py:102
+msgid "Worker disabled / not running"
+msgstr "Bokningsmotorn körs inte"
+
+#: src/campushallen/web/presentation.py:107
+msgid "At least one active admin must remain."
+msgstr "Det måste finnas minst en aktiv administratör kvar."
+
+#: src/campushallen/web/presentation.py:108
+msgid "Choose a different username."
+msgstr "Användarnamnet är redan upptaget. Välj ett annat."
+
+#: src/campushallen/web/presentation.py:109
+msgid "Earliest time must be before latest time"
+msgstr "Den tidigaste starttiden måste vara före den senaste."
+
+#: src/campushallen/web/presentation.py:110
+msgid "Login state changed; sign in again."
+msgstr "Din inloggning har ändrats. Logga in igen."
+
+#: src/campushallen/web/presentation.py:111
+msgid "Name and activity must not be blank"
+msgstr "Ange både ett namn på regeln och ett pass."
+
+#: src/campushallen/web/presentation.py:112
+msgid "Password changed in another session; log in again."
+msgstr "Lösenordet har ändrats i en annan session. Logga in igen."
+
+#: src/campushallen/web/presentation.py:113
+msgid "Rule times must be local clock times without a timezone offset"
+msgstr "Ange lokal tid utan tidszon, till exempel 18:45."
+
+#: src/campushallen/web/presentation.py:114
+msgid "Service rules require a fixed start time"
+msgstr "Regler för tjänster behöver en fast starttid."
+
+#: src/campushallen/web/presentation.py:115
+msgid "Start time must be inside the allowed window"
+msgstr "Starttiden måste ligga inom det tillåtna tidsintervallet."
+
+#: src/campushallen/web/presentation.py:116
+msgid "The last active admin cannot be deleted. Create or promote another admin first."
+msgstr "Den sista aktiva administratören kan inte tas bort. Skapa eller utse en annan administratör först."
+
+#: src/campushallen/web/presentation.py:117
+msgid "The new website passwords do not match."
+msgstr "De nya lösenorden för webbplatsen stämmer inte överens."
+
+#: src/campushallen/web/presentation.py:118
+msgid "This invitation is unavailable. Ask the owner for a new invitation."
+msgstr "Den här inbjudningslänken är inte längre giltig. Be ägaren om en ny inbjudan."
+
+#: src/campushallen/web/presentation.py:119
+msgid "Type DELETE to confirm local account removal."
+msgstr "Skriv DELETE för att bekräfta att anslutningen ska tas bort lokalt."
+
+#: src/campushallen/web/presentation.py:120
+msgid "Type DELETE to confirm local data removal."
+msgstr "Skriv DELETE för att bekräfta att dina lokala uppgifter ska tas bort."
+
+#: src/campushallen/web/presentation.py:121
+msgid "Use a label of at most 120 characters and a future expiry."
+msgstr "Ange en etikett med högst 120 tecken och ett giltighetsdatum i framtiden."
+
+#: src/campushallen/web/presentation.py:122
+msgid "Use a username of 1–254 characters without spaces or control characters."
+msgstr "Användarnamnet måste innehålla 1–254 tecken utan blanksteg eller kontrolltecken."
+
+#: src/campushallen/web/presentation.py:123
+msgid "Use a website password of 12–4096 characters."
+msgstr "Lösenordet för webbplatsen måste innehålla minst 12 och högst 4096 tecken."
+
+#: src/campushallen/web/presentation.py:124
+msgid "Website password is incorrect."
+msgstr "Lösenordet för webbplatsen är felaktigt."
+
+#: src/campushallen/web/presentation.py:125
+msgid "Website passwords do not match."
+msgstr "Lösenorden för webbplatsen stämmer inte överens."
+
+#: src/campushallen/web/presentation.py:133
+msgid "Unable to complete the request. Check the form and try again."
+msgstr "Det gick inte att slutföra åtgärden. Kontrollera formuläret och försök igen."
+
+#: src/campushallen/web/presentation.py:138
+msgid "A previous live attempt exists; inspect booking history before any manual retry."
+msgstr ""
+"Ett tidigare bokningsförsök finns. Kontrollera historiken och Campushallen innan du försöker igen"
+" manuellt."
+
+#: src/campushallen/web/presentation.py:139
+msgid "API booking opening time has not arrived."
+msgstr "Bokningen har inte öppnat hos Campushallen ännu."
+
+#: src/campushallen/web/presentation.py:140
+msgid "API did not supply bookableEarliest; no booking sent."
+msgstr "Campushallen angav ingen öppningstid. Ingen bokning skickades."
+
+#: src/campushallen/web/presentation.py:141
+msgid "Account was removed"
+msgstr "Kontot har tagits bort"
+
+#: src/campushallen/web/presentation.py:142
+msgid "Account, user, or rule is disabled."
+msgstr "Kontot, användaren eller bokningsregeln är inaktiv."
+
+#: src/campushallen/web/presentation.py:143
+msgid "Activity discovery failed; try again later."
+msgstr "Det gick inte att hämta pass. Försök igen senare."
+
+#: src/campushallen/web/presentation.py:144
+msgid "Activity has already started."
+msgstr "Passet har redan börjat."
+
+#: src/campushallen/web/presentation.py:145
+msgid "Activity is already booked."
+msgstr "Passet är redan bokat."
+
+#: src/campushallen/web/presentation.py:146
+msgid "Booking could not be completed."
+msgstr "Bokningen kunde inte slutföras."
+
+#: src/campushallen/web/presentation.py:147
+msgid "Booking independently verified."
+msgstr "Bokningen har bekräftats genom en separat kontroll."
+
+#: src/campushallen/web/presentation.py:148
+msgid "Campushallen request failed; no booking confirmed."
+msgstr "Det gick inte att kontakta Campushallen. Ingen bokning har bekräftats."
+
+#: src/campushallen/web/presentation.py:149
+msgid "Dry-run; no booking sent."
+msgstr "Testkörning. Ingen bokning skickades."
+
+#: src/campushallen/web/presentation.py:150
+msgid "Fixed start time no longer matches."
+msgstr "Den fasta starttiden stämmer inte längre."
+
+#: src/campushallen/web/presentation.py:151
+msgid "Live request reserved; an interrupted request requires manual verification."
+msgstr "Bokningsförsöket har påbörjats. Om det avbryts behöver bokningen kontrolleras manuellt."
+
+#: src/campushallen/web/presentation.py:152
+msgid "Matching activity discovered."
+msgstr "Ett matchande pass hittades."
+
+#: src/campushallen/web/presentation.py:153
+msgid "No regular spots available; no booking sent."
+msgstr "Det finns inga ordinarie platser kvar. Ingen bokning skickades."
+
+#: src/campushallen/web/presentation.py:154
+msgid "No safe upcoming target with API bookableEarliest was found."
+msgstr "Inget kommande pass med säker matchning och angiven öppningstid hittades."
+
+#: src/campushallen/web/presentation.py:155
+msgid "No unique safe target was selected."
+msgstr "Det gick inte att välja ett entydigt och säkert matchande pass."
+
+#: src/campushallen/web/presentation.py:156
+msgid "Queued target changed; no booking sent."
+msgstr "Passet ändrades medan försöket väntade. Ingen bokning skickades."
+
+#: src/campushallen/web/presentation.py:157
+msgid "Reconnect this Campushallen account."
+msgstr "Återanslut det här Campushallen-kontot."
+
+#: src/campushallen/web/presentation.py:158
+msgid "Request outcome is uncertain; check Campushallen before retrying."
+msgstr "Resultatet är osäkert. Kontrollera Campushallen innan du försöker igen."
+
+#: src/campushallen/web/presentation.py:159
+msgid "Request sent but booking could not be verified. Check Campushallen before retrying."
+msgstr ""
+"Förfrågan skickades men bokningen kunde inte bekräftas. Kontrollera Campushallen innan du "
+"försöker igen."
+
+#: src/campushallen/web/presentation.py:160
+msgid "Selection is ambiguous or outside the allowed time window."
+msgstr "Flera pass matchar, eller så ligger passet utanför det tillåtna tidsintervallet."
+
+#: src/campushallen/web/presentation.py:161
+msgid "Service booking is available only through the legacy CLI."
+msgstr "Tjänster kan bara bokas via det befintliga kommandoradsverktyget."
+
+#: src/campushallen/web/presentation.py:162
+msgid "Service rules remain available through the legacy CLI; web worker does not book services."
+msgstr ""
+"Regler för tjänster kan användas via kommandoradsverktyget. Webbplatsens bokningsmotor bokar inte"
+" tjänster."
+
+#: src/campushallen/web/presentation.py:170
+msgid "See the result and check Campushallen if you are unsure."
+msgstr "Se resultatet och kontrollera Campushallen om du är osäker."
+
+#: src/campushallen/web/presentation.py:175
+msgid "User registered"
+msgstr "Användare registrerad"
+
+#: src/campushallen/web/presentation.py:176
+msgid "User created"
+msgstr "Användare skapad"
+
+#: src/campushallen/web/presentation.py:177
+msgid "User deleted"
+msgstr "Användare borttagen"
+
+#: src/campushallen/web/presentation.py:178
+msgid "Admin promoted"
+msgstr "Administratör utsedd"
+
+#: src/campushallen/web/presentation.py:179
+msgid "Admin demoted"
+msgstr "Administratörsbehörighet borttagen"
+
+#: src/campushallen/web/presentation.py:180
+msgid "Login success"
+msgstr "Inloggning lyckades"
+
+#: src/campushallen/web/presentation.py:181
+msgid "Login failed"
+msgstr "Inloggning misslyckades"
+
+#: src/campushallen/web/presentation.py:182
+msgid "Logout"
+msgstr "Utloggning"
+
+#: src/campushallen/web/presentation.py:183
+msgid "Sessions revoked"
+msgstr "Alla sessioner avslutade"
+
+#: src/campushallen/web/presentation.py:184
+msgid "Password changed"
+msgstr "Lösenord ändrat"
+
+#: src/campushallen/web/presentation.py:185
+msgid "Campushallen connected"
+msgstr "Ansluten till Campushallen"
+
+#: src/campushallen/web/presentation.py:186
+msgid "Campushallen reconnected"
+msgstr "Återansluten till Campushallen"
+
+#: src/campushallen/web/presentation.py:187
+msgid "Account disabled"
+msgstr "Konto inaktiverat"
+
+#: src/campushallen/web/presentation.py:188
+msgid "Account enabled"
+msgstr "Konto aktiverat"
+
+#: src/campushallen/web/presentation.py:189
+msgid "Account disconnected"
+msgstr "Konto frånkopplat"
+
+#: src/campushallen/web/presentation.py:190
+msgid "Account deleted"
+msgstr "Konto borttaget"
+
+#: src/campushallen/web/presentation.py:191
+msgid "Stored credential enabled"
+msgstr "Inloggningsuppgifter sparade"
+
+#: src/campushallen/web/presentation.py:192
+msgid "Stored credential removed"
+msgstr "Sparat lösenord borttaget"
+
+#: src/campushallen/web/presentation.py:193
+msgid "Stored credential replaced"
+msgstr "Sparat lösenord ersatt"
+
+#: src/campushallen/web/presentation.py:194
+msgid "Booking rule created"
+msgstr "Bokningsregel skapad"
+
+#: src/campushallen/web/presentation.py:195
+msgid "Booking rule updated"
+msgstr "Bokningsregel uppdaterad"
+
+#: src/campushallen/web/presentation.py:196
+msgid "Booking rule deleted"
+msgstr "Bokningsregel borttagen"
+
+#: src/campushallen/web/presentation.py:197
+msgid "Invite created"
+msgstr "Inbjudan skapad"
+
+#: src/campushallen/web/presentation.py:198
+msgid "Invite used"
+msgstr "Inbjudan använd"
+
+#: src/campushallen/web/presentation.py:199
+msgid "Invite revoked"
+msgstr "Inbjudan återkallad"
+
+#: src/campushallen/web/presentation.py:200
+msgid "Token expired"
+msgstr "Anslutningen har gått ut"
+
+#: src/campushallen/web/presentation.py:201
+msgid "Reauth success"
+msgstr "Automatisk återanslutning lyckades"
+
+#: src/campushallen/web/presentation.py:202
+msgid "Reauth failed"
+msgstr "Automatisk återanslutning misslyckades"
+
+#: src/campushallen/web/presentation.py:203
+msgid "Reconnect required"
+msgstr "Återanslutning krävs"
+
+#: src/campushallen/web/presentation.py:208
+msgid "Security event"
+msgstr "Säkerhetshändelse"
+
+#: src/campushallen/web/presentation.py:223
+msgid "Enter a rule name (1–120 characters) and an activity (1–200 characters)."
+msgstr "Ange ett regelnamn med 1–120 tecken och ett pass med 1–200 tecken."
+
+#: src/campushallen/web/presentation.py:226
+msgid "Choose a weekday from Monday to Sunday."
+msgstr "Välj en veckodag från måndag till söndag."
+
+#: src/campushallen/web/presentation.py:228
+msgid "Choose a valid booking type."
+msgstr "Välj en giltig bokningstyp."
+
+#: src/campushallen/web/presentation.py:230
+msgid "Enter numeric IDs. The category ID must be greater than zero."
+msgstr "Ange numeriska ID:n. Kategori-ID måste vara större än noll."
+
+#: src/campushallen/web/presentation.py:232
+msgid "Use at most 30 facility filters."
+msgstr "Ange högst 30 anläggningsfilter."
+
+#: src/campushallen/web/presentation.py:234
+msgid "Enter valid local times, for example 18:45, without a timezone."
+msgstr "Ange giltiga lokala tider utan tidszon, till exempel 18:45."
+
+#: src/campushallen/web/routes/accounts.py:33
+msgid "Enter an account name and Campushallen username."
+msgstr "Ange ett kontonamn och ditt användarnamn hos Campushallen."
+
+#: src/campushallen/web/routes/accounts.py:38
+msgid "That account is already added."
+msgstr "Det här kontot har redan lagts till."
+
+#: src/campushallen/web/routes/accounts.py:58
+msgid "Too many connection attempts. Try again in five minutes."
+msgstr "För många anslutningsförsök. Försök igen om fem minuter."
+
+#: src/campushallen/web/routes/accounts.py:61
+msgid "Enter the Campushallen password."
+msgstr "Ange ditt lösenord för Campushallen."
+
+#: src/campushallen/web/routes/accounts.py:79
+msgid "Connection failed. Check your credentials or try again later."
+msgstr ""
+"Kunde inte logga in på Campushallen. Kontrollera användarnamn och lösenord eller försök igen "
+"senare."
+
+#: src/campushallen/web/routes/accounts.py:135
+msgid "Confirm disconnect to remove local tokens and saved credentials."
+msgstr "Bekräfta frånkopplingen för att ta bort anslutningen och sparade inloggningsuppgifter lokalt."
+
+#: src/campushallen/web/routes/accounts.py:145 src/campushallen/web/routes/security.py:36
+#: src/campushallen/web/routes/security.py:59
+msgid "Too many attempts. Try again shortly."
+msgstr "För många försök. Vänta en stund och försök igen."
+
+#: src/campushallen/web/routes/admin.py:43
+msgid "Too many requests. Try again shortly."
+msgstr "För många förfrågningar. Vänta en stund och försök igen."
+
+#: src/campushallen/web/routes/admin.py:64
+msgid "Use 1–100 invites, a label up to 120 characters, and 0–365 expiry days (0 means no expiry)."
+msgstr ""
+"Ange 1–100 inbjudningar, en etikett med högst 120 tecken och 0–365 dagars giltighet (0 betyder "
+"utan slutdatum)."
+
+#: src/campushallen/web/routes/auth.py:23
+msgid "Too many login attempts. Try again in five minutes."
+msgstr "För många inloggningsförsök. Försök igen om fem minuter."
+
+#: src/campushallen/web/routes/auth.py:26 src/campushallen/web/routes/auth.py:31
+msgid "Invalid username or password."
+msgstr "Felaktigt användarnamn eller lösenord."
+
+#: src/campushallen/web/routes/auth.py:43
+msgid "Login state changed. Please sign in again."
+msgstr "Din inloggning har ändrats. Logga in igen."
+
+#: src/campushallen/web/routes/invites.py:15
+msgid "Too many attempts. Try again in five minutes."
+msgstr "För många försök. Försök igen om fem minuter."
+
+#: src/campushallen/web/routes/pages.py:139
+msgid "Invalid account filter."
+msgstr "Välj ett giltigt konto att filtrera på."
+
+#: src/campushallen/web/routes/pages.py:144
+msgid "Unknown booking result."
+msgstr "Välj ett giltigt bokningsresultat."
+
+#: src/campushallen/web/routes/pages.py:154
+msgid "Invalid activity date."
+msgstr "Ange ett giltigt datum för passet."
+
+#: src/campushallen/web/routes/rules.py:93
+msgid "Activity not found"
+msgstr "Passet hittades inte"
+
+#: src/campushallen/web/routes/rules.py:99
+msgid "Source rule no longer exists"
+msgstr "Den ursprungliga bokningsregeln finns inte längre"
+
+#: src/campushallen/web/routes/rules.py:154
+msgid "Choose an account."
+msgstr "Välj ett Campushallen-konto."
+
+#: src/campushallen/web/routes/rules.py:211
+msgid "Rule names must be unique within an account."
+msgstr "Det finns redan en regel med det namnet för kontot. Välj ett annat namn."
+
+#: src/campushallen/web/templates/account.html:1
+msgid "Campushallen account"
+msgstr "Campushallen-konto"
+
+#: src/campushallen/web/templates/account.html:2
+msgid "CAMPUSHALLEN CONNECTION"
+msgstr "ANSLUTNING TILL CAMPUSHALLEN"
+
+#: src/campushallen/web/templates/account.html:4
+msgid "Automatic reconnection:"
+msgstr "Automatisk återanslutning:"
+
+#: src/campushallen/web/templates/account.html:4 src/campushallen/web/templates/dashboard.html:5
+msgid "ON"
+msgstr "På"
+
+#: src/campushallen/web/templates/account.html:4 src/campushallen/web/templates/dashboard.html:5
+msgid "OFF"
+msgstr "Av"
+
+#: src/campushallen/web/templates/account.html:4 src/campushallen/web/templates/accounts.html:2
+#: src/campushallen/web/templates/admin.html:11 src/campushallen/web/templates/dashboard.html:5
+#: src/campushallen/web/templates/rules.html:2
+msgid "Enabled"
+msgstr "Aktiv"
+
+#: src/campushallen/web/templates/account.html:5
+msgid "Reconnect using the form below. Automatic retries are paused until you reconnect successfully."
+msgstr "Återanslut med formuläret nedan. Automatiska försök pausas tills du har anslutit igen."
+
+#: src/campushallen/web/templates/account.html:6
+msgid "Temporary authentication error. Next retry after"
+msgstr "Tillfälligt inloggningsproblem. Nästa försök efter"
+
+#: src/campushallen/web/templates/account.html:7
+msgid "Connect or reconnect"
+msgstr "Anslut eller återanslut"
+
+#: src/campushallen/web/templates/account.html:9
+msgid "Campushallen password"
+msgstr "Lösenord för Campushallen"
+
+#: src/campushallen/web/templates/account.html:10
+msgid "Remember Campushallen credentials for automatic reconnection"
+msgstr "Spara inloggningsuppgifter för automatisk återanslutning"
+
+#: src/campushallen/web/templates/account.html:11
+msgid ""
+"Unchecked: use the password for this connection, then discard it and forget any previously saved "
+"password. Expired tokens need manual reconnection."
+msgstr ""
+"Utan bock används lösenordet bara för att ansluta nu. Ett tidigare sparat lösenord tas också "
+"bort. När anslutningen går ut behöver du logga in igen själv."
+
+#: src/campushallen/web/templates/account.html:12
+msgid ""
+"Checked: store an encrypted, recoverable password on the server. The worker may use it to "
+"reconnect. It is never displayed again. Anyone with both the application data and its encryption "
+"key may recover it."
+msgstr ""
+"Med bock kan tjänsten logga in på Campushallen igen automatiskt när anslutningen går ut. "
+"Lösenordet lagras krypterat på servern och visas aldrig igen. Den som får tillgång till både "
+"lagrade uppgifter och krypteringsnyckeln kan läsa lösenordet."
+
+#: src/campushallen/web/templates/account.html:13
+msgid "Replace saved password and reconnect"
+msgstr "Byt sparat lösenord och återanslut"
+
+#: src/campushallen/web/templates/account.html:13
+msgid "Connect account"
+msgstr "Anslut konto"
+
+#: src/campushallen/web/templates/account.html:14
+msgid "Forget saved password"
+msgstr "Ta bort sparat lösenord"
+
+#: src/campushallen/web/templates/account.html:14
+msgid "Forgetting keeps your current token. Later expiry will need a manual login."
+msgstr ""
+"Du är fortfarande ansluten när lösenordet tas bort. När anslutningen går ut behöver du logga in "
+"igen själv."
+
+#: src/campushallen/web/templates/account.html:15
+msgid "Upcoming activities"
+msgstr "Kommande pass"
+
+#: src/campushallen/web/templates/account.html:15
+msgid "Discover matches for enabled rules over the next 21 days. This may take a moment."
+msgstr ""
+"Sök efter pass som matchar dina aktiva regler under de närmaste 21 dagarna. Det kan ta en liten "
+"stund."
+
+#: src/campushallen/web/templates/account.html:15 src/campushallen/web/templates/dashboard.html:10
+msgid "Preview matching activities"
+msgstr "Förhandsgranska matchande pass"
+
+#: src/campushallen/web/templates/account.html:15
+msgid "Preview saves local results. It never sends a booking request."
+msgstr "Förhandsgranskningen sparar resultat lokalt. Den skickar aldrig en bokning."
+
+#: src/campushallen/web/templates/account.html:15
+msgid "Account activity"
+msgstr "Kontohändelser"
+
+#: src/campushallen/web/templates/account.html:15
+msgid "Last successful authentication:"
+msgstr "Senast lyckade inloggning:"
+
+#: src/campushallen/web/templates/account.html:15
+msgid "Last failed authentication:"
+msgstr "Senast misslyckade inloggning:"
+
+#: src/campushallen/web/templates/account.html:15
+msgid "Last discovery:"
+msgstr "Senaste sökning:"
+
+#: src/campushallen/web/templates/account.html:15
+msgid "Last error:"
+msgstr "Senaste fel:"
+
+#: src/campushallen/web/templates/account.html:16 src/campushallen/web/templates/accounts.html:2
+#: src/campushallen/web/templates/rules.html:2
+msgid "Disable"
+msgstr "Inaktivera"
+
+#: src/campushallen/web/templates/account.html:16 src/campushallen/web/templates/accounts.html:2
+#: src/campushallen/web/templates/rules.html:2
+msgid "Enable"
+msgstr "Aktivera"
+
+#: src/campushallen/web/templates/account.html:16
+msgid "account"
+msgstr "konto"
+
+#: src/campushallen/web/templates/account.html:17
+msgid "Preview results"
+msgstr "Resultat av förhandsgranskningen"
+
+#: src/campushallen/web/templates/account.html:17
+msgid "No matching activity"
+msgstr "Inget matchande pass"
+
+#: src/campushallen/web/templates/account.html:17
+msgid "Opens"
+msgstr "Bokningen öppnar"
+
+#: src/campushallen/web/templates/account.html:17
+msgid "No enabled rules, or this account is disabled."
+msgstr "Det finns inga aktiva regler, eller så är kontot inaktivt."
+
+#: src/campushallen/web/templates/account.html:17 src/campushallen/web/templates/rule_form.html:2
+msgid "Create a rule"
+msgstr "Skapa bokningsregel"
+
+#: src/campushallen/web/templates/account.html:17
+msgid "View activity details and create rules from matches on the dashboard →"
+msgstr "Se passens detaljer och skapa regler från träffarna i översikten →"
+
+#: src/campushallen/web/templates/account.html:18
+msgid "Remove local connection data"
+msgstr "Ta bort lokala anslutningsuppgifter"
+
+#: src/campushallen/web/templates/account.html:18
+msgid "These actions never cancel Campushallen bookings. A request already in flight cannot be recalled."
+msgstr ""
+"Dessa åtgärder avbokar aldrig pass hos Campushallen. Ett bokningsförsök som redan skickats kan "
+"inte stoppas."
+
+#: src/campushallen/web/templates/account.html:18
+msgid "Disconnect or delete connection"
+msgstr "Koppla från eller ta bort anslutningen"
+
+#: src/campushallen/web/templates/account.html:19
+msgid "Disconnect removes saved credentials and tokens, keeping your rules and history."
+msgstr ""
+"När du kopplar från tas sparade inloggningsuppgifter och anslutningen bort lokalt. Regler och "
+"historik finns kvar."
+
+#: src/campushallen/web/templates/account.html:19
+msgid "I confirm disconnection"
+msgstr "Jag bekräftar frånkopplingen"
+
+#: src/campushallen/web/templates/account.html:19
+msgid "Disconnect account"
+msgstr "Koppla från konto"
+
+#: src/campushallen/web/templates/account.html:20
+msgid "Delete removes this connection, its rules, credentials, snapshots, and local booking history."
+msgstr ""
+"Tar bort anslutningen, dess regler, sparade inloggningsuppgifter, hämtade pass och lokal "
+"bokningshistorik."
+
+#: src/campushallen/web/templates/account.html:20 src/campushallen/web/templates/settings.html:11
+msgid "Website password"
+msgstr "Lösenord för webbplatsen"
+
+#: src/campushallen/web/templates/account.html:20 src/campushallen/web/templates/settings.html:11
+msgid "Type DELETE to confirm"
+msgstr "Skriv DELETE för att bekräfta"
+
+#: src/campushallen/web/templates/account.html:20
+msgid "Delete local account connection"
+msgstr "Ta bort lokal kontoanslutning"
+
+#: src/campushallen/web/templates/accounts.html:1 src/campushallen/web/templates/base.html:11
+msgid "Accounts"
+msgstr "Campushallen-konton"
+
+#: src/campushallen/web/templates/accounts.html:1
+msgid "CONNECTIONS"
+msgstr "ANSLUTNINGAR"
+
+#: src/campushallen/web/templates/accounts.html:1
+msgid "Your Campushallen accounts."
+msgstr "Dina Campushallen-konton."
+
+#: src/campushallen/web/templates/accounts.html:3 src/campushallen/web/templates/rule_form.html:14
+msgid "Add an account"
+msgstr "Lägg till ett konto"
+
+#: src/campushallen/web/templates/accounts.html:3
+msgid "Display name"
+msgstr "Kontonamn"
+
+#: src/campushallen/web/templates/accounts.html:3
+msgid "Campushallen username"
+msgstr "Användarnamn hos Campushallen"
+
+#: src/campushallen/web/templates/accounts.html:3
+msgid "Add account"
+msgstr "Lägg till konto"
+
+#: src/campushallen/web/templates/admin.html:1 src/campushallen/web/templates/base.html:11
+msgid "Admin"
+msgstr "Administration"
+
+#: src/campushallen/web/templates/admin.html:2
+msgid "OPERATOR"
+msgstr "ADMINISTRATÖR"
+
+#: src/campushallen/web/templates/admin.html:2
+msgid "Application management."
+msgstr "Administration."
+
+#: src/campushallen/web/templates/admin.html:3
+msgid "Create invitations"
+msgstr "Skapa inbjudningar"
+
+#: src/campushallen/web/templates/admin.html:5
+msgid "Label"
+msgstr "Namn/etikett"
+
+#: src/campushallen/web/templates/admin.html:5
+msgid "Optional reminder"
+msgstr "Valfri anteckning"
+
+#: src/campushallen/web/templates/admin.html:6
+msgid "Number of invitations"
+msgstr "Antal inbjudningar"
+
+#: src/campushallen/web/templates/admin.html:7
+msgid "Expires after days (0 = no expiry)"
+msgstr "Giltig i antal dagar (0 = utan slutdatum)"
+
+#: src/campushallen/web/templates/admin.html:8
+msgid "Generate one-time links"
+msgstr "Skapa inbjudan"
+
+#: src/campushallen/web/templates/admin.html:9 src/campushallen/web/templates/invite_created.html:1
+msgid "Invitations"
+msgstr "Inbjudningar"
+
+#: src/campushallen/web/templates/admin.html:9
+msgid "ID / label"
+msgstr "ID / etikett"
+
+#: src/campushallen/web/templates/admin.html:9
+msgid "Status"
+msgstr "Status"
+
+#: src/campushallen/web/templates/admin.html:9 src/campushallen/web/templates/settings.html:8
+msgid "Expires"
+msgstr "Giltig till"
+
+#: src/campushallen/web/templates/admin.html:9
+msgid "Action"
+msgstr "Åtgärd"
+
+#: src/campushallen/web/templates/admin.html:10
+msgid "Never"
+msgstr "Utan slutdatum"
+
+#: src/campushallen/web/templates/admin.html:10
+msgid "Revoke"
+msgstr "Återkalla"
+
+#: src/campushallen/web/templates/admin.html:10
+msgid "No invitations yet."
+msgstr "Det finns inga inbjudningar ännu."
+
+#: src/campushallen/web/templates/admin.html:11
+msgid "Account health"
+msgstr "Kontostatus"
+
+#: src/campushallen/web/templates/admin.html:11
+msgid "Only operational status is shown here. Account contents remain private to their owners."
+msgstr "Här visas bara driftstatus. Kontonas innehåll är privat för respektive ägare."
+
+#: src/campushallen/web/templates/admin.html:11
+msgid "Account ID"
+msgstr "Konto-ID"
+
+#: src/campushallen/web/templates/admin.html:11
+msgid "Authentication"
+msgstr "Inloggning"
+
+#: src/campushallen/web/templates/admin.html:11
+msgid "Last discovery"
+msgstr "Senaste sökning"
+
+#: src/campushallen/web/templates/admin.html:11
+msgid "No connections yet."
+msgstr "Det finns inga anslutningar ännu."
+
+#: src/campushallen/web/templates/admin.html:12
+msgid "Security events"
+msgstr "Säkerhetshändelser"
+
+#: src/campushallen/web/templates/attempts.html:1 src/campushallen/web/templates/history.html:3
+msgid "Result"
+msgstr "Resultat"
+
+#: src/campushallen/web/templates/attempts.html:1
+msgid "Activity / account / rule"
+msgstr "Pass / konto / regel"
+
+#: src/campushallen/web/templates/attempts.html:1
+msgid "Activity starts"
+msgstr "Passet börjar"
+
+#: src/campushallen/web/templates/attempts.html:1
+msgid "Attempted"
+msgstr "Försök gjordes"
+
+#: src/campushallen/web/templates/attempts.html:1
+msgid "Reason / verification"
+msgstr "Orsak / bekräftelse"
+
+#: src/campushallen/web/templates/attempts.html:2
+msgid "Discovery"
+msgstr "Sökning"
+
+#: src/campushallen/web/templates/attempts.html:2
+msgid "Deleted rule"
+msgstr "Borttagen regel"
+
+#: src/campushallen/web/templates/attempts.html:2
+msgid "Verification:"
+msgstr "Bekräftelse:"
+
+#: src/campushallen/web/templates/attempts.html:3
+msgid "No results match these filters. Preview an account to get started."
+msgstr "Inga resultat matchar filtren. Förhandsgranska ett konto för att komma igång."
+
+#: src/campushallen/web/templates/base.html:5
+msgid "Campushallen Booker"
+msgstr "Campushallen Booker"
+
+#: src/campushallen/web/templates/base.html:10
+msgid "Campushallen"
+msgstr "Campushallen"
+
+#: src/campushallen/web/templates/base.html:10
+msgid "Booker"
+msgstr "Booker"
+
+#: src/campushallen/web/templates/base.html:11
+msgid "Main"
+msgstr "Huvudmeny"
+
+#: src/campushallen/web/templates/base.html:11 src/campushallen/web/templates/dashboard.html:1
+msgid "Overview"
+msgstr "Översikt"
+
+#: src/campushallen/web/templates/base.html:11
+msgid "Rules"
+msgstr "Bokningsregler"
+
+#: src/campushallen/web/templates/base.html:11 src/campushallen/web/templates/history.html:1
+msgid "History"
+msgstr "Historik"
+
+#: src/campushallen/web/templates/base.html:11 src/campushallen/web/templates/settings.html:1
+msgid "Security"
+msgstr "Säkerhet"
+
+#: src/campushallen/web/templates/base.html:12
+msgid "Log out ·"
+msgstr "Logga ut ·"
+
+#: src/campushallen/web/templates/base.html:14 src/campushallen/web/templates/dashboard.html:10
+#: src/campushallen/web/templates/onboarding.html:1
+msgid "Get started"
+msgstr "Kom igång"
+
+#: src/campushallen/web/templates/base.html:14
+msgid "Development · Booking previews are read-only · Times shown in"
+msgstr "Under utveckling · Förhandsgranskningar gör inga bokningar · Tider visas i"
+
+#: src/campushallen/web/templates/dashboard.html:2
+msgid "YOUR TRAINING, ORGANIZED"
+msgstr "DIN TRÄNING, PLANERAD"
+
+#: src/campushallen/web/templates/dashboard.html:2
+msgid "Your week at Campushallen."
+msgstr "Din vecka på Campushallen."
+
+#: src/campushallen/web/templates/dashboard.html:3
+msgid "Last report"
+msgstr "Senaste rapport"
+
+#: src/campushallen/web/templates/dashboard.html:3
+msgid "Dry-run"
+msgstr "Testläge"
+
+#: src/campushallen/web/templates/dashboard.html:3
+msgid "Operator-enabled live mode"
+msgstr "Bokningsläge aktiverat av administratör"
+
+#: src/campushallen/web/templates/dashboard.html:3
+msgid "No worker has reported yet. You can still configure accounts and preview matches."
+msgstr ""
+"Bokningsmotorn har inte rapporterat ännu. Du kan ändå lägga till konton, skapa regler och "
+"förhandsgranska pass."
+
+#: src/campushallen/web/templates/dashboard.html:5
+msgid "Auto reconnect:"
+msgstr "Automatisk återanslutning:"
+
+#: src/campushallen/web/templates/dashboard.html:6
+msgid "Auth retry after"
+msgstr "Nytt inloggningsförsök efter"
+
+#: src/campushallen/web/templates/dashboard.html:7
+msgid "NEXT RELEVANT ACTIVITY"
+msgstr "NÄSTA MATCHANDE PASS"
+
+#: src/campushallen/web/templates/dashboard.html:7
+msgid "Booking opens"
+msgstr "Bokningen öppnar"
+
+#: src/campushallen/web/templates/dashboard.html:7
+msgid "Already booked ✓"
+msgstr "Redan bokad ✓"
+
+#: src/campushallen/web/templates/dashboard.html:7
+msgid "Not booked at last check"
+msgstr "Inte bokad vid senaste kontrollen"
+
+#: src/campushallen/web/templates/dashboard.html:7
+msgid "Full"
+msgstr "Fullbokat"
+
+#: src/campushallen/web/templates/dashboard.html:7
+#, python-format
+msgid "%(num)s available spot"
+msgid_plural "%(num)s available spots"
+msgstr[0] "%(num)s ledig plats"
+msgstr[1] "%(num)s lediga platser"
+
+#: src/campushallen/web/templates/dashboard.html:7 src/campushallen/web/templates/dashboard.html:11
+#: src/campushallen/web/templates/rules.html:2
+msgid "· Waitlist"
+msgstr "· Reservlista"
+
+#: src/campushallen/web/templates/dashboard.html:7
+msgid "available"
+msgstr "tillgänglig"
+
+#: src/campushallen/web/templates/dashboard.html:7
+msgid "unavailable"
+msgstr "inte tillgänglig"
+
+#: src/campushallen/web/templates/dashboard.html:8
+msgid "Next worker action:"
+msgstr "Nästa åtgärd:"
+
+#: src/campushallen/web/templates/dashboard.html:8
+msgid "Paused for reconnection"
+msgstr "Pausad i väntan på återanslutning"
+
+#: src/campushallen/web/templates/dashboard.html:8
+msgid "No current schedule; worker not reporting"
+msgstr "Ingen aktuell planering. Bokningsmotorn rapporterar inte"
+
+#: src/campushallen/web/templates/dashboard.html:8
+msgid "Already booked; no booking request planned"
+msgstr "Redan bokad. Inget bokningsförsök planerat"
+
+#: src/campushallen/web/templates/dashboard.html:8 src/campushallen/web/templates/onboarding.html:6
+msgid "Preview"
+msgstr "Förhandsgranskning"
+
+#: src/campushallen/web/templates/dashboard.html:8
+msgid "Booking attempt"
+msgstr "Bokningsförsök"
+
+#: src/campushallen/web/templates/dashboard.html:8
+msgid "Target checked; next discovery on worker poll"
+msgstr "Passet har kontrollerats. En ny sökning görs vid nästa körning"
+
+#: src/campushallen/web/templates/dashboard.html:8
+#, python-format
+msgid "Checked %(time)s. Availability may change."
+msgstr "Kontrollerad %(time)s. Tillgängligheten kan ändras."
+
+#: src/campushallen/web/templates/dashboard.html:8
+msgid "Create rule from this activity →"
+msgstr "Skapa regel från detta pass →"
+
+#: src/campushallen/web/templates/dashboard.html:9
+msgid "Find your next session."
+msgstr "Hitta ditt nästa pass."
+
+#: src/campushallen/web/templates/dashboard.html:9
+msgid "Add a rule, then preview this account to discover matching activities."
+msgstr "Lägg till en regel och förhandsgranska kontot för att hitta matchande pass."
+
+#: src/campushallen/web/templates/dashboard.html:10
+msgid "Recent:"
+msgstr "Senast:"
+
+#: src/campushallen/web/templates/dashboard.html:10
+msgid "Start with your Campushallen account."
+msgstr "Börja med ditt Campushallen-konto."
+
+#: src/campushallen/web/templates/dashboard.html:10
+msgid "Connect an account, choose a rule, and preview a session."
+msgstr "Anslut ett konto, skapa en regel och förhandsgranska ett pass."
+
+#: src/campushallen/web/templates/dashboard.html:11
+msgid "Enabled rules"
+msgstr "Aktiva bokningsregler"
+
+#: src/campushallen/web/templates/dashboard.html:11 src/campushallen/web/templates/rules.html:1
+msgid "+ New rule"
+msgstr "+ Ny bokningsregel"
+
+#: src/campushallen/web/templates/dashboard.html:11
+msgid "Flexible time"
+msgstr "Valfri tid"
+
+#: src/campushallen/web/templates/dashboard.html:11 src/campushallen/web/templates/rules.html:2
+msgid "allowed"
+msgstr "tillåten"
+
+#: src/campushallen/web/templates/dashboard.html:11 src/campushallen/web/templates/rules.html:2
+msgid "disabled"
+msgstr "avstängd"
+
+#: src/campushallen/web/templates/dashboard.html:11
+msgid "Edit rule →"
+msgstr "Redigera regel →"
+
+#: src/campushallen/web/templates/dashboard.html:11
+msgid "No enabled rules yet."
+msgstr "Det finns inga aktiva bokningsregler ännu."
+
+#: src/campushallen/web/templates/dashboard.html:12
+msgid "Recent results"
+msgstr "Senaste resultat"
+
+#: src/campushallen/web/templates/dashboard.html:12
+msgid "View history →"
+msgstr "Visa historik →"
+
+#: src/campushallen/web/templates/error.html:1
+msgid "Unable to complete that request."
+msgstr "Det gick inte att slutföra åtgärden."
+
+#: src/campushallen/web/templates/error.html:1
+msgid "Return to overview"
+msgstr "Tillbaka till översikten"
+
+#: src/campushallen/web/templates/events.html:1
+msgid "Event"
+msgstr "Händelse"
+
+#: src/campushallen/web/templates/events.html:1
+msgid "Time"
+msgstr "Tid"
+
+#: src/campushallen/web/templates/events.html:1
+msgid "User ID"
+msgstr "Användar-ID"
+
+#: src/campushallen/web/templates/events.html:1
+msgid "Code"
+msgstr "Kod"
+
+#: src/campushallen/web/templates/events.html:1
+msgid "No security events yet."
+msgstr "Det finns inga säkerhetshändelser ännu."
+
+#: src/campushallen/web/templates/history.html:2
+msgid "ACTIVITY LOG"
+msgstr "HÄNDELSELOGG"
+
+#: src/campushallen/web/templates/history.html:2
+msgid "Booking history."
+msgstr "Bokningshistorik."
+
+#: src/campushallen/web/templates/history.html:3 src/campushallen/web/templates/rule_form.html:4
+msgid "Account"
+msgstr "Campushallen-konto"
+
+#: src/campushallen/web/templates/history.html:3
+msgid "All accounts"
+msgstr "Alla konton"
+
+#: src/campushallen/web/templates/history.html:3
+msgid "All results"
+msgstr "Alla resultat"
+
+#: src/campushallen/web/templates/history.html:3
+msgid "Activity date"
+msgstr "Datum för passet"
+
+#: src/campushallen/web/templates/history.html:3
+msgid "Filter history"
+msgstr "Filtrera historiken"
+
+#: src/campushallen/web/templates/history.html:3
+msgid "Clear filters"
+msgstr "Rensa filter"
+
+#: src/campushallen/web/templates/history.html:4
+msgid "← Newer"
+msgstr "← Nyare"
+
+#: src/campushallen/web/templates/history.html:4
+msgid "Page"
+msgstr "Sida"
+
+#: src/campushallen/web/templates/history.html:4
+msgid "Older →"
+msgstr "Äldre →"
+
+#: src/campushallen/web/templates/invite.html:2
+msgid "Invitation · Campushallen Booker"
+msgstr "Inbjudan · Campushallen Booker"
+
+#: src/campushallen/web/templates/invite.html:5
+msgid "YOU'RE INVITED"
+msgstr "DU ÄR INBJUDEN"
+
+#: src/campushallen/web/templates/invite.html:6
+msgid "Welcome to Campushallen Booker."
+msgstr "Du har blivit inbjuden till Campushallen Booker."
+
+#: src/campushallen/web/templates/invite.html:8
+msgid "Choose a website login. You'll connect your Campushallen account afterwards."
+msgstr "Skapa ditt konto på webbplatsen. Sedan kan du ansluta ditt Campushallen-konto."
+
+#: src/campushallen/web/templates/invite.html:11
+msgid "Choose username"
+msgstr "Välj användarnamn"
+
+#: src/campushallen/web/templates/invite.html:12
+msgid "Choose website password"
+msgstr "Välj lösenord för webbplatsen"
+
+#: src/campushallen/web/templates/invite.html:13
+msgid "At least 12 characters. Password managers and long passphrases are welcome."
+msgstr "Minst 12 tecken. Använd gärna en lösenordshanterare eller en lång lösenfras."
+
+#: src/campushallen/web/templates/invite.html:14
+msgid "Confirm website password"
+msgstr "Bekräfta lösenord för webbplatsen"
+
+#: src/campushallen/web/templates/invite.html:15
+msgid "Create account"
+msgstr "Skapa konto"
+
+#: src/campushallen/web/templates/invite.html:17
+msgid "Ask the application owner for a new link."
+msgstr "Be ägaren om en ny inbjudningslänk."
+
+#: src/campushallen/web/templates/invite.html:18
+msgid "Already registered? Log in"
+msgstr "Har du redan ett konto? Logga in"
+
+#: src/campushallen/web/templates/invite_created.html:2
+msgid "INVITATIONS"
+msgstr "INBJUDNINGAR"
+
+#: src/campushallen/web/templates/invite_created.html:2
+msgid "Save these links now."
+msgstr "Inbjudan skapad. Spara länkarna nu."
+
+#: src/campushallen/web/templates/invite_created.html:3
+msgid ""
+"They cannot be displayed again. Give each link to one person you want to invite. Treat these "
+"links as secrets."
+msgstr "Länkarna visas bara nu. Dela varje länk privat med en person du vill bjuda in."
+
+#: src/campushallen/web/templates/invite_created.html:4
+msgid "Invitation"
+msgstr "Inbjudan"
+
+#: src/campushallen/web/templates/invite_created.html:4
+#, python-format
+msgid "Invitation %(number)s link"
+msgstr "Länk till inbjudan %(number)s"
+
+#: src/campushallen/web/templates/invite_created.html:4
+msgid "Link copied"
+msgstr "Länken har kopierats"
+
+#: src/campushallen/web/templates/invite_created.html:4
+msgid "Select and copy the link above."
+msgstr "Markera och kopiera länken ovan."
+
+#: src/campushallen/web/templates/invite_created.html:4
+msgid "Copy link"
+msgstr "Kopiera länk"
+
+#: src/campushallen/web/templates/invite_created.html:5
+msgid "Return to invitation management"
+msgstr "Tillbaka till inbjudningarna"
+
+#: src/campushallen/web/templates/login.html:2
+msgid "Log in · Campushallen Booker"
+msgstr "Logga in · Campushallen Booker"
+
+#: src/campushallen/web/templates/login.html:3
+msgid "YOUR WEEK, BOOKED"
+msgstr "PLANERA DIN TRÄNING"
+
+#: src/campushallen/web/templates/login.html:3
+msgid "Welcome back."
+msgstr "Välkommen tillbaka."
+
+#: src/campushallen/web/templates/login.html:3
+msgid "Manage your Campushallen accounts and booking rules."
+msgstr "Hantera dina Campushallen-konton och bokningsregler."
+
+#: src/campushallen/web/templates/login.html:4
+msgid "Account created. Log in to start connecting Campushallen."
+msgstr "Ditt konto är skapat. Logga in för att ansluta ditt Campushallen-konto."
+
+#: src/campushallen/web/templates/login.html:5
+msgid "Application username"
+msgstr "Användarnamn"
+
+#: src/campushallen/web/templates/login.html:6
+msgid "Password"
+msgstr "Lösenord"
+
+#: src/campushallen/web/templates/login.html:7
+msgid "Log in"
+msgstr "Logga in"
+
+#: src/campushallen/web/templates/login.html:7
+msgid "Ask the application owner to create your login."
+msgstr "Be ägaren om en inbjudan för att skapa ett konto."
+
+#: src/campushallen/web/templates/onboarding.html:2
+msgid "GET STARTED"
+msgstr "KOM IGÅNG"
+
+#: src/campushallen/web/templates/onboarding.html:2
+msgid "A few steps to your first preview."
+msgstr "Kom igång med dina pass."
+
+#: src/campushallen/web/templates/onboarding.html:2
+msgid "You can leave setup at any time and return through the Get started link."
+msgstr "Du kan hoppa över steg och komma tillbaka när du vill via länken Kom igång."
+
+#: src/campushallen/web/templates/onboarding.html:3
+msgid "1 · Website account created"
+msgstr "1 · Konto på webbplatsen skapat"
+
+#: src/campushallen/web/templates/onboarding.html:3
+msgid "Connect Campushallen"
+msgstr "Anslut ditt Campushallen-konto"
+
+#: src/campushallen/web/templates/onboarding.html:3
+msgid "Add your account, then enter your Campushallen credentials on its connection page."
+msgstr "Lägg till ditt konto. Logga sedan in med dina inloggningsuppgifter för Campushallen på kontosidan."
+
+#: src/campushallen/web/templates/onboarding.html:3
+msgid "Manage connections"
+msgstr "Hantera anslutningar"
+
+#: src/campushallen/web/templates/onboarding.html:3
+msgid "Add your first connection"
+msgstr "Lägg till ditt första konto"
+
+#: src/campushallen/web/templates/onboarding.html:4
+msgid "2 · Optional"
+msgstr "2 · Valfritt"
+
+#: src/campushallen/web/templates/onboarding.html:4
+msgid "Choose how to reconnect"
+msgstr "Välj automatisk återanslutning"
+
+#: src/campushallen/web/templates/onboarding.html:4
+msgid ""
+"Use your password once, or explicitly remember it encrypted on the server for automatic "
+"reconnection. You can remove it at any time."
+msgstr ""
+"Välj om lösenordet bara ska användas nu eller sparas för automatisk återanslutning. Det lagras "
+"krypterat på servern, visas aldrig igen och kan tas bort när du vill."
+
+#: src/campushallen/web/templates/onboarding.html:4
+msgid "Someone with both the database and encryption key could recover remembered passwords."
+msgstr "Den som får tillgång till både lagrade uppgifter och krypteringsnyckeln kan läsa sparade lösenord."
+
+#: src/campushallen/web/templates/onboarding.html:5 src/campushallen/web/templates/onboarding.html:6
+msgid "Done"
+msgstr "Klart"
+
+#: src/campushallen/web/templates/onboarding.html:5 src/campushallen/web/templates/rule_form.html:1
+msgid "Booking rule"
+msgstr "Bokningsregel"
+
+#: src/campushallen/web/templates/onboarding.html:5
+msgid "Choose your session"
+msgstr "Välj vilka pass du vill boka"
+
+#: src/campushallen/web/templates/onboarding.html:5
+msgid "Pick an activity, weekday, preferred time and facility. Waitlist bookings are off by default."
+msgstr ""
+"Välj pass, veckodag, önskad starttid och anläggning. Bokning till reservlista är avstängd från "
+"början."
+
+#: src/campushallen/web/templates/onboarding.html:5
+msgid "Create your first rule →"
+msgstr "Skapa din första bokningsregel →"
+
+#: src/campushallen/web/templates/onboarding.html:6
+msgid "Check the match"
+msgstr "Förhandsgranska dina pass"
+
+#: src/campushallen/web/templates/onboarding.html:6
+msgid ""
+"Preview from an account page to see upcoming sessions and their API-provided booking opening "
+"times. Previews never book."
+msgstr ""
+"Förhandsgranska på kontosidan för att se kommande pass och när Campushallen öppnar bokningen. "
+"Tjänsten är under utveckling och förhandsgranskningen gör inga bokningar."
+
+#: src/campushallen/web/templates/onboarding.html:6
+msgid "Add a connection first →"
+msgstr "Lägg till ett konto först →"
+
+#: src/campushallen/web/templates/onboarding.html:6
+msgid "Continue to dashboard"
+msgstr "Fortsätt till översikten"
+
+#: src/campushallen/web/templates/onboarding.html:6
+msgid "Skip setup for now"
+msgstr "Hoppa över detta nu"
+
+#: src/campushallen/web/templates/rule_form.html:2
+msgid "BOOKING RULE"
+msgstr "BOKNINGSREGEL"
+
+#: src/campushallen/web/templates/rule_form.html:2
+msgid "Edit rule"
+msgstr "Redigera bokningsregel"
+
+#: src/campushallen/web/templates/rule_form.html:5
+msgid "Rule name"
+msgstr "Regelns namn"
+
+#: src/campushallen/web/templates/rule_form.html:5
+msgid "Activity"
+msgstr "Pass"
+
+#: src/campushallen/web/templates/rule_form.html:5
+msgid "Product name"
+msgstr "Passets namn hos Campushallen"
+
+#: src/campushallen/web/templates/rule_form.html:5
+msgid "As shown by Campushallen"
+msgstr "Som det visas hos Campushallen"
+
+#: src/campushallen/web/templates/rule_form.html:6
+msgid "Weekday"
+msgstr "Veckodag"
+
+#: src/campushallen/web/templates/rule_form.html:7
+msgid "Preferred start time"
+msgstr "Önskad starttid"
+
+#: src/campushallen/web/templates/rule_form.html:8
+msgid "Facility contains (comma-separated)"
+msgstr "Anläggning (separera flera med kommatecken)"
+
+#: src/campushallen/web/templates/rule_form.html:8
+msgid "For example, the facility in your schedule"
+msgstr "Till exempel anläggningen i ditt schema"
+
+#: src/campushallen/web/templates/rule_form.html:9
+msgid "Allow waiting-list bookings"
+msgstr "Boka reservplats"
+
+#: src/campushallen/web/templates/rule_form.html:9
+msgid "Rule enabled"
+msgstr "Aktiv regel"
+
+#: src/campushallen/web/templates/rule_form.html:10
+msgid "Advanced matching options"
+msgstr "Avancerade inställningar"
+
+#: src/campushallen/web/templates/rule_form.html:10
+msgid ""
+"When the time window is blank, use one hour on either side of your preferred time. Without a "
+"preferred time, consider the whole day and reject ambiguous matches."
+msgstr ""
+"Om tidsintervallet lämnas tomt söks pass inom en timme före och efter önskad starttid. Utan "
+"önskad tid söks hela dagen. Om flera pass matchar görs ingen bokning."
+
+#: src/campushallen/web/templates/rule_form.html:11
+msgid "Booking type"
+msgstr "Bokningstyp"
+
+#: src/campushallen/web/templates/rule_form.html:11
+msgid "Group activity"
+msgstr "Gruppass"
+
+#: src/campushallen/web/templates/rule_form.html:11
+msgid "Service (CLI only)"
+msgstr "Tjänst (endast kommandoradsverktyget)"
+
+#: src/campushallen/web/templates/rule_form.html:11
+msgid "Web category ID"
+msgstr "Kategori-ID i API:et"
+
+#: src/campushallen/web/templates/rule_form.html:12
+msgid "Fixed start time (optional for groups)"
+msgstr "Fast starttid (valfritt för gruppass)"
+
+#: src/campushallen/web/templates/rule_form.html:12
+msgid "Earliest allowed start"
+msgstr "Tidigaste tillåtna starttid"
+
+#: src/campushallen/web/templates/rule_form.html:12
+msgid "Latest allowed start"
+msgstr "Senaste tillåtna starttid"
+
+#: src/campushallen/web/templates/rule_form.html:13
+msgid "Product IDs"
+msgstr "Produkt-ID:n"
+
+#: src/campushallen/web/templates/rule_form.html:13
+msgid "Business unit IDs"
+msgstr "Anläggnings-ID:n"
+
+#: src/campushallen/web/templates/rule_form.html:13
+msgid "Product name fragments"
+msgstr "Delar av passets namn"
+
+#: src/campushallen/web/templates/rule_form.html:13
+msgid "(comma-separated)"
+msgstr "(separera med kommatecken)"
+
+#: src/campushallen/web/templates/rule_form.html:14
+msgid "Save rule"
+msgstr "Spara regel"
+
+#: src/campushallen/web/templates/rule_form.html:14
+msgid "Cancel"
+msgstr "Avbryt"
+
+#: src/campushallen/web/templates/rule_form.html:14
+msgid "before creating a rule."
+msgstr "innan du skapar en bokningsregel."
+
+#: src/campushallen/web/templates/rules.html:1
+msgid "Booking rules"
+msgstr "Bokningsregler"
+
+#: src/campushallen/web/templates/rules.html:1
+msgid "AUTOMATION"
+msgstr "BOKNINGAR"
+
+#: src/campushallen/web/templates/rules.html:1
+msgid "Booking rules."
+msgstr "Bokningsregler."
+
+#: src/campushallen/web/templates/rules.html:2
+msgid "Edit"
+msgstr "Redigera"
+
+#: src/campushallen/web/templates/rules.html:2
+msgid "Delete rule"
+msgstr "Ta bort regel"
+
+#: src/campushallen/web/templates/rules.html:2
+msgid "No rules yet. Add a Campushallen account, then create your first rule."
+msgstr "Det finns inga bokningsregler ännu. Lägg till ett Campushallen-konto och skapa din första regel."
+
+#: src/campushallen/web/templates/settings.html:2
+msgid "YOUR WEBSITE ACCOUNT"
+msgstr "DITT KONTO PÅ WEBBPLATSEN"
+
+#: src/campushallen/web/templates/settings.html:2
+msgid "Security and sessions."
+msgstr "Säkerhet och sessioner."
+
+#: src/campushallen/web/templates/settings.html:3 src/campushallen/web/templates/settings.html:7
+msgid "Change website password"
+msgstr "Byt lösenord för webbplatsen"
+
+#: src/campushallen/web/templates/settings.html:3
+msgid ""
+"This changes your Booker login, separate from your Campushallen credentials. All sessions will be"
+" logged out."
+msgstr ""
+"Detta ändrar lösenordet för webbplatsen, som är skilt från ditt lösenord för Campushallen. Alla "
+"sessioner loggas ut."
+
+#: src/campushallen/web/templates/settings.html:5
+msgid "Current website password"
+msgstr "Nuvarande lösenord för webbplatsen"
+
+#: src/campushallen/web/templates/settings.html:6
+msgid "New website password"
+msgstr "Nytt lösenord för webbplatsen"
+
+#: src/campushallen/web/templates/settings.html:7
+msgid "Confirm new website password"
+msgstr "Bekräfta nytt lösenord för webbplatsen"
+
+#: src/campushallen/web/templates/settings.html:8
+msgid "Sessions"
+msgstr "Sessioner"
+
+#: src/campushallen/web/templates/settings.html:8
+#, python-format
+msgid "%(num)s signed-in session."
+msgid_plural "%(num)s signed-in sessions."
+msgstr[0] "%(num)s inloggad session."
+msgstr[1] "%(num)s inloggade sessioner."
+
+#: src/campushallen/web/templates/settings.html:8
+msgid "Expired sessions are cleaned up at the next login."
+msgstr "Utgångna sessioner rensas vid nästa inloggning."
+
+#: src/campushallen/web/templates/settings.html:8
+msgid "Log out all sessions"
+msgstr "Logga ut alla sessioner"
+
+#: src/campushallen/web/templates/settings.html:9
+msgid "Your security events"
+msgstr "Dina säkerhetshändelser"
+
+#: src/campushallen/web/templates/settings.html:10
+msgid "Delete website account"
+msgstr "Ta bort konto på webbplatsen"
+
+#: src/campushallen/web/templates/settings.html:10
+msgid ""
+"Removes your local connections, saved passwords, tokens, rules, booking history, security events,"
+" and sessions. Campushallen bookings stay in place. Used invitations remain permanently consumed."
+msgstr ""
+"Tar bort dina lokala anslutningar, sparade lösenord, regler, bokningshistorik, säkerhetshändelser"
+" och sessioner. Dina bokningar hos Campushallen finns kvar. Använda inbjudningar förblir "
+"förbrukade."
+
+#: src/campushallen/web/templates/settings.html:10
+msgid "The last active admin cannot delete their account."
+msgstr "Den sista aktiva administratören kan inte ta bort sitt konto."
+
+#: src/campushallen/web/templates/settings.html:11
+msgid "Delete my local data"
+msgstr "Ta bort mina lokala uppgifter"
+
+#: src/campushallen/web/templates/settings.html:11
+msgid "Delete website account and local data"
+msgstr "Ta bort konto och lokala uppgifter"
+
+#~ msgid "This invitation is unavailable. Ask for a new link."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Re-select and check duplicates immediately before any possible mutation.\n"
+#~ "\n"
+#~ "        A durable claim is committed before issuing a live request. Unknown results\n"
+#~ "        are never automatically retried. No cancellation path exists here.\n"
+#~ "        "
+#~ msgstr ""
+
+#~ msgid " regular spots"
+#~ msgstr ""
+
+#~ msgid "Snapshot checked"
+#~ msgstr ""
+
+#~ msgid ". Availability may change."
+#~ msgstr ""
+
+#~ msgid "Signed-in sessions:"
+#~ msgstr ""
+
+#~ msgid ". Expired sessions are cleaned up at the next login."
+#~ msgstr ""
+
+#~ msgid " "
+#~ msgstr ""
+

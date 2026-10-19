@@ -1,13 +1,13 @@
-{% extends 'base.html' %}{% block content %}
-<p class="eyebrow">OPERATOR</p><h1>Application management.</h1><p>{{ worker }}</p>
-<section class="card narrow"><h2>Create invitations</h2><form method="post" action="/admin/invites">
+{% extends 'base.html' %}{% block title %}{{ _('Admin') }} · Campushallen Booker{% endblock %}{% block content %}
+<p class="eyebrow">{{ _("OPERATOR") }}</p><h1>{{ _("Application management.") }}</h1><p>{{ worker|worker_label }}</p>
+<section class="card narrow"><h2>{{ _("Create invitations") }}</h2><form method="post" action="/admin/invites">
 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-<label>Label<input name="label" maxlength="120" placeholder="Optional reminder"></label>
-<label>Number of invitations<input name="count" type="number" min="1" max="100" value="1" required></label>
-<label>Expires after days (0 = no expiry)<input name="expires_days" type="number" min="0" max="365" value="7" required></label>
-<button>Generate one-time links</button></form></section>
-<section><h2>Invitations</h2><div class="table-wrap"><table><thead><tr><th>ID / label</th><th>Status</th><th>Expires</th><th>Action</th></tr></thead><tbody>
-{% for invitation in invitations %}<tr><td>{{ invitation.id }} · {{ invitation.label }}</td><td>{{ invitation|invite_status }}</td><td>{{ invitation.expires_at|localtime if invitation.expires_at else 'Never' }}</td><td>{% if not invitation.used_at and not invitation.revoked_at %}<form method="post" action="/admin/invites/{{ invitation.id }}/revoke"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="quiet">Revoke</button></form>{% endif %}</td></tr>{% else %}<tr><td colspan="4">No invitations yet.</td></tr>{% endfor %}</tbody></table></div></section>
-<section><h2>Account health</h2><p class="muted">Only operational status is shown here. Account contents remain private to their owners.</p><div class="table-wrap"><table><thead><tr><th>Account ID</th><th>Authentication</th><th>Enabled</th><th>Last discovery</th></tr></thead><tbody>{% for id, status, enabled, discovered in statuses %}<tr><td>{{ id }}</td><td>{{ status|replace('_',' ') }}</td><td>{{ enabled }}</td><td>{{ discovered|localtime }}</td></tr>{% else %}<tr><td colspan="4">No connections yet.</td></tr>{% endfor %}</tbody></table></div></section>
-<section><h2>Security events</h2>{% include 'events.html' %}</section>
+<label>{{ _("Label") }}<input name="label" maxlength="120" placeholder="{{ _('Optional reminder') }}"></label>
+<label>{{ _("Number of invitations") }}<input name="count" type="number" min="1" max="100" value="1" required></label>
+<label>{{ _("Expires after days (0 = no expiry)") }}<input name="expires_days" type="number" min="0" max="365" value="7" required></label>
+<button>{{ _("Generate one-time links") }}</button></form></section>
+<section><h2>{{ _("Invitations") }}</h2><div class="table-wrap"><table><thead><tr><th>{{ _("ID / label") }}</th><th>{{ _("Status") }}</th><th>{{ _("Expires") }}</th><th>{{ _("Action") }}</th></tr></thead><tbody>
+{% for invitation in invitations %}<tr><td>{{ invitation.id }} · {{ invitation.label }}</td><td>{{ invitation|invite_status }}</td><td>{{ invitation.expires_at|localtime if invitation.expires_at else _('Never') }}</td><td>{% if not invitation.used_at and not invitation.revoked_at %}<form method="post" action="/admin/invites/{{ invitation.id }}/revoke"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="quiet">{{ _("Revoke") }}</button></form>{% endif %}</td></tr>{% else %}<tr><td colspan="4">{{ _("No invitations yet.") }}</td></tr>{% endfor %}</tbody></table></div></section>
+<section><h2>{{ _("Account health") }}</h2><p class="muted">{{ _("Only operational status is shown here. Account contents remain private to their owners.") }}</p><div class="table-wrap"><table><thead><tr><th>{{ _("Account ID") }}</th><th>{{ _("Authentication") }}</th><th>{{ _("Enabled") }}</th><th>{{ _("Last discovery") }}</th></tr></thead><tbody>{% for id, status, enabled, discovered in statuses %}<tr><td>{{ id }}</td><td>{{ status|status_label }}</td><td>{{ _('Enabled') if enabled else _('Disabled') }}</td><td>{{ discovered|localtime }}</td></tr>{% else %}<tr><td colspan="4">{{ _("No connections yet.") }}</td></tr>{% endfor %}</tbody></table></div></section>
+<section><h2>{{ _("Security events") }}</h2>{% include 'events.html' %}</section>
 {% endblock %}

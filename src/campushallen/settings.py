@@ -10,6 +10,15 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
+    default_locale: str = "sv_SE"
+
+    @field_validator("default_locale")
+    @classmethod
+    def valid_locale(cls, value: str) -> str:
+        if value != "sv_SE":
+            raise ValueError("Only sv_SE is supported in this phase")
+        return value
+
     app_env: str = "development"
     database_url: str = "sqlite:///state/web.db"
     secret_key: SecretStr | None = None

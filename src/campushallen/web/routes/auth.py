@@ -6,6 +6,7 @@ from campushallen.database.models import CampushallenAccount, WebSession
 from campushallen.services.audit import Event, audit
 from campushallen.services.authentication import authenticate, new_session, token_hash
 from campushallen.web.dependencies import DB, Form, render
+from campushallen.web.i18n import gettext as _
 
 router = APIRouter()
 
@@ -19,15 +20,15 @@ def login_page(request: Request):
 def login(request: Request, db: DB, form: Form):
     key = request.client.host if request.client else "local"
     if not request.app.state.limiter.allow(key):
-        raise HTTPException(429, "Too many login attempts. Try again in five minutes.")
+        raise HTTPException(429, _("Too many login attempts. Try again in five minutes."))
     password = str(form.get("password", ""))
     if len(password) > 4096:
-        return render(request, "login.html", 400, error="Invalid username or password.")
+        return render(request, "login.html", 400, error=_("Invalid username or password."))
     user = authenticate(db, str(form.get("username", "")), password)
     if not user:
         audit(db, Event.LOGIN_FAILED)
         db.commit()
-        return render(request, "login.html", 400, error="Invalid username or password.")
+        return render(request, "login.html", 400, error=_("Invalid username or password."))
     old = db.get(
         WebSession, token_hash(request.app.state.secret, request.cookies.get("session", ""))
     )
@@ -39,7 +40,7 @@ def login(request: Request, db: DB, form: Form):
         token = new_session(db, user, request.app.state.secret, settings.session_hours)
     except ValueError:
         return render(
-            request, "login.html", 400, error="Login state changed. Please sign in again."
+            request, "login.html", 400, error=_("Login state changed. Please sign in again.")
         )
     response = RedirectResponse(
         "/onboarding"

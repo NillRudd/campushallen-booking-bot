@@ -10,6 +10,7 @@ from starlette.datastructures import FormData
 
 from campushallen.database.models import BookingRule, CampushallenAccount, User, WebSession, utcnow
 from campushallen.services.authentication import token_hash
+from campushallen.web.i18n import gettext as _
 
 
 class LoginRequired(Exception):
@@ -43,7 +44,7 @@ def owned_account(db: Session, user_id: int, account_id: int) -> CampushallenAcc
         )
     )
     if not account:
-        raise HTTPException(404, "Account not found")
+        raise HTTPException(404, _("Account not found"))
     return account
 
 
@@ -54,7 +55,7 @@ def owned_rule(db: Session, user_id: int, rule_id: int) -> BookingRule:
         .where(BookingRule.id == rule_id, CampushallenAccount.user_id == user_id)
     )
     if not rule:
-        raise HTTPException(404, "Rule not found")
+        raise HTTPException(404, _("Rule not found"))
     return rule
 
 
@@ -63,11 +64,11 @@ async def csrf_form(request: Request) -> FormData:
     cookie = request.cookies.get("csrf", "")
     submitted = str(form.get("csrf_token", ""))
     if not cookie or not secrets.compare_digest(cookie, submitted):
-        raise HTTPException(403, "Invalid CSRF token. Reload the form and try again.")
+        raise HTTPException(403, _("Invalid CSRF token. Reload the form and try again."))
     try:
         request.app.state.csrf_signer.loads(cookie, max_age=43200)
     except (BadSignature, SignatureExpired):
-        raise HTTPException(403, "Expired CSRF token. Reload the form and try again.") from None
+        raise HTTPException(403, _("Expired CSRF token. Reload the form and try again.")) from None
     return form
 
 
@@ -81,12 +82,12 @@ def render(request: Request, template: str, status_code: int = 200, **context):
     except BadSignature:
         token = request.app.state.csrf_signer.dumps(secrets.token_urlsafe(32))
     notices = {
-        "connected": "Campushallen connection updated.",
-        "forgotten": "Saved password removed. Your current token is kept.",
-        "disconnected": "Local authentication data removed. Campushallen bookings were kept.",
-        "saved": "Booking rule saved.",
-        "removed": "Local data removed.",
-        "updated": "Settings updated.",
+        "connected": _("Campushallen connection updated."),
+        "forgotten": _("Saved password removed. Your current token is kept."),
+        "disconnected": _("Local authentication data removed. Campushallen bookings were kept."),
+        "saved": _("Booking rule saved."),
+        "removed": _("Local data removed."),
+        "updated": _("Settings updated."),
     }
     context.setdefault("notice", notices.get(request.query_params.get("notice", "")))
     response = request.app.state.templates.TemplateResponse(
@@ -108,7 +109,7 @@ def render(request: Request, template: str, status_code: int = 200, **context):
 
 def admin_user(user: CurrentUser) -> User:
     if not user.is_admin:
-        raise HTTPException(403, "Administrator access required.")
+        raise HTTPException(403, _("Administrator access required."))
     return user
 
 

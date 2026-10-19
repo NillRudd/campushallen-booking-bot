@@ -11,6 +11,8 @@ from campushallen.services.notifications import Notification, NotificationKind, 
 from campushallen.services.secrets import ReconnectRequired
 from campushallen.services.user_security import check_password
 from campushallen.web.dependencies import DB, CurrentUser, Form, owned_account, render
+from campushallen.web.i18n import gettext as _
+from campushallen.web.presentation import safe_error
 
 router = APIRouter()
 
@@ -28,12 +30,12 @@ def add_account(request: Request, db: DB, user: CurrentUser, form: Form):
     name = str(form.get("display_name", "")).strip()
     username = str(form.get("username", "")).strip()
     if not 1 <= len(name) <= 120 or not 1 <= len(username) <= 254:
-        raise HTTPException(422, "Enter an account name and Campushallen username.")
+        raise HTTPException(422, _("Enter an account name and Campushallen username."))
     db.add(CampushallenAccount(user_id=user.id, display_name=name, username=username))
     try:
         db.commit()
     except IntegrityError:
-        raise HTTPException(409, "That account is already added.") from None
+        raise HTTPException(409, _("That account is already added.")) from None
     return RedirectResponse("/accounts", status_code=303)
 
 
@@ -53,10 +55,10 @@ def account_detail(account_id: int, request: Request, db: DB, user: CurrentUser)
 def connect(account_id: int, request: Request, db: DB, user: CurrentUser, form: Form):
     account = owned_account(db, user.id, account_id)
     if not request.app.state.limiter.allow(f"connect:{user.id}"):
-        raise HTTPException(429, "Too many connection attempts. Try again in five minutes.")
+        raise HTTPException(429, _("Too many connection attempts. Try again in five minutes."))
     password = str(form.get("password", ""))
     if not 1 <= len(password) <= 1024:
-        raise HTTPException(422, "Enter the Campushallen password.")
+        raise HTTPException(422, _("Enter the Campushallen password."))
     try:
         connect_account(
             db,
@@ -74,7 +76,7 @@ def connect(account_id: int, request: Request, db: DB, user: CurrentUser, form: 
             user=user,
             account=account,
             remembered=credential_for(db, account.id) is not None,
-            error="Connection failed. Check your credentials or try again later.",
+            error=_("Connection failed. Check your credentials or try again later."),
         )
     return RedirectResponse(f"/accounts/{account.id}?notice=connected", status_code=303)
 
@@ -129,7 +131,9 @@ def forget_password(account_id: int, request: Request, db: DB, user: CurrentUser
 def disconnect_account(account_id: int, request: Request, db: DB, user: CurrentUser, form: Form):
     account = owned_account(db, user.id, account_id)
     if form.get("confirmation") != "DISCONNECT":
-        raise HTTPException(422, "Confirm disconnect to remove local tokens and saved credentials.")
+        raise HTTPException(
+            422, _("Confirm disconnect to remove local tokens and saved credentials.")
+        )
     disconnect(db, account)
     return RedirectResponse(f"/accounts/{account.id}?notice=disconnected", status_code=303)
 
@@ -138,13 +142,13 @@ def disconnect_account(account_id: int, request: Request, db: DB, user: CurrentU
 def delete_account(account_id: int, request: Request, db: DB, user: CurrentUser, form: Form):
     account = owned_account(db, user.id, account_id)
     if not request.app.state.limiter.allow(f"delete-account:{user.id}"):
-        raise HTTPException(429, "Too many attempts. Try again shortly.")
+        raise HTTPException(429, _("Too many attempts. Try again shortly."))
     try:
         check_password(user, str(form.get("password", "")))
         if form.get("confirmation") != "DELETE":
             raise ValueError("Type DELETE to confirm local account removal.")
     except ValueError as exc:
-        raise HTTPException(422, str(exc)) from None
+        raise HTTPException(422, safe_error(str(exc))) from None
     audit(db, Event.ACCOUNT_DELETED, user_id=user.id, actor_id=user.id)
     db.delete(account)
     db.commit()

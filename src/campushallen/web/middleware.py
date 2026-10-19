@@ -3,6 +3,8 @@
 from starlette.responses import PlainTextResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+from campushallen.web.i18n import gettext as _
+
 
 class FormBodyLimit:
     def __init__(self, app: ASGIApp, limit: int = 262144):
@@ -18,7 +20,7 @@ class FormBodyLimit:
         except ValueError:
             declared = self.limit + 1
         if declared > self.limit or declared < 0:
-            await PlainTextResponse("Request body too large.", status_code=413)(
+            await PlainTextResponse(_("Request body too large."), status_code=413)(
                 scope, receive, send
             )
             return
@@ -30,7 +32,7 @@ class FormBodyLimit:
             chunk = message.get("body", b"")
             size += len(chunk)
             if size > self.limit:
-                await PlainTextResponse("Request body too large.", status_code=413)(
+                await PlainTextResponse(_("Request body too large."), status_code=413)(
                     scope, receive, send
                 )
                 return

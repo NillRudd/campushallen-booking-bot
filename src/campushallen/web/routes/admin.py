@@ -8,6 +8,7 @@ from campushallen.database.models import AuditEvent, CampushallenAccount, Invita
 from campushallen.services.invitations import create_invite, revoke_invite
 from campushallen.services.operations import worker_health
 from campushallen.web.dependencies import DB, AdminUser, Form, render
+from campushallen.web.i18n import gettext as _
 
 router = APIRouter()
 
@@ -39,14 +40,14 @@ def admin_page(request: Request, db: DB, user: AdminUser):
 @router.post("/admin/invites")
 def new_invites(request: Request, db: DB, user: AdminUser, form: Form):
     if not request.app.state.limiter.allow(f"invites-create:{user.id}"):
-        raise HTTPException(429, "Too many requests. Try again shortly.")
+        raise HTTPException(429, _("Too many requests. Try again shortly."))
     try:
         count = int(str(form.get("count", "1")))
         days = int(str(form.get("expires_days", "7")))
         if not 1 <= count <= 100 or not 0 <= days <= 365:
             raise ValueError()
         links = []
-        for _ in range(count):
+        for index in range(count):
             row, token = create_invite(
                 db,
                 label=str(form.get("label", "")),
@@ -59,7 +60,9 @@ def new_invites(request: Request, db: DB, user: AdminUser, form: Form):
         db.rollback()
         raise HTTPException(
             422,
-            "Use 1–100 invites, a label up to 120 characters, and 0–365 expiry days (0 means no expiry).",
+            _(
+                "Use 1–100 invites, a label up to 120 characters, and 0–365 expiry days (0 means no expiry).",
+            ),
         ) from None
     # Plaintext links are rendered only in this response, never redirected through a URL or session.
     return render(request, "invite_created.html", user=user, links=links)

@@ -1,7 +1,6 @@
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
-from zoneinfo import ZoneInfo
 
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
@@ -18,14 +17,15 @@ from campushallen.services.account_auth import AccountAuthentication
 from campushallen.services.accounts import AccountGateway
 from campushallen.services.authentication import LoginLimiter
 from campushallen.services.engine import BookingEngine
-from campushallen.services.invitations import invite_status
 from campushallen.services.logging import InviteAccessFilter
 from campushallen.services.notifications import NoopNotifier
 from campushallen.services.secrets import CredentialVault, TokenVault, runtime_key
 from campushallen.settings import Settings
+from campushallen.web import i18n, presentation
 from campushallen.web.dependencies import LoginRequired, render
+from campushallen.web.i18n import gettext as _
 from campushallen.web.middleware import FormBodyLimit
-from campushallen.web.presentation import connection_status, friendly_result, verification_label
+from campushallen.web.presentation import connection_status
 from campushallen.web.routes import accounts, admin, auth, invites, pages, rules, security
 
 ROOT = Path(__file__).parent
@@ -70,33 +70,35 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.state.engine = BookingEngine(app.state.sessions, app.state.gateway, app.state.notifier)
     app.state.templates = Jinja2Templates(directory=str(ROOT / "templates"))
-    tz = ZoneInfo(settings.campushallen_timezone)
-    app.state.templates.env.filters["localtime"] = lambda value: (
-        value.astimezone(tz).strftime("%a %d %b %Y %H:%M %Z") if value else "—"
+    env = app.state.templates.env
+    env.add_extension("jinja2.ext.i18n")
+    env.install_gettext_translations(i18n.translations(settings.default_locale), newstyle=True)
+    env.filters["localtime"] = lambda value: i18n.local_datetime(
+        value, settings.campushallen_timezone, settings.default_locale
     )
-    app.state.templates.env.filters["clock"] = lambda value: (
-        value.strftime("%H:%M") if hasattr(value, "strftime") else str(value or "")
-    )
-    app.state.templates.env.filters["connection_status"] = lambda account: connection_status(
-        account, tokens
-    )
-    app.state.templates.env.filters["friendly_result"] = friendly_result
-    app.state.templates.env.filters["verification_label"] = verification_label
-    app.state.templates.env.filters["invite_status"] = invite_status
-    app.state.templates.env.globals["weekdays"] = [
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-        "Sunday",
-    ]
+    env.filters["clock"] = lambda value: i18n.clock(value, settings.default_locale)
+    env.filters["connection_status"] = lambda account: connection_status(account, tokens)
+    for name in (
+        "friendly_result",
+        "verification_label",
+        "invite_status",
+        "reason",
+        "status_label",
+        "event_label",
+        "worker_label",
+    ):
+        env.filters[name] = getattr(presentation, name)
+    env.globals["weekdays"] = i18n.weekdays(settings.default_locale)
     app.mount("/static", StaticFiles(directory=ROOT / "static"), name="static")
 
     @app.middleware("http")
     async def security_headers(request, call_next):
-        response = await call_next(request)
+        locale_token = i18n.LOCALE.set(settings.default_locale)
+        try:
+            response = await call_next(request)
+        finally:
+            i18n.LOCALE.reset(locale_token)
+        response.headers["Content-Language"] = settings.default_locale.replace("_", "-")
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "no-referrer"
@@ -112,12 +114,30 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.exception_handler(HTTPException)
     async def http_error(request, exc):
-        return render(request, "error.html", exc.status_code, error=exc.detail)
+        messages = {
+            404: _("Page not found."),
+            405: _("This action is not allowed."),
+        }
+        # Our route errors are already translated. Framework errors use safe local copy.
+        detail = (
+            messages.get(exc.status_code)
+            if str(exc.detail) in ("Not Found", "Method Not Allowed")
+            else str(exc.detail)
+        )
+        if exc.status_code == 400:
+            detail = _("Invalid request. Check the form and try again.")
+        return render(request, "error.html", exc.status_code, error=detail)
 
     @app.exception_handler(RequestValidationError)
     async def invalid_request(request, exc):
         return render(
-            request, "error.html", 422, error="Invalid request. Check the form and try again."
+            request, "error.html", 422, error=_("Invalid request. Check the form and try again.")
+        )
+
+    @app.exception_handler(Exception)
+    async def unexpected_error(request, exc):
+        return render(
+            request, "error.html", 500, error=_("Something went wrong. Please try again later.")
         )
 
     @app.get("/health")

@@ -1,6 +1,6 @@
-{% extends 'base.html' %}{% block content %}
-<p class="eyebrow">INVITATIONS</p><h1>Save these links now.</h1>
-<section class="card"><p>They cannot be displayed again. Give each link to one person you want to invite. Treat these links as secrets.</p>
-{% for link in links %}<label>Invitation {{ loop.index }}<input value="{{ link }}" readonly aria-label="Invitation {{ loop.index }} link"></label>{% endfor %}
-<p><a href="/admin">Return to invitation management</a></p></section>
+{% extends 'base.html' %}{% block title %}{{ _('Invitations') }} · Campushallen Booker{% endblock %}{% block content %}
+<p class="eyebrow">{{ _("INVITATIONS") }}</p><h1>{{ _("Save these links now.") }}</h1>
+<section class="card"><p>{{ _("They cannot be displayed again. Give each link to one person you want to invite. Treat these links as secrets.") }}</p>
+{% for link in links %}<label>{{ _("Invitation") }} {{ loop.index }}<input value="{{ link }}" readonly id="invite-{{ loop.index }}" aria-label="{{ _('Invitation %(number)s link', number=loop.index) }}"></label><button type="button" class="quiet" data-copy="invite-{{ loop.index }}" data-success="{{ _('Link copied') }}" data-failure="{{ _('Select and copy the link above.') }}">{{ _('Copy link') }}</button><p role="status" data-copy-status></p>{% endfor %}
+<p><a href="/admin">{{ _("Return to invitation management") }}</a></p></section>
 {% endblock %}

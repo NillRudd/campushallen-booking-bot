@@ -14,6 +14,9 @@ from campushallen.database.models import BookingOpportunity, BookingRule, Campus
 from campushallen.services.audit import Event, audit
 from campushallen.services.rules import RuleInput
 from campushallen.web.dependencies import DB, CurrentUser, Form, owned_account, owned_rule, render
+from campushallen.web.i18n import gettext as _
+from campushallen.web.i18n import weekdays
+from campushallen.web.presentation import rule_errors
 
 router = APIRouter()
 
@@ -87,17 +90,19 @@ def from_activity(opportunity_id: int, request: Request, db: DB, user: CurrentUs
         .where(BookingOpportunity.id == opportunity_id, CampushallenAccount.user_id == user.id)
     )
     if not slot:
-        raise HTTPException(404, "Activity not found")
+        raise HTTPException(404, _("Activity not found"))
     local = slot.activity_start.astimezone(
         ZoneInfo(request.app.state.settings.campushallen_timezone)
     )
     source_rule = db.get(BookingRule, slot.booking_rule_id)
     if source_rule is None:
-        raise HTTPException(404, "Source rule no longer exists")
+        raise HTTPException(404, _("Source rule no longer exists"))
     values = {
         "id": None,
         "campushallen_account_id": slot.campushallen_account_id,
-        "name": f"{slot.product_name} {local:%A}"[:120],
+        "name": f"{slot.product_name} {weekdays(request.app.state.settings.default_locale)[local.weekday()]}"[
+            :120
+        ],
         "activity": slot.product_name,
         "product_name": slot.product_name,
         "weekday": local.weekday(),
@@ -146,7 +151,7 @@ def save_rule(rule_id, request, db, user, form):
     try:
         account_id = int(str(form.get("campushallen_account_id", "")))
     except ValueError:
-        raise HTTPException(422, "Choose an account.") from None
+        raise HTTPException(422, _("Choose an account.")) from None
     owned_account(db, user.id, account_id)
     try:
         data = parse_rule(form)
@@ -175,7 +180,7 @@ def save_rule(rule_id, request, db, user, form):
         ):
             submitted.setdefault(name, "")
         submitted["id"] = rule_id
-        error = "; ".join(e["msg"] for e in exc.errors(include_input=False))
+        error = rule_errors(exc)
         return render(
             request,
             "rule_form.html",
@@ -203,7 +208,7 @@ def save_rule(rule_id, request, db, user, form):
     try:
         db.commit()
     except IntegrityError:
-        raise HTTPException(409, "Rule names must be unique within an account.") from None
+        raise HTTPException(409, _("Rule names must be unique within an account.")) from None
     return RedirectResponse("/rules", status_code=303)
 
 
