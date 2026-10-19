@@ -7,9 +7,11 @@ Optional encrypted credentials allow automatic reconnection; a separate worker
 reports its health and planned actions. The original YAML-based CLI
 continues to work.
 
-**Development only. Deployment is intentionally deferred.** The Raspberry Pi,
-systemd units, and installer have not been changed. No real booking is needed to
-run the tests or start the application.
+Production deployment support is prepared in [the Raspberry Pi runbook](docs/production-deployment.md).
+That runbook records the actual deployment status; preparation alone does not
+mean the public site is running. The new worker remains **dry-run**, and the
+legacy live timers are reserved for a later, explicitly approved cutover.
+No real booking is needed to run tests or start the application.
 
 ## Local development
 
@@ -72,7 +74,8 @@ make docker-down                          # stop; retain data
 
 The worker profile never enables real bookings. `docker compose down -v` would
 remove the development database and keys; ordinary `make docker-down` keeps them.
-Browser binaries are unnecessary for the HTTP API/web application. The legacy
+Playwright and browser binaries are unnecessary for the HTTP API/web application.
+Playwright is included in the development extra and the optional `browser` extra. The legacy
 interactive browser login still requires Playwright Chromium installed locally.
 
 ## Configuration and secrets
@@ -89,6 +92,9 @@ settings.
 | `STATE_DIR` | `state`; generated keys live here |
 | `SECRET_KEY` | Session hashing / signed CSRF tokens; at least 32 characters |
 | `ENCRYPTION_KEY` | Master Fernet-format key; purpose-separated token/credential encryption |
+| `SECRET_KEY_FILE`, `ENCRYPTION_KEY_FILE` | Optional mounted secret-file paths; explicit key values take precedence |
+| `ALLOWED_HOSTS` | JSON array; production requires the single public hostname |
+| `TRUSTED_TUNNEL_IPS` | JSON array of exact trusted connector peer IPs; empty in development |
 | `PUBLIC_BASE_URL` | `http://127.0.0.1:8000`; origin for generated invite links |
 | `CAMPUSHALLEN_TIMEZONE` | `Europe/Stockholm` |
 | `SECURE_COOKIES` | `false` for local HTTP; HTTPS installations must use `true` |
@@ -114,9 +120,11 @@ Application passwords are Argon2id hashes. Browser sessions use random opaque
 cookies, with only an HMAC digest stored in SQLite; logout deletes the database
 session. Cookies are HTTP-only and SameSite, and all mutating forms require a
 signed CSRF token. Queries enforce user ownership before accessing account or
-rule IDs. Templates escape user content. Login and account connection attempts
-have a bounded, in-process rate limiter. Use a single web process in this phase;
-a shared limiter would be needed before using multiple processes.
+rule IDs. Templates escape user content. Website login has persistent account and IP limits: ten failures within 30 minutes
+lock the submitted name for 30 minutes; source IPs allow twenty submissions per
+15 minutes. Unknown names follow the same policy. Other sensitive actions retain
+a bounded in-process limiter. Use one web process; see the
+[operational policy](docs/production-operations.md) before changing this topology.
 
 Campushallen passwords are discarded after connection unless you explicitly opt
 in per account. Remembered passwords live only as authenticated ciphertext in a
@@ -445,9 +453,12 @@ SQLite 3.35+ is needed for downgrade column removal. Losing the encryption key
 requires reconnecting accounts and re-entering opted-in credentials.
 
 See [the next-phase pre-deployment checklist](docs/pre-deployment-checklist.md).
-**Deployment is still intentionally deferred.** No domain, DNS, Cloudflare,
-reverse proxy, TLS, production Docker or Raspberry Pi/systemd setup is configured
-by this phase.
+That earlier phase deferred deployment. Production Docker, Cloudflare Tunnel,
+backup/recovery and the separate future cutover are now documented in the
+[deployment runbook](docs/production-deployment.md),
+[operations guide](docs/production-operations.md),
+[backup guide](docs/backup-restore.md) and [cutover plan](docs/cutover-plan.md).
+The runbook distinguishes local verification from work actually completed on the Pi.
 
 
 For the automated browser smoke test, install Playwright's Chromium once:
