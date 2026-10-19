@@ -4,11 +4,12 @@ import logging
 import signal
 
 from campushallen.database.session import make_engine, session_factory
+from campushallen.services.account_auth import AccountAuthentication
 from campushallen.services.accounts import AccountGateway
 from campushallen.services.engine import BookingEngine
 from campushallen.services.logging import WorkerLogFormatter
 from campushallen.services.scheduler import Scheduler
-from campushallen.services.secrets import TokenVault, runtime_key
+from campushallen.services.secrets import CredentialVault, TokenVault, runtime_key
 from campushallen.settings import Settings
 
 
@@ -46,7 +47,12 @@ def main() -> None:
     # HTTPX logging can expose third-party URL/query data; never enable debug here.
     logging.getLogger("httpx").setLevel(logging.WARNING)
     database = make_engine(settings.database_url)
-    gateway = AccountGateway(settings, TokenVault(runtime_key(settings, "encryption_key")))
+    master = runtime_key(settings, "encryption_key")
+    tokens = TokenVault(master)
+    gateway = AccountGateway(settings, tokens)
+    gateway.auth_service = AccountAuthentication(
+        session_factory(database), gateway, tokens, CredentialVault(master)
+    )
     scheduler = Scheduler(
         BookingEngine(session_factory(database), gateway),
         dry_run=not args.live,

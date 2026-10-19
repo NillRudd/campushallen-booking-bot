@@ -5,6 +5,7 @@ import logging
 from collections.abc import Awaitable, Callable
 
 from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
 
 from campushallen.database.models import (
     BookingAttempt,
@@ -16,6 +17,7 @@ from campushallen.database.models import (
 )
 
 from .engine import BookingEngine, Plan, StalePlan
+from .operations import Heartbeat
 
 LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +36,7 @@ class Scheduler:
         self.tasks: dict[tuple, asyncio.Task] = {}
         self.account_locks: dict[int, asyncio.Lock] = {}
         self.reported: set[tuple] = set()
+        self.heartbeat = Heartbeat(engine.sessions, dry_run=dry_run)
 
     def accounts(self) -> list[int]:
         with self.engine.sessions() as db:
@@ -146,8 +149,14 @@ class Scheduler:
                 if not plan.slot:
                     key = (plan.account_id, plan.rule_id, plan.outcome, today)
                     if key not in self.reported:
-                        await asyncio.to_thread(self.engine.record, plan)
-                        self.reported.add(key)
+                        try:
+                            await asyncio.to_thread(self.engine.record, plan)
+                            self.reported.add(key)
+                        except (StalePlan, SQLAlchemyError):
+                            LOGGER.warning(
+                                "Discovery result became unavailable",
+                                extra={"account_id": plan.account_id},
+                            )
                     continue
                 key = (
                     plan.account_id,
@@ -170,10 +179,20 @@ class Scheduler:
 
     async def once(self) -> None:
         # Dry-run reports future matches immediately; live mode only attempts due targets.
-        await self.refresh(wait=False)
-        await asyncio.gather(*self.tasks.values())
+        await asyncio.to_thread(self.heartbeat.beat)
+        try:
+            await self.refresh(wait=False)
+            await asyncio.gather(*self.tasks.values())
+        finally:
+            await asyncio.to_thread(self.heartbeat.beat, stopped=True)
+
+    async def heartbeat_loop(self, interval: float) -> None:
+        while True:
+            await asyncio.to_thread(self.heartbeat.beat)
+            await asyncio.sleep(min(30, interval))
 
     async def serve(self, interval: float = 60) -> None:
+        pulse = asyncio.create_task(self.heartbeat_loop(interval))
         try:
             while True:
                 await self.refresh()
@@ -185,3 +204,6 @@ class Scheduler:
                 if not task.done():
                     task.cancel()
             await asyncio.gather(*self.tasks.values(), return_exceptions=True)
+            pulse.cancel()
+            await asyncio.gather(pulse, return_exceptions=True)
+            await asyncio.to_thread(self.heartbeat.beat, stopped=True)

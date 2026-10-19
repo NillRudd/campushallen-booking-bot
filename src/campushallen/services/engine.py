@@ -17,6 +17,7 @@ from campushallen.booking import _booked_group_activity_ids, _verified_booking_f
 from campushallen.database.models import (
     BookingAttempt,
     BookingClaim,
+    BookingOpportunity,
     BookingRule,
     CampushallenAccount,
     Outcome,
@@ -26,6 +27,14 @@ from campushallen.database.models import (
 from campushallen.schedule import BookingState
 
 from .accounts import AccountGateway
+from .notifications import (
+    NoopNotifier,
+    Notification,
+    NotificationKind,
+    NotificationService,
+    deliver,
+)
+from .operations import snapshot
 from .rules import domain_rule
 from .secrets import ReconnectRequired
 
@@ -41,8 +50,14 @@ class Plan:
 
 
 class BookingEngine:
-    def __init__(self, sessions: sessionmaker, gateway: AccountGateway):
+    def __init__(
+        self,
+        sessions: sessionmaker,
+        gateway: AccountGateway,
+        notifier: NotificationService | None = None,
+    ):
         self.sessions, self.gateway = sessions, gateway
+        self.notifier = notifier or NoopNotifier()
         self.timezone = ZoneInfo(gateway.settings.campushallen_timezone)
 
     def discover(self, account_id: int, *, now: datetime | None = None) -> list[Plan]:
@@ -71,7 +86,12 @@ class BookingEngine:
                     continue
                 try:
                     with self.gateway.client(account) as (client, customer_id):
+                        # Independent bookings GET also lets the UI show already-booked state.
+                        booked = _booked_group_activity_ids(
+                            client.customer_group_activity_bookings(customer_id)
+                        )
                         found = False
+                        discovered = []
                         for offset in range(22):
                             day = now.date() + timedelta(days=offset)
                             if day.weekday() != rule.weekday:
@@ -89,6 +109,7 @@ class BookingEngine:
                             ):
                                 slot = None
                             if slot and slot.bookable_earliest:
+                                discovered.append(slot)
                                 found = True
                                 plans.append(
                                     Plan(
@@ -114,6 +135,17 @@ class BookingEngine:
                                         "Selection is ambiguous or outside the allowed time window.",
                                     )
                                 )
+                        # Persist only after network reads finish, keeping SQLite writes brief.
+                        for discovered_slot in discovered:
+                            snapshot(
+                                db,
+                                rule,
+                                discovered_slot,
+                                already_booked=discovered_slot.id in booked,
+                            )
+                        account.last_discovery_at = utcnow()
+                        account.last_error_code = None
+                        db.commit()
                         if not found:
                             plans.append(
                                 Plan(
@@ -125,8 +157,11 @@ class BookingEngine:
                                 )
                             )
                 except ReconnectRequired:
-                    account.auth_status = "reconnect_required"
-                    db.commit()
+                    if not getattr(self.gateway, "auth_service", None):
+                        account.auth_status = "reconnect_required"
+                        db.commit()
+                    else:
+                        db.rollback()
                     plans.append(
                         Plan(
                             account_id,
@@ -163,8 +198,44 @@ class BookingEngine:
                 result=(result or plan.outcome).value,
                 message=message or plan.message,
             )
+            account = db.get(CampushallenAccount, plan.account_id)
+            if not account:
+                raise StalePlan("Account was removed")
+            current_rule = db.get(BookingRule, plan.rule_id)
+            if current_rule is None or current_rule.campushallen_account_id != plan.account_id:
+                attempt.booking_rule_id = None
             db.add(attempt)
+            if attempt.result in (Outcome.BOOKED, Outcome.ALREADY_BOOKED, Outcome.DRY_RUN):
+                account.last_success_at = utcnow()
+                account.last_error_code = None
+            else:
+                account.last_failure_at = utcnow()
+                account.last_error_code = attempt.result
+            if slot:
+                opportunity = db.scalar(
+                    select(BookingOpportunity).where(
+                        BookingOpportunity.campushallen_account_id == plan.account_id,
+                        BookingOpportunity.booking_rule_id == plan.rule_id,
+                        BookingOpportunity.activity_id == slot.id,
+                    )
+                )
+                if opportunity:
+                    opportunity.worker_status = attempt.result.lower()
+                    if attempt.result in (Outcome.BOOKED, Outcome.ALREADY_BOOKED):
+                        opportunity.already_booked = True
+                    opportunity.next_action_at = None
             db.commit()
+            kind = (
+                NotificationKind.BOOKING_CONFIRMED
+                if attempt.result == Outcome.BOOKED
+                else (
+                    NotificationKind.BOOKING_FAILED
+                    if attempt.result in (Outcome.BOOKING_FAILED, Outcome.VERIFICATION_FAILED)
+                    else None
+                )
+            )
+            if kind:
+                deliver(self.notifier, Notification(kind, account.user_id, account.id, attempt.id))
             return attempt
 
     def preview_account(self, account_id: int) -> list[BookingAttempt]:
@@ -294,8 +365,11 @@ class BookingEngine:
                         else "Request sent but booking could not be verified. Check Campushallen before retrying."
                     )
             except ReconnectRequired:
-                account.auth_status = "reconnect_required"
-                db.commit()
+                if not getattr(self.gateway, "auth_service", None):
+                    account.auth_status = "reconnect_required"
+                    db.commit()
+                else:
+                    db.rollback()
                 result, message = Outcome.AUTH_FAILED, "Reconnect this Campushallen account."
             except (httpx.HTTPError, ValueError, KeyError, TypeError):
                 result = Outcome.VERIFICATION_FAILED if request_started else Outcome.BOOKING_FAILED
