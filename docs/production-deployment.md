@@ -2,24 +2,31 @@
 
 ## Current status
 
-**Prepared locally; production deployment is not complete.** SSH access to
-`niklas@192.168.1.127` now works. Read-only preflight found current undervoltage
-and throttling (`get_throttled=0x50005`) on two checks. Installation is held until
-power is stable. Both legacy timers are enabled and waiting; neither booking
-service was active when checked. Docker is not installed. No Pi configuration,
-legacy units/auth files, Cloudflare account settings or DNS records were changed.
+**Pi installation is in progress; public production acceptance is incomplete.**
+The deployed source and arm64 application image are pinned to
+`5c1b08221b247933feaf1d15984bd03997338e33` under
+`/home/niklas/campushallenbot-releases/`; `~/campushallenbot` points to that release.
+Local deployment documentation may advance independently of the deployed image.
 
-The host is Debian 13.7 (trixie), arm64, UID/GID 1000, with 11 GB free disk and
-738 MiB available RAM out of 905 MiB at the observation. NTP is synchronized and
-Europe/Stockholm is configured. Existing user lingering is enabled. Production
-code/data/config directories do not yet exist. Privileged port inspection remains
-pending; passwordless sudo is unavailable. Resolve the power condition before
-installing Docker or adding the production workload.
-The verified application baseline is local `main` at `45cc370` (the feature
-branches were linear descendants and were fast-forwarded once). Deployment work
-is on `deployment/raspberry-pi`. Neither branch has been pushed. This document is
-a runbook, not evidence that a public service is running. See the
-[verification record](production-validation.md) for completed and pending checks.
+The host is Debian 13.7 (trixie), arm64, UID/GID 1000. Docker CE 29.9.1 and
+Compose 5.6.0 were installed from Docker's official repository. Separate production
+configuration/data/backup directories and private session/encryption keys exist.
+The encryption key has a private off-Pi recovery copy on the Mac. Database
+migrations reached `d8426c9ef017`, with no schema drift.
+
+Current undervoltage/throttling (`0x50005`) persists. The operator explicitly
+instructed continuing despite this condition; this is an accepted deployment
+risk, not evidence of reliable power. Docker initially lacked memory-controller
+support. Appending `cgroup_memory=1 cgroup_enable=memory` to the existing boot
+command line and a controlled prerequisite reboot enabled enforced container
+memory limits. The original boot line is retained in
+`~/.cache/campushallen-provision/cmdline.txt.before-memory`.
+
+Both legacy live timers remain enabled and active after that reboot; neither
+booking service was triggered. Production admin setup, private replacement tunnel
+token entry, public HTTPS/invite acceptance, production backup/restore and final
+whole-stack reboot acceptance remain pending. The prerequisite reboot is not a
+completed whole-stack reboot test. See the [verification record](production-validation.md).
 
 ## Architecture and boundaries
 

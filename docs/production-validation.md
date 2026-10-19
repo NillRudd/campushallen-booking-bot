@@ -1,6 +1,6 @@
 # Production preparation verification
 
-Recorded on 19 October 2026. **No production deployment has occurred.**
+Recorded on 19 October 2026. **Pi installation is in progress; public acceptance remains incomplete.**
 
 ## Source and local checks
 
@@ -41,42 +41,53 @@ were consulted before upgrading. Existing Fernet/HKDF purpose separation, previo
 ciphertext compatibility and reauthentication tests pass. Runtime dependency
 scanning is not an OS/container vulnerability assessment or a penetration test.
 
-## Production acceptance still outstanding
+## Pi deployment progress and remaining acceptance
+
+The source release and arm64 image installed on the Pi are both
+`5c1b08221b247933feaf1d15984bd03997338e33`. Before transfer, the complete local
+140-test suite, Ruff, formatting, mypy, Swedish browser smoke and isolated
+production-image smoke passed again for this exact commit. No branch was pushed.
 
 | Required fact | Actual evidence / current state |
 | --- | --- |
-| Deployed Git commit | None; only local source/images have been prepared |
-| Pi preflight and resources | SSH now works; Debian 13.7 trixie/arm64, 11 GB free, 905 MiB total / 738 MiB available RAM, synchronized Stockholm time |
-| Legacy timer health | Both timers enabled and active/waiting; next run 20 October 18:30 CEST; both associated services inactive when checked; no modifications or manual triggers |
-| Production containers / tunnel | Not installed or started by this task |
-| Public URL | Mac HTTPS probe could not resolve campushallenbot.se; no DNS change was made |
-| Persistent production directory | Planned `~/campushallenbot-data`; not created on the Pi |
-| Production secret files | Planned `~/.config/campushallenbot/{secret_key,encryption_key,cloudflare_tunnel_token}`; not provisioned |
-| Production admin | Not created; user must enter its website password interactively |
-| Production backup / off-Pi key | Not created; local temporary smoke is not a production recovery copy |
-| Pi reboot / recovery | Not attempted; still requires resource/timer checks and a completed initial stack |
-| Real website admin/invite smoke | Pending authenticated public application |
-| Hardware warnings | Current undervoltage and throttling: 0x50005 on two checks; installation held until power is stable. Privileged port inspection still pending |
-| New live bookings | Not enabled; active production worker command has neither real-booking flag |
-| Future cutover | Documented separately; no cutover action authorized or executed in this phase |
+| Host | Debian 13.7 trixie, kernel 6.18.50+rpt-rpi-v8, arm64, UID/GID 1000 |
+| Docker | Official repository; CE 29.9.1, Compose 5.6.0; daemon enabled at boot |
+| Memory control | Boot flags enabled memory cgroup; a harmless 64 MiB container reported memory.max=67108864 |
+| Resources after installation | 9.3 GiB disk free; 905 MiB RAM total, 603 MiB available at observation; not a load test |
+| Migration | `d8426c9ef017` head; Alembic check reports no new upgrade operations |
+| Data | `~/campushallenbot-data`; independent of both old checkouts |
+| Configuration | `~/.config/campushallenbot` mode 0700; secret_key and encryption_key mode 0600 |
+| Key recovery | Matching encryption key copied privately to Mac `~/Documents/CampushallenBot-Recovery/encryption_key`, directory 0700 / file 0600; synthetic vault check passed |
+| Admin | Operator created niklas privately; database confirms active admin |
+| Containers | Web healthy; worker running with a persisted dry-run heartbeat; no host ports published |
+| Tunnel | Official pinned image downloaded; replacement token and connector startup pending |
+| Public HTTPS/admin/invites | Pending; no public acceptance claimed |
+| Backup | Online snapshots created; isolated restore of `campushallen-20261019T200238906746Z-628576.sqlite3` confirms niklas admin metadata and synthetic encryption checks; daily website timer enabled, next 20 October 03:38 CEST |
+| Reboot | Prerequisite memory-cgroup reboot passed; final full-stack acceptance reboot pending |
+| Legacy timers | Both enabled and active/waiting after reboot; next observed run 20 October 18:30 CEST; associated services inactive |
+| Host ports | Privileged pre-install inspection found SSH plus existing mDNS; no application ports published by Compose |
+| New bookings | Worker configuration has neither real-booking flag; no Campushallen accounts imported or connected |
+| Hardware | Current and historic undervoltage/throttling `0x50005`; operator explicitly authorized continuing |
 
-SSH connectivity is restored. Resolve current undervoltage first, then repeat
-power/resource/timer checks and finish privileged port inspection before installing
-Docker. Next provision production keys, bootstrap the admin, have the user supply
-the tunnel token privately, publish the apex hostname and complete all real
-acceptance and reboot checks. Do not treat this local verification record as production signoff.
+The [official Raspberry Pi flag table](https://www.raspberrypi.com/documentation/computers/os.html#get_throttled)
+identifies bits 0 and 2 as current undervoltage and throttling, with historical
+bits 16 and 18 also set. Power remains a production reliability risk after the
+operator's override. NTP and Stockholm timezone were checked. Existing user
+lingering is enabled. No legacy credentials, auth files or environment files were
+read, copied or modified. No old booking service was manually triggered.
 
-## Read-only Pi follow-up
+The tunnel token was accidentally supplied in chat. It was not installed or
+repeated; the operator was instructed to rotate it in Cloudflare and enter the
+replacement through the host-side hidden prompt. Replacement confirmation remains
+pending. No token value belongs in this record.
 
-SSH preflight at approximately 21:38 CEST on 19 October confirmed the host is
-reachable as niklas, UID/GID 1000. `get_throttled=0x50005` has bits 0 and 2 set
-(current undervoltage and throttling), plus historical bits 16 and 18. The
-[official flag table](https://www.raspberrypi.com/documentation/computers/os.html#get_throttled)
-was consulted. Historical bits may remain after the supply is corrected; acceptance
-requires the current condition bits to clear and remain clear. Do not reboot just
-to hide historical flags.
+## Pi health-probe correction
 
-Docker/Compose are absent. `Linger=yes`; both legacy timers remain enabled and
-waiting. New deployment, data and configuration paths are absent. No credentials
-from either old checkout were read. Passwords were not written to scripts, files,
-Git or environment variables. No packages were installed or host settings changed.
+The initial worker process persisted healthy dry-run heartbeats, but its container
+probe exceeded ten seconds while importing the full application on the throttled
+Pi. The probe now uses Python's standard-library SQLite reader with a read-only
+connection, checks the latest non-stopped heartbeat against the same freshness
+threshold and requires dry_run=1. It needs no keys or application initialization.
+Regression tests cover fresh/stale, live/stopped workers and missing databases.
+The replacement image must pass local checks and Pi health acceptance before the
+stack is considered healthy; initial heartbeat alone is not that acceptance.

@@ -1,24 +1,38 @@
-"""Container-only probes; expose neither account identifiers nor secrets."""
+"""Small, read-only container probe; avoid loading the application on each check."""
 
+import os
+import sqlite3
 import sys
+from contextlib import closing
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
-from campushallen.database.session import make_engine, session_factory
-from campushallen.services.operations import worker_health
-from campushallen.settings import Settings
+
+def healthy_worker(database_url: str, poll_seconds: float) -> bool:
+    if not database_url.startswith("sqlite:///") or poll_seconds <= 0:
+        return False
+    path = Path(database_url.removeprefix("sqlite:///"))
+    with closing(sqlite3.connect(path.resolve().as_uri() + "?mode=ro", uri=True, timeout=2)) as db:
+        row = db.execute(
+            "SELECT heartbeat_at, dry_run FROM worker_states "
+            "WHERE stopped_at IS NULL ORDER BY heartbeat_at DESC LIMIT 1"
+        ).fetchone()
+    if row is None or row[1] != 1:
+        return False
+    heartbeat = datetime.fromisoformat(row[0]).replace(tzinfo=UTC)
+    return heartbeat > datetime.now(UTC) - timedelta(seconds=max(90, poll_seconds * 3))
 
 
 def main() -> None:
     if sys.argv[1:] != ["worker"]:
         raise SystemExit(2)
-    settings = Settings()
-    engine = make_engine(settings.database_url)
     try:
-        with session_factory(engine)() as db:
-            status, state = worker_health(db, settings.worker_poll_seconds)
-            if status != "Worker healthy" or state is None or not state.dry_run:
-                raise SystemExit(1)
-    finally:
-        engine.dispose()
+        healthy = healthy_worker(
+            os.environ["DATABASE_URL"], float(os.environ.get("WORKER_POLL_SECONDS", "60"))
+        )
+    except (KeyError, ValueError, OSError, sqlite3.Error):
+        healthy = False
+    raise SystemExit(0 if healthy else 1)
 
 
 if __name__ == "__main__":
