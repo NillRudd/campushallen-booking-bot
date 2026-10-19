@@ -1,4 +1,4 @@
-.PHONY: dev test lint format typecheck migrate docker-up docker-down worker browser-smoke i18n-extract i18n-update i18n-compile
+.PHONY: dev test lint format typecheck migrate docker-up docker-down worker browser-smoke i18n-extract i18n-update i18n-compile production-smoke
 
 dev:
 	uvicorn campushallen.web.app:create_app --factory --reload --host 127.0.0.1
@@ -41,3 +41,6 @@ i18n-update: i18n-extract
 
 i18n-compile:
 	pybabel compile --statistics -d src/campushallen/web/translations
+
+production-smoke:
+	python scripts/smoke_production.py

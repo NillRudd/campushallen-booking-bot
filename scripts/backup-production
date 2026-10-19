@@ -1,0 +1,4 @@
+#!/bin/sh
+set -eu
+cd "$(dirname "$0")/.."
+exec ./scripts/production exec -T worker python -m campushallen.cli backup --directory /backups --keep 14

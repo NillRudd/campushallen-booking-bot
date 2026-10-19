@@ -1,0 +1,8 @@
+[Unit]
+Description=Consistent Campushallen website database backup
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/niklas/campushallenbot
+ExecStart=/home/niklas/campushallenbot/scripts/backup-production
+UMask=0077

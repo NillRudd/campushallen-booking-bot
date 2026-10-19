@@ -4,6 +4,7 @@ import argparse
 import getpass
 from dataclasses import asdict
 from datetime import timedelta
+from pathlib import Path
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -13,6 +14,7 @@ from campushallen.database.models import BookingRule, CampushallenAccount, Invit
 from campushallen.database.session import make_engine, session_factory
 from campushallen.schedule import BookingRule as DomainRule
 from campushallen.services.authentication import create_user
+from campushallen.services.backups import backup_database, verify_restore
 from campushallen.services.invitations import create_invite, invite_status, revoke_invite
 from campushallen.services.rules import RuleInput
 from campushallen.services.secrets import runtime_key
@@ -55,6 +57,16 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Campushallen web application administration")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("init-dev", help="Create private local development keys if needed")
+    backup = commands.add_parser(
+        "backup", help="Create a consistent SQLite snapshot; keys stay separate"
+    )
+    backup.add_argument("--directory", type=Path, required=True)
+    backup.add_argument("--keep", type=int, default=14)
+    restore = commands.add_parser(
+        "restore-test", help="Verify a backup in a temporary isolated database"
+    )
+    restore.add_argument("backup", type=Path)
+    restore.add_argument("--expect-user")
     create = commands.add_parser(
         "create-user", help="Create an application user; password is prompted"
     )
@@ -82,6 +94,22 @@ def main() -> None:
         runtime_key(settings, "secret_key")
         runtime_key(settings, "encryption_key")
         print("Development keys ready (values are never printed).")
+        return
+    if args.command in ("backup", "restore-test"):
+        try:
+            if args.command == "backup":
+                print(backup_database(settings.database_url, args.directory, keep=args.keep))
+            else:
+                verify_restore(
+                    args.backup,
+                    runtime_key(settings, "encryption_key"),
+                    expected_user=args.expect_user,
+                )
+                print(
+                    "Isolated restore and synthetic encryption checks passed; production was not modified."
+                )
+        except (OSError, ValueError) as exc:
+            parser.error(str(exc))
         return
     engine = make_engine(settings.database_url)
     try:

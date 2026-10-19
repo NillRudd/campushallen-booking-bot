@@ -1,0 +1,5 @@
+#!/bin/sh
+# Non-secret configuration only. Never source/eval the environment file.
+set -eu
+cd "$(dirname "$0")/.."
+exec docker compose --env-file "${CAMPUSHALLEN_PROD_ENV:-$HOME/.config/campushallenbot/production.env}" -f compose.prod.yaml "$@"

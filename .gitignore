@@ -55,3 +55,10 @@ auth-token*.json
 secret_key
 encryption_key
 sessions/
+
+# Production operator material; source examples use .example extensions.
+production.env
+cloudflare_tunnel_token
+backups/
+recovery/
+*.partial

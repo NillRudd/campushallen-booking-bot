@@ -1,0 +1,100 @@
+name: campushallenbot
+x-app: &app
+  image: ${APP_IMAGE:?Set APP_IMAGE to campushallenbot:<verified-git-commit>}
+  user: "${APP_UID:?Set the non-root Pi UID}:${APP_GID:?Set the Pi GID}"
+  init: true
+  restart: unless-stopped
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  pids_limit: 64
+  stop_grace_period: 120s
+  tmpfs: ["/tmp:size=16m,mode=1777"]
+  environment: &app-env
+    APP_ENV: production
+    DEFAULT_LOCALE: sv_SE
+    PUBLIC_BASE_URL: https://campushallenbot.se
+    SECURE_COOKIES: "true"
+    CAMPUSHALLEN_TIMEZONE: Europe/Stockholm
+    DATABASE_URL: sqlite:////app/state/web.db
+    STATE_DIR: /app/state
+    SECRET_KEY_FILE: /run/secrets/secret_key
+    ENCRYPTION_KEY_FILE: /run/secrets/encryption_key
+    ALLOWED_HOSTS: '["campushallenbot.se"]'
+    TRUSTED_TUNNEL_IPS: '["172.30.85.3"]'
+    WORKER_POLL_SECONDS: "60"
+    WORKER_CONCURRENCY: "2"
+    HEALTH_HOST: campushallenbot.se
+  volumes:
+    - ${DATA_DIR:?Set DATA_DIR}:/app/state
+  secrets: [secret_key, encryption_key]
+  logging:
+    driver: json-file
+    options: {max-size: 5m, max-file: "3"}
+
+services:
+  web:
+    <<: *app
+    mem_limit: 256m
+    cpus: 1.0
+    networks:
+      app:
+        ipv4_address: 172.30.85.2
+  worker:
+    <<: *app
+    mem_limit: 256m
+    cpus: 1.0
+    command: [python, -m, campushallen.worker]
+    healthcheck:
+      test: [CMD, python, -m, campushallen.healthcheck, worker]
+      interval: 60s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+    volumes:
+      - ${DATA_DIR:?Set DATA_DIR}:/app/state
+      - ${BACKUP_DIR:?Set BACKUP_DIR}:/backups
+    depends_on:
+      web: {condition: service_healthy}
+    networks:
+      app:
+        ipv4_address: 172.30.85.4
+  cloudflared:
+    image: cloudflare/cloudflared:2026.10.1@sha256:a15a3b50b8dabd57ac2090e9484c0247dba9dfa1f0df4d298d4317f9d69eb2d5
+    user: "${APP_UID}:${APP_GID}"
+    command: [tunnel, --no-autoupdate, --loglevel, fatal, --metrics, "0.0.0.0:2000", run, --token-file, /run/secrets/cloudflare_tunnel_token]
+    secrets: [cloudflare_tunnel_token]
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 32
+    mem_limit: 128m
+    cpus: 0.5
+    healthcheck:
+      test: [CMD, cloudflared, tunnel, --metrics, "localhost:2000", ready]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+    depends_on:
+      web: {condition: service_healthy}
+    logging:
+      driver: json-file
+      options: {max-size: 5m, max-file: "3"}
+    networks:
+      app:
+        ipv4_address: 172.30.85.3
+
+# Private bridge with outbound NAT. No host service ports or metrics ports are published.
+networks:
+  app:
+    ipam:
+      config: [{subnet: 172.30.85.0/29}]
+secrets:
+  secret_key:
+    file: ${CONFIG_DIR:?Set CONFIG_DIR}/secret_key
+  encryption_key:
+    file: ${CONFIG_DIR:?Set CONFIG_DIR}/encryption_key
+  cloudflare_tunnel_token:
+    file: ${CONFIG_DIR:?Set CONFIG_DIR}/cloudflare_tunnel_token

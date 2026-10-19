@@ -1,0 +1,16 @@
+#!/bin/sh
+# Read-only: never inspect legacy configuration/credentials or start booking units.
+set -u
+uname -a
+cat /etc/os-release
+dpkg --print-architecture
+df -h /
+free -h
+timedatectl
+systemctl --user list-timers --all
+systemctl --user status --no-pager campushallen-bot.timer campushallen-friend.timer
+systemctl --user is-enabled campushallen-bot.timer campushallen-friend.timer
+vcgencmd get_throttled || true
+docker --version
+docker compose version
+sudo ss -tulpn

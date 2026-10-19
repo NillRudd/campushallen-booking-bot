@@ -36,3 +36,8 @@ auth-token*.json
 secret_key
 encryption_key
 sessions/
+production.env
+cloudflare_tunnel_token
+backups
+recovery
+*.partial
