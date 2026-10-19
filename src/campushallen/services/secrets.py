@@ -53,3 +53,45 @@ class TokenVault:
             raise ReconnectRequired(
                 "Token state is unavailable; reconnect this account."
             ) from from_error
+
+
+class CredentialVault:
+    """HKDF-SHA256 purpose separation, plus account binding inside the encrypted payload.
+
+    Legacy token Fernet keys remain unchanged so upgrades preserve existing tokens.
+    This derived key is exclusively for credential encryption version 1.
+    """
+
+    def __init__(self, master_key: str):
+        import base64
+
+        from cryptography.hazmat.primitives import hashes
+        from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+
+        # Fernet validates the master format before it is used as key material.
+        Fernet(master_key.encode())
+        derived = HKDF(
+            algorithm=hashes.SHA256(),
+            length=32,
+            salt=None,
+            info=b"campushallen-booker/credentials/v1",
+        ).derive(base64.urlsafe_b64decode(master_key))
+        self.cipher = Fernet(base64.urlsafe_b64encode(derived))
+
+    def seal(self, account_id: int, password: str) -> str:
+        return self.cipher.encrypt(
+            json.dumps({"account_id": account_id, "password": password}).encode()
+        ).decode()
+
+    def open(self, account_id: int, ciphertext: str, version: int = 1) -> str:
+        try:
+            if version != 1:
+                raise ValueError("Unsupported version")
+            data = json.loads(self.cipher.decrypt(ciphertext.encode()))
+            if data["account_id"] != account_id or not isinstance(data["password"], str):
+                raise ValueError("Credential belongs to another account")
+            return data["password"]
+        except (InvalidToken, ValueError, TypeError, KeyError):
+            raise ReconnectRequired(
+                "Saved credential is unavailable; replace it or reconnect."
+            ) from None

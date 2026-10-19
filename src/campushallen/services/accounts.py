@@ -3,7 +3,7 @@
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterator
+from typing import TYPE_CHECKING, Iterator
 from zoneinfo import ZoneInfo
 
 import httpx
@@ -14,6 +14,9 @@ from campushallen.database.models import CampushallenAccount
 from campushallen.settings import Settings
 
 from .secrets import ReconnectRequired, TokenVault
+
+if TYPE_CHECKING:
+    from .account_auth import AccountAuthentication
 
 
 def api_config(settings: Settings) -> AppConfig:
@@ -33,6 +36,7 @@ class AccountGateway:
     def __init__(self, settings: Settings, vault: TokenVault):
         self.settings = settings
         self.vault = vault
+        self.auth_service: AccountAuthentication | None = None
 
     def connect(self, account: CampushallenAccount, password: str) -> None:
         client = CampushallenHttpClient(api_config(self.settings), load_saved_auth=False)
@@ -57,7 +61,27 @@ class AccountGateway:
                 )
             account.auth_state = self.vault.seal(state)
             account.auth_status = "connected"
-        except (httpx.HTTPError, ValueError, TypeError, KeyError):
+            account.requires_reconnect = False
+            account.last_auth_success_at = datetime.now(timezone.utc)
+            account.auth_retry_at = None
+            account.auth_lease_until = None
+            account.auth_failure_count = 0
+            account.auth_error_code = None
+        except httpx.HTTPStatusError as exc:
+            from .account_auth import TemporaryAuthenticationError
+
+            if exc.response.status_code == 429 or exc.response.status_code >= 500:
+                raise TemporaryAuthenticationError(
+                    "Campushallen is temporarily unavailable."
+                ) from None
+            raise ReconnectRequired(
+                "Campushallen login failed. Reconnect to update credentials."
+            ) from None
+        except httpx.HTTPError:
+            from .account_auth import TemporaryAuthenticationError
+
+            raise TemporaryAuthenticationError("Campushallen is temporarily unavailable.") from None
+        except (ValueError, TypeError, KeyError):
             raise ReconnectRequired(
                 "Campushallen login failed. Check your credentials and try again."
             ) from None
@@ -66,7 +90,23 @@ class AccountGateway:
 
     @contextmanager
     def client(self, account: CampushallenAccount) -> Iterator[tuple[CampushallenHttpClient, int]]:
-        state: dict[str, Any] = self.vault.open(account.auth_state)
+        if self.auth_service:
+            client = CampushallenHttpClient(api_config(self.settings), load_saved_auth=False)
+            try:
+                state = self.auth_service.ensure(account.id, client)
+                client.client.headers["Authorization"] = f"Bearer {state['access_token']}"
+                yield client, int(state["customer_id"])
+            except httpx.HTTPStatusError as exc:
+                if exc.response.status_code in (401, 403):
+                    # No replay of the operation: in particular, never replay a booking POST.
+                    raise ReconnectRequired(
+                        "Authentication changed during the operation; reconnect or retry discovery."
+                    ) from None
+                raise
+            finally:
+                client.close()
+            return
+        state = self.vault.open(account.auth_state)
         if (
             state.get("expires_at")
             and float(state["expires_at"]) <= datetime.now(timezone.utc).timestamp()
