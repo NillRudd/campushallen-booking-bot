@@ -56,6 +56,7 @@ class User(Timestamps, Base):
     username: Mapped[str] = mapped_column(String(254), unique=True)
     password_hash: Mapped[str] = mapped_column(Text)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
 
 
 class WebSession(Base):
@@ -75,6 +76,17 @@ class CampushallenAccount(Timestamps, Base):
     auth_state: Mapped[str | None] = mapped_column(Text, nullable=True)
     auth_status: Mapped[str] = mapped_column(String(32), default="disconnected")
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    requires_reconnect: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
+    last_auth_success_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
+    last_auth_failure_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
+    auth_error_code: Mapped[str | None] = mapped_column(String(40))
+    auth_failure_count: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    auth_retry_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
+    auth_lease_until: Mapped[datetime | None] = mapped_column(UTCDateTime())
+    last_discovery_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
+    last_success_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
+    last_failure_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
+    last_error_code: Mapped[str | None] = mapped_column(String(40))
 
 
 class BookingRule(Timestamps, Base):
@@ -162,3 +174,76 @@ class BookingClaim(Base):
     )
     activity_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class CampushallenCredential(Timestamps, Base):
+    __tablename__ = "campushallen_credentials"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    campushallen_account_id: Mapped[int] = mapped_column(
+        ForeignKey("campushallen_accounts.id", ondelete="CASCADE"), unique=True
+    )
+    encrypted_password: Mapped[str] = mapped_column(Text)
+    encryption_version: Mapped[int] = mapped_column(Integer, default=1)
+
+
+class Invitation(Base):
+    __tablename__ = "invitations"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    label: Mapped[str] = mapped_column(String(120), default="")
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    expires_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), index=True)
+    used_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
+    revoked_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
+    created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    used_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+
+
+class AuditEvent(Base):
+    __tablename__ = "audit_events"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    code: Mapped[str] = mapped_column(String(48))
+    actor_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), index=True
+    )
+    account_id: Mapped[int | None] = mapped_column(
+        ForeignKey("campushallen_accounts.id", ondelete="SET NULL")
+    )
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow, index=True)
+
+
+class WorkerState(Base):
+    __tablename__ = "worker_states"
+    worker_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    started_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    heartbeat_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow, index=True)
+    stopped_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
+    version: Mapped[str] = mapped_column(String(32))
+    dry_run: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class BookingOpportunity(Base):
+    """Latest non-sensitive discovery snapshot; IDs identify this occurrence only."""
+
+    __tablename__ = "booking_opportunities"
+    __table_args__ = (
+        UniqueConstraint("campushallen_account_id", "booking_rule_id", "activity_id"),
+    )
+    id: Mapped[int] = mapped_column(primary_key=True)
+    campushallen_account_id: Mapped[int] = mapped_column(
+        ForeignKey("campushallen_accounts.id", ondelete="CASCADE"), index=True
+    )
+    booking_rule_id: Mapped[int] = mapped_column(ForeignKey("booking_rules.id", ondelete="CASCADE"))
+    activity_id: Mapped[int] = mapped_column(Integer)
+    activity_name: Mapped[str] = mapped_column(String(200))
+    product_name: Mapped[str] = mapped_column(String(200))
+    facility: Mapped[str] = mapped_column(String(500))
+    activity_start: Mapped[datetime] = mapped_column(UTCDateTime(), index=True)
+    bookable_earliest: Mapped[datetime] = mapped_column(UTCDateTime())
+    left_to_book: Mapped[int] = mapped_column(Integer)
+    has_waiting_list: Mapped[bool] = mapped_column(Boolean)
+    already_booked: Mapped[bool] = mapped_column(Boolean, default=False)
+    observed_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    next_action_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
+    worker_status: Mapped[str] = mapped_column(String(32), default="discovered")
