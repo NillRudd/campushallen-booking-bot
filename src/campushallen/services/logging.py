@@ -17,3 +17,15 @@ class WorkerLogFormatter(logging.Formatter):
             if hasattr(record, name):
                 data[name] = getattr(record, name)
         return json.dumps(data)
+
+
+class InviteAccessFilter(logging.Filter):
+    """Uvicorn logs a path in its third argument; invitation bearer tokens must be redacted."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if isinstance(record.args, tuple) and len(record.args) >= 3:
+            args = list(record.args)
+            if isinstance(args[2], str) and args[2].split("?")[0].startswith("/invite/"):
+                args[2] = "/invite/[redacted]"
+                record.args = tuple(args)
+        return True

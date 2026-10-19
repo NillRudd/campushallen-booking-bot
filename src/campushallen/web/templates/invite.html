@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Invitation · Campushallen Booker{% endblock %}
+{% block content %}
+<section class="card login">
+  <p class="eyebrow">YOU'RE INVITED</p>
+  <h1>Welcome to Campushallen Booker.</h1>
+  {% if available %}
+  <p>Choose a website login. You'll connect your Campushallen account afterwards.</p>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label>Choose username<input name="username" autocomplete="username" maxlength="254" required></label>
+    <label>Choose website password<input type="password" name="password" autocomplete="new-password" minlength="12" maxlength="4096" required></label>
+    <p class="muted">At least 12 characters. Password managers and long passphrases are welcome.</p>
+    <label>Confirm website password<input type="password" name="confirmation" autocomplete="new-password" maxlength="4096" required></label>
+    <button>Create account</button>
+  </form>
+  {% else %}<p>Ask the application owner for a new link.</p>{% endif %}
+  <p><a href="/login">Already registered? Log in</a></p>
+</section>
+{% endblock %}

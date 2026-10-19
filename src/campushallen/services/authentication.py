@@ -8,7 +8,7 @@ from datetime import timedelta
 
 from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
 
 from campushallen.database.models import User, WebSession, utcnow
@@ -18,12 +18,26 @@ PASSWORDS = PasswordHasher()
 DUMMY_HASH = PASSWORDS.hash(secrets.token_urlsafe(32))
 
 
-def create_user(db: Session, username: str, password: str) -> User:
+def prepare_user(username: str, password: str, *, is_admin: bool = False) -> User:
     username = username.strip().casefold()
-    if not 1 <= len(username) <= 254 or not 12 <= len(password) <= 1024:
-        raise ValueError("Use a username and a password of 12–1024 characters.")
-    user = User(username=username, password_hash=PASSWORDS.hash(password))
+    if not 1 <= len(username) <= 254 or any(c.isspace() or ord(c) < 32 for c in username):
+        raise ValueError("Use a username of 1–254 characters without spaces or control characters.")
+    validate_password(password)
+    return User(username=username, password_hash=PASSWORDS.hash(password), is_admin=is_admin)
+
+
+def validate_password(password: str) -> None:
+    if not 12 <= len(password) <= 4096:
+        raise ValueError("Use a website password of 12–4096 characters.")
+
+
+def create_user(db: Session, username: str, password: str, *, is_admin: bool = False) -> User:
+    from .audit import Event, audit
+
+    user = prepare_user(username, password, is_admin=is_admin)
     db.add(user)
+    db.flush()
+    audit(db, Event.USER_CREATED, user_id=user.id)
     db.commit()
     return user
 
@@ -37,7 +51,15 @@ def authenticate(db: Session, username: str, password: str) -> User | None:
     if not user or not user.is_active:
         return None
     if PASSWORDS.check_needs_rehash(user.password_hash):
-        user.password_hash = PASSWORDS.hash(password)
+        changed = db.execute(
+            update(User)
+            .where(User.id == user.id, User.password_hash == user.password_hash)
+            .values(password_hash=PASSWORDS.hash(password))
+            .returning(User.id)
+        ).scalar_one_or_none()
+        if changed is None:
+            db.rollback()
+            return None
     return user
 
 
@@ -46,6 +68,18 @@ def token_hash(secret: str, token: str) -> str:
 
 
 def new_session(db: Session, user: User, secret: str, hours: int) -> str:
+    # Serialize session creation against password changes and account deletion.
+    allowed = db.execute(
+        update(User)
+        .where(
+            User.id == user.id, User.password_hash == user.password_hash, User.is_active.is_(True)
+        )
+        .values(updated_at=User.updated_at)
+        .returning(User.id)
+    ).scalar_one_or_none()
+    if allowed is None:
+        db.rollback()
+        raise ValueError("Login state changed; sign in again.")
     token = secrets.token_urlsafe(48)
     db.execute(delete(WebSession).where(WebSession.expires_at <= utcnow()))
     db.add(

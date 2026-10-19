@@ -17,9 +17,28 @@ class Settings(BaseSettings):
     campushallen_timezone: str = "Europe/Stockholm"
     secure_cookies: bool = False
     session_hours: int = 12
+    public_base_url: str = "http://127.0.0.1:8000"
     state_dir: Path = Path("state")
     worker_poll_seconds: float = 60
     worker_concurrency: int = 8
+
+    @field_validator("public_base_url")
+    @classmethod
+    def base_url(cls, value: str) -> str:
+        from urllib.parse import urlsplit
+
+        parts = urlsplit(value)
+        if (
+            parts.scheme not in ("http", "https")
+            or not parts.netloc
+            or parts.username
+            or parts.password
+            or parts.query
+            or parts.fragment
+            or parts.path not in ("", "/")
+        ):
+            raise ValueError("PUBLIC_BASE_URL must be an HTTP(S) origin without credentials")
+        return value.rstrip("/")
 
     @field_validator("campushallen_timezone")
     @classmethod

@@ -3,17 +3,20 @@
 import argparse
 import getpass
 from dataclasses import asdict
+from datetime import timedelta
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from campushallen.config import load_config
-from campushallen.database.models import BookingRule, CampushallenAccount, User
+from campushallen.database.models import BookingRule, CampushallenAccount, Invitation, User, utcnow
 from campushallen.database.session import make_engine, session_factory
 from campushallen.schedule import BookingRule as DomainRule
 from campushallen.services.authentication import create_user
+from campushallen.services.invitations import create_invite, invite_status, revoke_invite
 from campushallen.services.rules import RuleInput
 from campushallen.services.secrets import runtime_key
+from campushallen.services.user_security import set_admin
 from campushallen.settings import Settings
 
 
@@ -56,6 +59,17 @@ def main() -> None:
         "create-user", help="Create an application user; password is prompted"
     )
     create.add_argument("username")
+    create.add_argument("--admin", action="store_true")
+    for action in ("promote", "demote"):
+        commands.add_parser(action).add_argument("username")
+    invite = commands.add_parser("invite", help="Create, list, or revoke one-time invitations")
+    invite_commands = invite.add_subparsers(dest="invite_action", required=True)
+    invite_create = invite_commands.add_parser("create")
+    invite_create.add_argument("--label", default="")
+    invite_create.add_argument("--count", type=int, default=1)
+    invite_create.add_argument("--expires-days", type=int, default=7, help="0 means no expiry")
+    invite_commands.add_parser("list")
+    invite_commands.add_parser("revoke").add_argument("id", type=int)
     importer = commands.add_parser(
         "import-config", help="Import YAML rules without moving credentials"
     )
@@ -76,8 +90,45 @@ def main() -> None:
                 password = getpass.getpass("Application password (at least 12 characters): ")
                 if password != getpass.getpass("Confirm password: "):
                     parser.error("Passwords do not match")
-                user = create_user(db, args.username, password)
+                user = create_user(db, args.username, password, is_admin=args.admin)
                 print(f"Created application user {user.username}.")
+            elif args.command in ("promote", "demote"):
+                user = db.scalar(
+                    select(User).where(User.username == args.username.strip().casefold())
+                )
+                if not user:
+                    parser.error("Application user not found")
+                set_admin(db, user, enabled=args.command == "promote")
+                print("Admin status updated.")
+            elif args.command == "invite":
+                if args.invite_action == "create":
+                    if not 1 <= args.count <= 100 or not 0 <= args.expires_days <= 365:
+                        parser.error("Use count 1–100 and expiry days 0–365")
+                    links = []
+                    for _ in range(args.count):
+                        row, token = create_invite(
+                            db,
+                            label=args.label,
+                            expires_at=utcnow() + timedelta(days=args.expires_days)
+                            if args.expires_days
+                            else None,
+                        )
+                        links.append(f"{settings.public_base_url}/invite/{token}")
+                    db.commit()
+                    print("Save these invitation links now. They cannot be displayed again.")
+                    for link in links:
+                        print(link)
+                elif args.invite_action == "list":
+                    for row in db.scalars(select(Invitation).order_by(Invitation.id)):
+                        print(
+                            f"{row.id}  {row.label!r}  {invite_status(row)}  expires={row.expires_at or 'never'}"
+                        )
+                else:
+                    print(
+                        "Invitation revoked."
+                        if revoke_invite(db, args.id)
+                        else "No unused invitation changed."
+                    )
             else:
                 user = db.scalar(select(User).where(User.username == args.user.strip().casefold()))
                 if not user:
