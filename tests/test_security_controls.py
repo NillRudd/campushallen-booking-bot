@@ -238,5 +238,8 @@ def test_expired_token_status_is_visible_without_triggering_network(web):
             }
         )
         db.commit()
-    assert "Token expired; reconnection needed" in client.get(f"/accounts/{account_id}").text
+    assert (
+        "Anslutningen har gått ut. Återanslutning krävs"
+        in client.get(f"/accounts/{account_id}").text
+    )
     assert "private-token" not in client.get("/").text

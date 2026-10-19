@@ -79,8 +79,8 @@ def test_unavailable_invites_give_same_generic_message(web, state):
         db.commit()
     response = client.get(f"/invite/{token}")
     assert response.status_code == 400
-    assert "This invitation is unavailable" in response.text
-    assert "Choose username" not in response.text
+    assert "inbjudningslänken är inte längre giltig" in response.text
+    assert 'name="username"' not in response.text
 
 
 def test_invite_registration_csrf_validation_and_failure_does_not_consume(web):
@@ -153,7 +153,7 @@ def test_normal_users_cannot_manage_invitations_and_admins_cannot_see_credential
     response = post(
         client, "/admin/invites", {"count": "2", "label": "Friends", "expires_days": "7"}
     )
-    assert response.status_code == 200 and "Save these links now" in response.text
+    assert response.status_code == 200 and "Spara länkarna" in response.text
     import re
 
     links = re.findall(r"http://127\.0\.0\.1:8000/invite/([A-Za-z0-9_-]{43})", response.text)

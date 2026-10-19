@@ -120,71 +120,95 @@ def main() -> None:
                 browser = p.chromium.launch(
                     channel=os.environ.get("CAMPUSHALLEN_BROWSER_CHANNEL") or None, headless=True
                 )
-                admin = browser.new_context(viewport={"width": 1400, "height": 1000})
+                admin = browser.new_context(
+                    locale="sv-SE",
+                    permissions=["clipboard-read", "clipboard-write"],
+                    viewport={"width": 1400, "height": 1000},
+                )
                 page = admin.new_page()
                 page.set_default_timeout(10000)
                 errors = []
                 page.on("pageerror", lambda error: errors.append(str(error)))
                 page.goto(base_url + "/login")
-                page.get_by_label("Application username").fill(admin_name)
-                page.get_by_label("Password", exact=True).fill(admin_password)
-                page.get_by_role("button", name="Log in", exact=True).click()
-                page.get_by_role("link", name="Admin", exact=True).click()
-                page.get_by_label("Label", exact=True).fill("Browser smoke")
-                page.get_by_role("button", name="Generate one-time links").click()
-                invite_url = page.get_by_label("Invitation 1 link", exact=True).input_value()
-                page.get_by_role("link", name="Return to invitation management").click()
+                assert page.locator("html").get_attribute("lang") == "sv"
+                page.screenshot(path=str(artifacts / "login.png"), full_page=True)
+                page.get_by_label("Användarnamn").fill(admin_name)
+                page.get_by_label("Lösenord", exact=True).fill(admin_password)
+                page.get_by_role("button", name="Logga in", exact=True).click()
+                page.get_by_role("link", name="Administration", exact=True).click()
+                page.screenshot(path=str(artifacts / "admin.png"), full_page=True)
+                page.get_by_label("Namn/etikett", exact=True).fill("Browser smoke")
+                page.get_by_role("button", name="Skapa inbjudan").click()
+                invite_url = page.get_by_label("Länk till inbjudan 1", exact=True).input_value()
+                page.get_by_role("button", name="Kopiera länk", exact=True).click()
+                page.get_by_role("status").filter(has_text="Länken har kopierats").wait_for()
+                assert page.evaluate("navigator.clipboard.readText()") == invite_url
+                page.get_by_role("link", name="Tillbaka till inbjudningarna").click()
                 assert invite_url not in page.content()
-                friend = browser.new_context(viewport={"width": 1400, "height": 1000})
+                friend = browser.new_context(
+                    locale="sv-SE", viewport={"width": 1400, "height": 1000}
+                )
                 page = friend.new_page()
                 page.set_default_timeout(10000)
                 page.on("pageerror", lambda error: errors.append(str(error)))
                 page.goto(invite_url)
-                page.get_by_label("Choose username", exact=True).fill(friend_name)
-                page.get_by_label("Choose website password", exact=True).fill(friend_password)
-                page.get_by_label("Confirm website password", exact=True).fill(friend_password)
-                page.get_by_role("button", name="Create account", exact=True).click()
-                page.get_by_label("Application username").fill(friend_name)
-                page.get_by_label("Password", exact=True).fill(friend_password)
-                page.get_by_role("button", name="Log in", exact=True).click()
+                page.screenshot(path=str(artifacts / "invite.png"), full_page=True)
+                page.get_by_label("Välj användarnamn", exact=True).fill(friend_name)
+                page.get_by_label("Välj lösenord för webbplatsen", exact=True).fill(friend_password)
+                page.get_by_label("Bekräfta lösenord för webbplatsen", exact=True).fill(
+                    friend_password
+                )
+                page.get_by_role("button", name="Skapa konto", exact=True).click()
+                page.get_by_label("Användarnamn").fill(friend_name)
+                page.get_by_label("Lösenord", exact=True).fill(friend_password)
+                page.get_by_role("button", name="Logga in", exact=True).click()
                 assert page.url.endswith("/onboarding")
-                page.get_by_role("link", name="Accounts", exact=True).click()
-                page.get_by_label("Display name").fill("Training account")
-                page.get_by_label("Campushallen username").fill("temporary-browser-account")
-                page.get_by_role("button", name="Add account", exact=True).click()
+                page.screenshot(path=str(artifacts / "onboarding.png"), full_page=True)
+                page.get_by_role("link", name="Campushallen-konton", exact=True).click()
+                page.get_by_label("Kontonamn").fill("Training account")
+                page.get_by_label("Användarnamn hos Campushallen").fill("temporary-browser-account")
+                page.get_by_role("button", name="Lägg till konto", exact=True).click()
                 page.get_by_role("link", name="Training account", exact=True).click()
                 assert not page.get_by_label(
-                    "Remember Campushallen credentials for automatic reconnection", exact=True
+                    "Spara inloggningsuppgifter för automatisk återanslutning", exact=True
                 ).is_checked()
-                page.get_by_label("Campushallen password", exact=True).fill(campu_password)
+                page.get_by_label("Lösenord för Campushallen", exact=True).fill(campu_password)
                 page.get_by_label(
-                    "Remember Campushallen credentials for automatic reconnection", exact=True
+                    "Spara inloggningsuppgifter för automatisk återanslutning", exact=True
                 ).check()
-                page.get_by_role("button", name="Connect account", exact=True).click()
+                page.get_by_role("button", name="Anslut konto", exact=True).click()
+                page.screenshot(path=str(artifacts / "account.png"), full_page=True)
                 assert (
-                    "Automatic reconnection:" in page.content()
+                    "Automatisk återanslutning:" in page.content()
                     and campu_password not in page.content()
                 )
-                page.get_by_role("link", name="Rules", exact=True).click()
-                page.get_by_role("link", name="+ New rule", exact=True).click()
-                page.get_by_label("Rule name", exact=True).fill("Daytime floorball")
-                page.get_by_label("Activity", exact=True).fill("Innebandy")
-                page.get_by_label("Product name", exact=True).fill("Innebandy 85")
-                page.get_by_label("Weekday", exact=True).select_option(str(local_start.weekday()))
-                page.get_by_label("Preferred start time", exact=True).fill("12:00")
-                page.get_by_label("Facility contains (comma-separated)", exact=True).fill(
+                page.get_by_role("link", name="Bokningsregler", exact=True).click()
+                page.get_by_role("link", name="+ Ny bokningsregel", exact=True).click()
+                page.screenshot(path=str(artifacts / "rule.png"), full_page=True)
+                page.get_by_label("Regelns namn", exact=True).fill("Daytime floorball")
+                page.get_by_label("Pass", exact=True).fill("Innebandy")
+                page.get_by_label("Passets namn hos Campushallen", exact=True).fill("Innebandy 85")
+                page.get_by_label("Veckodag", exact=True).select_option(str(local_start.weekday()))
+                page.get_by_label("Önskad starttid", exact=True).fill("12:00")
+                page.get_by_label("Anläggning (separera flera med kommatecken)", exact=True).fill(
                     "Vallastaden"
                 )
-                page.get_by_role("button", name="Save rule", exact=True).click()
-                page.get_by_role("link", name="Accounts", exact=True).click()
+                page.get_by_role("button", name="Spara regel", exact=True).click()
+                page.get_by_role("link", name="Campushallen-konton", exact=True).click()
                 page.get_by_role("link", name="Training account", exact=True).click()
-                page.get_by_role("button", name="Preview matching activities", exact=True).click()
-                assert page.get_by_text("DRY_RUN", exact=True).count() == 1
-                page.get_by_role("link", name="Overview", exact=True).click()
+                page.get_by_role(
+                    "button", name="Förhandsgranska matchande pass", exact=True
+                ).click()
+                assert (
+                    page.get_by_text("Testkörning – ingen bokning gjordes", exact=True).count() == 1
+                )
+                page.get_by_role("link", name="Översikt", exact=True).click()
                 assert page.get_by_text("Innebandy 85 Vallastaden", exact=True).count() >= 1
                 page.screenshot(path=str(artifacts / "desktop.png"), full_page=True)
                 mobile = browser.new_context(
-                    storage_state=friend.storage_state(), viewport={"width": 390, "height": 844}
+                    locale="sv-SE",
+                    storage_state=friend.storage_state(),
+                    viewport={"width": 390, "height": 844},
                 )
                 mobile_page = mobile.new_page()
                 mobile_page.goto(base_url + "/")
@@ -192,18 +216,20 @@ def main() -> None:
                 assert mobile_page.evaluate(
                     "document.documentElement.scrollWidth <= window.innerWidth"
                 )
-                page.get_by_role("link", name="History", exact=True).click()
-                page.get_by_role("button", name="Filter history", exact=True).click()
+                page.get_by_role("link", name="Historik", exact=True).click()
+                page.get_by_role("button", name="Filtrera historiken", exact=True).click()
+                page.screenshot(path=str(artifacts / "history.png"), full_page=True)
                 assert (
                     page.locator("tbody tr").filter(has_text="Innebandy 85 Vallastaden").count()
                     == 1
                 )
-                page.get_by_role("link", name="Accounts", exact=True).click()
+                page.get_by_role("link", name="Campushallen-konton", exact=True).click()
                 page.get_by_role("link", name="Training account", exact=True).click()
-                page.get_by_role("button", name="Forget saved password", exact=True).click()
-                assert "Saved password removed" in page.content()
-                page.get_by_role("link", name="Security", exact=True).click()
-                page.get_by_role("button", name="Log out all sessions", exact=True).click()
+                page.get_by_role("button", name="Ta bort sparat lösenord", exact=True).click()
+                assert "Det sparade lösenordet har tagits bort" in page.content()
+                page.get_by_role("link", name="Säkerhet", exact=True).click()
+                page.screenshot(path=str(artifacts / "security.png"), full_page=True)
+                page.get_by_role("button", name="Logga ut alla sessioner", exact=True).click()
                 assert page.url.endswith("/login")
                 assert errors == [], errors
                 browser.close()

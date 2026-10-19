@@ -199,13 +199,14 @@ def test_dashboard_history_filters_and_activity_rule_prefill(web):
         opportunity_id = db.scalar(select(BookingOpportunity.id))
     response = client.get("/")
     for label in (
-        "Reconnection required",
-        "Auto reconnect",
+        "Återanslutning krävs",
+        "Automatisk återanslutning",
         "Daytime ball",
-        "Booking opens",
-        "Already booked",
-        "Full",
-        "Waitlist available",
+        "Bokningen öppnar",
+        "Redan bokad",
+        "Fullbokat",
+        "Reservlista",
+        "tillgänglig",
     ):
         assert label in response.text
     assert client.get("/onboarding").status_code == 200
@@ -217,7 +218,7 @@ def test_dashboard_history_filters_and_activity_rule_prefill(web):
         and "Daytime ball" in response.text
         and "Ball Tuesday" in response.text
     )
-    assert "Confirmed by independent" in response.text
+    assert "Bekräftad genom en separat kontroll" in response.text
     assert "Daytime ball" not in client.get("/history?result=BOOKED").text
     assert client.get("/history?account_id=&result=&date=").status_code == 200
     assert client.get("/history?date=bad-date").status_code == 422
