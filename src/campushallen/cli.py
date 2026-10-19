@@ -34,7 +34,7 @@ def import_config(db, config_path: str, user_id: int, account_id: int) -> int:
         data["name"] = domain.name or f"{domain.activity} {index}"
         data["earliest_allowed_time"] = data.pop("allowed_start_earliest")
         data["latest_allowed_time"] = data.pop("allowed_start_latest")
-        data["allow_waitlist"] = bool(raw.get("allow_waitlist", config.booking.allow_waitlist))
+        data["allow_waitlist"] = raw.get("allow_waitlist", config.booking.allow_waitlist)
         if db.scalar(
             select(BookingRule.id).where(
                 BookingRule.campushallen_account_id == account_id, BookingRule.name == data["name"]

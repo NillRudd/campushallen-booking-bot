@@ -34,9 +34,11 @@ def dashboard(request: Request, db: DB, user: CurrentUser):
     upcoming = db.scalar(
         select(BookingAttempt)
         .join(CampushallenAccount)
+        .join(BookingRule, BookingAttempt.booking_rule_id == BookingRule.id)
         .where(
             CampushallenAccount.user_id == user.id,
             CampushallenAccount.enabled.is_(True),
+            BookingRule.enabled.is_(True),
             BookingAttempt.activity_start > utcnow(),
             BookingAttempt.result == "DRY_RUN",
         )

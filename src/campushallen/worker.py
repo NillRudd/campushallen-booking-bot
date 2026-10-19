@@ -6,6 +6,7 @@ import signal
 from campushallen.database.session import make_engine, session_factory
 from campushallen.services.accounts import AccountGateway
 from campushallen.services.engine import BookingEngine
+from campushallen.services.logging import WorkerLogFormatter
 from campushallen.services.scheduler import Scheduler
 from campushallen.services.secrets import TokenVault, runtime_key
 from campushallen.settings import Settings
@@ -39,7 +40,9 @@ def main() -> None:
     if args.live and not args.confirm_real_bookings:
         parser.error("Real mutations require both --live and --confirm-real-bookings")
     settings = Settings()
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+    handler = logging.StreamHandler()
+    handler.setFormatter(WorkerLogFormatter())
+    logging.basicConfig(level=logging.INFO, handlers=[handler])
     # HTTPX logging can expose third-party URL/query data; never enable debug here.
     logging.getLogger("httpx").setLevel(logging.WARNING)
     database = make_engine(settings.database_url)

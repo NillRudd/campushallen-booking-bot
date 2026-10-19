@@ -1,7 +1,7 @@
 from datetime import time
 from typing import Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from campushallen.database.models import BookingRule
 from campushallen.schedule import BookingRule as DomainRule
@@ -24,6 +24,15 @@ class RuleInput(BaseModel):
     latest_allowed_time: time = time(21)
     allow_waitlist: bool = False
     enabled: bool = True
+
+    @field_validator(
+        "start_time", "preferred_start_time", "earliest_allowed_time", "latest_allowed_time"
+    )
+    @classmethod
+    def local_wall_time(cls, value: time | None) -> time | None:
+        if value is not None and value.tzinfo is not None:
+            raise ValueError("Rule times must be local clock times without a timezone offset")
+        return value
 
     @model_validator(mode="after")
     def valid_window(self) -> "RuleInput":
@@ -52,7 +61,7 @@ def domain_rule(rule: BookingRule) -> DomainRule:
         business_unit_ids=tuple(rule.business_unit_ids),
         product_name_contains=tuple(rule.product_name_contains),
         facility_contains=tuple(rule.facility_contains),
-        preferred_start_time=rule.preferred_start_time,
+        preferred_start_time=rule.preferred_start_time or rule.start_time,
         allowed_start_earliest=rule.earliest_allowed_time,
         allowed_start_latest=rule.latest_allowed_time,
     )

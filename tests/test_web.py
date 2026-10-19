@@ -254,3 +254,14 @@ def test_templates_escape_activity_content(web):
     assert post(client, "/rules", data).status_code == 303
     response = client.get("/rules")
     assert "<script>" not in response.text and "&lt;script&gt;" in response.text
+
+
+def test_rule_rejects_timezone_offsets_and_incomplete_forms(web):
+    client, app = web
+    login(client)
+    account = own_account(client, app)
+    data = rule_form(account)
+    assert (
+        post(client, "/rules", {**data, "preferred_start_time": "18:45+02:00"}).status_code == 422
+    )
+    assert post(client, "/rules", {"campushallen_account_id": str(account)}).status_code == 422

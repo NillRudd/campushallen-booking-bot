@@ -275,3 +275,73 @@ def test_live_failure_uncertain_response_never_retries(booking, monkeypatch):
     assert result.result == "VERIFICATION_FAILED"
     assert "sensitive" not in result.message
     assert b.engine.run(b.plan, dry_run=False).result == "CLAIMED"
+
+
+def test_scheduler_waits_using_api_opening_without_blocking_threads(booking, monkeypatch):
+    import campushallen.services.scheduler as scheduler_module
+
+    b = booking
+    clock = [utcnow()]
+    opening = clock[0] + timedelta(seconds=65)
+    plan = replace(b.plan, slot=replace(b.slot, bookable_earliest=opening))
+    sleeps, calls = [], []
+
+    async def fake_sleep(seconds):
+        sleeps.append(seconds)
+        clock[0] += timedelta(seconds=seconds)
+
+    def run(plan, *, dry_run):
+        assert clock[0] >= opening
+        assert dry_run
+        calls.append(plan)
+        return SimpleNamespace(result="DRY_RUN")
+
+    monkeypatch.setattr(scheduler_module, "utcnow", lambda: clock[0])
+    monkeypatch.setattr(b.engine, "run", run)
+    asyncio.run(Scheduler(b.engine, sleep=fake_sleep).execute(plan, wait=True))
+    assert sleeps == [30, 30, 5]
+    assert calls == [plan]
+
+
+def test_scheduler_serializes_overlapping_rules_for_one_account(booking):
+    b = booking
+    with b.sessions() as db:
+        db.get(CampushallenAccount, b.accounts[1]).enabled = False
+        original = db.get(BookingRule, b.rules[0])
+        db.add(
+            BookingRule(
+                campushallen_account_id=b.accounts[0],
+                name="Overlapping rule",
+                activity=original.activity,
+                product_name=original.product_name,
+                weekday=original.weekday,
+                earliest_allowed_time=time(17),
+                latest_allowed_time=time(21),
+            )
+        )
+        db.commit()
+    asyncio.run(Scheduler(b.engine, dry_run=False).once())
+    assert len(b.gateway.posts) == 1
+    with b.sessions() as db:
+        assert "ALREADY_BOOKED" in db.scalars(select(BookingAttempt.result)).all()
+
+
+def test_fixed_time_rule_selects_exact_session_among_multiple(booking):
+    b = booking
+    b.gateway.slots.append(
+        replace(b.slot, id=102, starts_at=b.slot.starts_at + timedelta(minutes=15))
+    )
+    with b.sessions() as db:
+        db.get(BookingRule, b.rules[0]).start_time = b.slot.starts_at.time()
+        db.commit()
+    assert b.engine.run(b.plan, dry_run=False).result == "BOOKED"
+    assert b.gateway.posts == [(b.accounts[0] * 100, 101, False)]
+
+
+def test_worker_requires_both_flags_before_live_mode(monkeypatch):
+    from campushallen.worker import main
+
+    monkeypatch.setattr("sys.argv", ["campushallen-worker", "--live"])
+    with pytest.raises(SystemExit) as exc:
+        main()
+    assert exc.value.code == 2

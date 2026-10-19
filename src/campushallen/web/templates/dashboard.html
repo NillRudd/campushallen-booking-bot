@@ -1,6 +1,6 @@
 {% extends 'base.html' %}{% block content %}
 <p class="eyebrow">YOUR TRAINING, ORGANIZED</p><h1>Your week at Campushallen.</h1><p class="lead">Keep your accounts, booking rules, and results in one place.</p>
-<div class="grid"><section class="card"><h2>Connected accounts <span class="count">{{ accounts|length }}</span></h2>
+<div class="grid"><section class="card"><h2>Your accounts <span class="count">{{ accounts|length }}</span></h2>
 {% for account in accounts %}<div class="row"><a href="/accounts/{{ account.id }}">{{ account.display_name }}</a><span class="badge">{{ account.auth_status|replace('_',' ') if account.enabled else 'disabled' }}</span></div>{% else %}<p>No accounts yet. <a href="/accounts">Add your first account</a>.</p>{% endfor %}</section>
 <section class="card"><p class="eyebrow">NEXT MATCHING ACTIVITY</p>{% if upcoming %}<h2>{{ upcoming.activity_name }}</h2><p>{{ upcoming.activity_start|localtime }}</p><p class="muted">Booking opens {{ upcoming.bookable_earliest|localtime }}</p><small>Last discovered {{ upcoming.created_at|localtime }}. Refresh from the account page.</small>{% else %}<h2>Find your next session.</h2><p>Add a rule, then preview an account to discover upcoming matches.</p>{% endif %}</section></div>
 <section><div class="section-title"><h2>Enabled rules</h2><a class="button" href="/rules/new">+ New rule</a></div><div class="grid">

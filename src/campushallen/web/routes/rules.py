@@ -104,7 +104,18 @@ def save_rule(rule_id, request, db, user, form):
             submitted[name] = str(form.get(name, "")).split(",")
         submitted["allow_waitlist"] = form.get("allow_waitlist") == "on"
         submitted["enabled"] = form.get("enabled") == "on"
-        for name in ("start_time", "preferred_start_time", "product_name"):
+        for name in (
+            "name",
+            "activity",
+            "product_name",
+            "weekday",
+            "booking_type",
+            "web_category_id",
+            "start_time",
+            "preferred_start_time",
+            "earliest_allowed_time",
+            "latest_allowed_time",
+        ):
             submitted.setdefault(name, "")
         submitted["id"] = rule_id
         error = "; ".join(e["msg"] for e in exc.errors(include_input=False))
