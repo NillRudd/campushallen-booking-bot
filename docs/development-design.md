@@ -1,4 +1,8 @@
-# Repository audit and development design
+# Original development phase: repository audit and design
+
+This is the historical design record for `feature/web-app`. For current optional
+credentials, reauthentication, invitations and operational state, see
+[the product/security phase design](pre-deployment-design.md).
 
 ## Existing system
 
