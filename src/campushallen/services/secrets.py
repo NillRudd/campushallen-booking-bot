@@ -37,46 +37,50 @@ def runtime_key(settings: Settings, name: str) -> str:
     return value
 
 
+def purpose_cipher(master_key: str, purpose: bytes) -> Fernet:
+    import base64
+
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+
+    Fernet(master_key.encode())
+    derived = HKDF(algorithm=hashes.SHA256(), length=32, salt=None, info=purpose).derive(
+        base64.urlsafe_b64decode(master_key)
+    )
+    return Fernet(base64.urlsafe_b64encode(derived))
+
+
 class TokenVault:
     def __init__(self, key: str):
-        self.cipher = Fernet(key.encode())
+        self.legacy_cipher = Fernet(key.encode())
+        self.cipher = purpose_cipher(key, b"campushallen-booker/tokens/v1")
 
     def seal(self, state: dict[str, Any]) -> str:
-        return self.cipher.encrypt(json.dumps(state).encode()).decode()
+        return "v1:" + self.cipher.encrypt(json.dumps(state).encode()).decode()
 
     def open(self, ciphertext: str | None) -> dict[str, Any]:
         if not ciphertext:
             raise ReconnectRequired("Reconnect this Campushallen account.")
         try:
-            return json.loads(self.cipher.decrypt(ciphertext.encode()))
-        except (InvalidToken, ValueError, TypeError) as from_error:
-            raise ReconnectRequired(
-                "Token state is unavailable; reconnect this account."
-            ) from from_error
+            cipher = self.cipher if ciphertext.startswith("v1:") else self.legacy_cipher
+            payload = ciphertext[3:] if ciphertext.startswith("v1:") else ciphertext
+            result = json.loads(cipher.decrypt(payload.encode()))
+            if not isinstance(result, dict):
+                raise ValueError("Invalid token state")
+            return result
+        except (InvalidToken, ValueError, TypeError):
+            raise ReconnectRequired("Token state is unavailable; reconnect this account.") from None
 
 
 class CredentialVault:
     """HKDF-SHA256 purpose separation, plus account binding inside the encrypted payload.
 
-    Legacy token Fernet keys remain unchanged so upgrades preserve existing tokens.
-    This derived key is exclusively for credential encryption version 1.
+    Tokens and credentials use distinct purpose strings. TokenVault still reads
+    previous-phase ciphertext with the legacy key for upgrade compatibility.
     """
 
     def __init__(self, master_key: str):
-        import base64
-
-        from cryptography.hazmat.primitives import hashes
-        from cryptography.hazmat.primitives.kdf.hkdf import HKDF
-
-        # Fernet validates the master format before it is used as key material.
-        Fernet(master_key.encode())
-        derived = HKDF(
-            algorithm=hashes.SHA256(),
-            length=32,
-            salt=None,
-            info=b"campushallen-booker/credentials/v1",
-        ).derive(base64.urlsafe_b64decode(master_key))
-        self.cipher = Fernet(base64.urlsafe_b64encode(derived))
+        self.cipher = purpose_cipher(master_key, b"campushallen-booker/credentials/v1")
 
     def seal(self, account_id: int, password: str) -> str:
         return self.cipher.encrypt(

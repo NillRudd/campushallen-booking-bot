@@ -46,7 +46,7 @@ class AccountGateway:
                 raise ReconnectRequired("Authentication failed; reconnect this account.")
             try:
                 customer_id = int(data["username"])
-            except (ValueError, TypeError, KeyError):
+            except (AttributeError, ValueError, TypeError, KeyError):
                 raise ReconnectRequired("Login returned no customer identifier.") from None
             # Verify the identity before keeping any state. Never store password.
             client.get_customer(customer_id)
@@ -81,7 +81,7 @@ class AccountGateway:
             from .account_auth import TemporaryAuthenticationError
 
             raise TemporaryAuthenticationError("Campushallen is temporarily unavailable.") from None
-        except (ValueError, TypeError, KeyError):
+        except (AttributeError, ValueError, TypeError, KeyError):
             raise ReconnectRequired(
                 "Campushallen login failed. Check your credentials and try again."
             ) from None

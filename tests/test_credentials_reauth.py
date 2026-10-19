@@ -262,3 +262,68 @@ def test_wrong_master_key_fails_without_remote_login(authenticated_gateway):
     assert b.server.login_calls == 0
     with b.sessions() as db:
         assert db.get(CampushallenAccount, b.account_id).requires_reconnect
+
+
+def test_token_encryption_is_purpose_separated_and_legacy_tokens_remain_readable():
+    import json
+
+    master = Fernet.generate_key().decode()
+    state = {"access_token": "legacy-private-token", "customer_id": 100}
+    legacy = Fernet(master).encrypt(json.dumps(state).encode()).decode()
+    vault = TokenVault(master)
+    assert vault.open(legacy) == state
+    current = vault.seal(state)
+    assert current.startswith("v1:") and vault.open(current) == state
+    with pytest.raises(ReconnectRequired):
+        CredentialVault(master).open(1, current[3:])
+
+
+def test_disable_during_reauth_does_not_resurrect_account(authenticated_gateway, monkeypatch):
+    b = authenticated_gateway
+    expire(b)
+    original = b.gateway.connect
+
+    def connect(account, password):
+        original(account, password)
+        with b.sessions() as db:
+            row = db.get(CampushallenAccount, b.account_id)
+            row.enabled = False
+            row.auth_lease_until = None
+            db.commit()
+
+    monkeypatch.setattr(b.gateway, "connect", connect)
+    with pytest.raises(ReconnectRequired):
+        use(b)
+    with b.sessions() as db:
+        row = db.get(CampushallenAccount, b.account_id)
+        assert not row.enabled
+        assert b.tokens.open(row.auth_state)["access_token"] == "old-token"
+
+
+def test_concurrent_reauthentication_uses_one_credential_attempt(
+    authenticated_gateway, monkeypatch
+):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Event
+
+    b = authenticated_gateway
+    expire(b)
+    started, release = Event(), Event()
+    original = b.gateway.connect
+
+    def connect(account, password):
+        started.set()
+        assert release.wait(timeout=5)
+        original(account, password)
+
+    monkeypatch.setattr(b.gateway, "connect", connect)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        first = pool.submit(use, b)
+        assert started.wait(timeout=5)
+        try:
+            with pytest.raises(ReconnectRequired):
+                use(b)
+        finally:
+            release.set()
+        assert first.result(timeout=5) == "Bearer fresh-token"
+    assert b.server.login_calls == 1

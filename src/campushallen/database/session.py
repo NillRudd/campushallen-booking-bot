@@ -16,7 +16,7 @@ def make_engine(url: str) -> Engine:
         kwargs["connect_args"] = {"check_same_thread": False, "timeout": 30}
         if not parsed.database or parsed.database == ":memory:":
             kwargs["poolclass"] = StaticPool
-    engine = create_engine(url, **kwargs)
+    engine = create_engine(url, hide_parameters=True, **kwargs)
     if parsed.get_backend_name() == "sqlite":
 
         @event.listens_for(engine, "connect")

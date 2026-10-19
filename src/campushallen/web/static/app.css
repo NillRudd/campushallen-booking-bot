@@ -299,3 +299,9 @@ summary {
     padding: 0.75rem;
   }
 }
+
+.notice { background: #e1f1e6; border: 1px solid #b5d5c0; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+nav { flex-wrap: wrap; }
+section { min-width: 0; }
+input[readonly] { font-family: ui-monospace, monospace; }
+@media (max-width: 760px) { nav { justify-content: flex-start; gap: .75rem 1.2rem; } }

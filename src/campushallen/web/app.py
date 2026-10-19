@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -13,19 +14,27 @@ from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
 from campushallen.database.session import make_engine, session_factory
+from campushallen.services.account_auth import AccountAuthentication
 from campushallen.services.accounts import AccountGateway
 from campushallen.services.authentication import LoginLimiter
 from campushallen.services.engine import BookingEngine
-from campushallen.services.secrets import TokenVault, runtime_key
+from campushallen.services.invitations import invite_status
+from campushallen.services.logging import InviteAccessFilter
+from campushallen.services.notifications import NoopNotifier
+from campushallen.services.secrets import CredentialVault, TokenVault, runtime_key
 from campushallen.settings import Settings
 from campushallen.web.dependencies import LoginRequired, render
-from campushallen.web.routes import accounts, auth, pages, rules
+from campushallen.web.presentation import connection_status, friendly_result, verification_label
+from campushallen.web.routes import accounts, admin, auth, invites, pages, rules, security
 
 ROOT = Path(__file__).parent
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or Settings()
+    access_log = logging.getLogger("uvicorn.access")
+    if not any(isinstance(f, InviteAccessFilter) for f in access_log.filters):
+        access_log.addFilter(InviteAccessFilter())
     engine = make_engine(settings.database_url)
 
     @asynccontextmanager
@@ -33,16 +42,31 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         yield
         engine.dispose()
 
-    app = FastAPI(title="Campushallen Booker", lifespan=lifespan, docs_url=None, redoc_url=None)
+    app = FastAPI(
+        title="Campushallen Booker",
+        lifespan=lifespan,
+        docs_url=None,
+        redoc_url=None,
+        openapi_url=None,
+    )
     app.state.settings = settings
     app.state.sessions = session_factory(engine)
     app.state.secret = runtime_key(settings, "secret_key")
     app.state.csrf_signer = URLSafeTimedSerializer(app.state.secret, salt="browser-csrf")
     app.state.limiter = LoginLimiter()
-    app.state.gateway = AccountGateway(
-        settings, TokenVault(runtime_key(settings, "encryption_key"))
+    master_key = runtime_key(settings, "encryption_key")
+    tokens = TokenVault(master_key)
+    app.state.credential_vault = CredentialVault(master_key)
+    app.state.notifier = NoopNotifier()
+    app.state.gateway = AccountGateway(settings, tokens)
+    app.state.gateway.auth_service = AccountAuthentication(
+        app.state.sessions,
+        app.state.gateway,
+        tokens,
+        app.state.credential_vault,
+        app.state.notifier,
     )
-    app.state.engine = BookingEngine(app.state.sessions, app.state.gateway)
+    app.state.engine = BookingEngine(app.state.sessions, app.state.gateway, app.state.notifier)
     app.state.templates = Jinja2Templates(directory=str(ROOT / "templates"))
     tz = ZoneInfo(settings.campushallen_timezone)
     app.state.templates.env.filters["localtime"] = lambda value: (
@@ -51,6 +75,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.templates.env.filters["clock"] = lambda value: (
         value.strftime("%H:%M") if hasattr(value, "strftime") else str(value or "")
     )
+    app.state.templates.env.filters["connection_status"] = connection_status
+    app.state.templates.env.filters["friendly_result"] = friendly_result
+    app.state.templates.env.filters["verification_label"] = verification_label
+    app.state.templates.env.filters["invite_status"] = invite_status
     app.state.templates.env.globals["weekdays"] = [
         "Monday",
         "Tuesday",
@@ -67,7 +95,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
-        response.headers["Referrer-Policy"] = "same-origin"
+        response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; style-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'self'"
         )
@@ -98,6 +126,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         except SQLAlchemyError:
             return JSONResponse({"status": "database_unavailable"}, status_code=503)
 
-    for router in (auth.router, pages.router, accounts.router, rules.router):
+    for router in (
+        auth.router,
+        pages.router,
+        accounts.router,
+        rules.router,
+        invites.router,
+        admin.router,
+        security.router,
+    ):
         app.include_router(router)
     return app
