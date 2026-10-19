@@ -1,4 +1,4 @@
-.PHONY: dev test lint format typecheck migrate docker-up docker-down worker
+.PHONY: dev test lint format typecheck migrate docker-up docker-down worker browser-smoke
 
 dev:
 	uvicorn campushallen.web.app:create_app --factory --reload --host 127.0.0.1
@@ -28,3 +28,6 @@ docker-up:
 
 docker-down:
 	docker compose down
+
+browser-smoke:
+	python scripts/smoke_web.py
