@@ -70,3 +70,29 @@ One existing Starlette TestClient deprecation warning concerns its HTTPX adapter
 it does not affect passing assertions. These checks are development verification,
 not a penetration test or approval to deploy. See the
 [pre-deployment checklist](pre-deployment-checklist.md) for the next phase.
+
+## Swedish website phase
+
+Verified on 19 October 2026 on `feature/swedish-ui`:
+
+| Check | Result |
+| --- | --- |
+| Existing suite before locale-specific additions | 94 passed, with Swedish UI expectations |
+| Full suite, local Python 3.14.4 and Docker Python 3.12 | 121 passed on each |
+| Ruff checks/formatting and mypy | Passed; 36 typed application modules |
+| Swedish catalog | All 410 messages translated; compiled catalog and plural forms verified |
+| Locale coverage | Major pages, validation, account states, outcomes, dates/weekdays, admin and stable persisted codes |
+| Browser smoke | Swedish accessible selectors, clipboard copy, invitation/registration/onboarding, remembered credentials, rule creation, preview, dashboard/history, forget password and logout-all passed |
+| Visual review | Login, invite, onboarding, account, rule form, dashboard, history, security and admin reviewed; 390px mobile dashboard has no page overflow |
+| Frontend string audit | Static text is localized; brand, external/user data, secondary admin codes and fixed DELETE confirmation are documented exceptions |
+| Package build | Wheel includes `.po`, `.mo` and the external copy-link script |
+| Docker build/start | Development image built; healthy as UID 10001; Swedish `/login` and `/health` checked |
+| `alembic check` | No new upgrade operations; no migration needed |
+
+The runtime dependency added in this phase is Babel 2.18.0 (allowed range
+`>=2.17,<3`). The existing TestClient HTTPX deprecation warning remains. Catalog
+maintenance and language boundaries are documented in [localization.md](localization.md).
+All automated Campushallen calls remain mocked, real bookings were not enabled,
+and no production Raspberry Pi/systemd behavior was changed. Nothing was pushed
+or deployed. Development containers were stopped after verification; their data
+volume was retained.

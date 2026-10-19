@@ -84,6 +84,7 @@ settings.
 | Variable | Development default / purpose |
 | --- | --- |
 | `APP_ENV` | `development` |
+| `DEFAULT_LOCALE` | `sv_SE`; currently the only supported web locale |
 | `DATABASE_URL` | `sqlite:///state/web.db` |
 | `STATE_DIR` | `state`; generated keys live here |
 | `SECRET_KEY` | Session hashing / signed CSRF tokens; at least 32 characters |
@@ -141,6 +142,35 @@ token endpoint remains unimplemented; this feature uses a new password login.
 `.env`, local YAML, databases, state, logs, tokens, and keys are ignored by Git
 and excluded from the Docker build context. Do not share the entire working
 directory as an archive. Never enable HTTP debug/body logging with real secrets.
+
+## Website language and localization
+
+The website defaults to Swedish (`sv-SE`, configured as `DEFAULT_LOCALE=sv_SE`).
+There is no language selector or browser-language negotiation in this phase.
+The CLI, logs, database enums, API values and developer documentation remain English.
+
+Website copy uses standard gettext English source strings and Jinja i18n.
+The Swedish catalog is in `src/campushallen/web/translations/sv_SE/LC_MESSAGES/`;
+both the editable `messages.po` and compiled `messages.mo` are shipped with the
+package. Babel formats Swedish dates and weekdays in Europe/Stockholm; database
+timestamps remain UTC. Outcome, account-state and security-event labels are
+translated only for display.
+
+After changing website copy, activate the development virtual environment and run:
+
+```sh
+make i18n-update   # extract English msgids and update the Swedish .po
+# Edit messages.po, translating new messages and checking placeholders/plurals.
+make i18n-compile
+make test
+```
+
+Restart the local app after compiling; catalogs are cached. Commit the `.pot`,
+`.po` and `.mo` files together. Future languages such as `en_US` can use another
+catalog and a locale-selection policy without rewriting templates. They must
+also be enabled in the settings validator; only Swedish is accepted today.
+See [localization notes](docs/localization.md) for boundaries and intentional
+exceptions.
 
 ## Architecture
 
