@@ -40,3 +40,11 @@ playwright/.auth/
 .DS_Store
 .idea/
 .vscode/
+
+# Web database and development keys.
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.sqlite3-*
+data/

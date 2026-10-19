@@ -6,21 +6,55 @@ build-backend = "setuptools.build_meta"
 name = "campushallen-bot"
 version = "0.1.0"
 description = "Local Campushallen booking automation with Playwright"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [
   "playwright>=1.47,<2",
   "httpx>=0.27,<1",
   "PyYAML>=6,<7",
   "beautifulsoup4>=4.10,<5",
+  "fastapi>=0.115,<1",
+  "uvicorn[standard]>=0.30,<1",
+  "sqlalchemy>=2.0,<2.1",
+  "alembic>=1.13,<2",
+  "pydantic-settings>=2.5,<3",
+  "jinja2>=3.1.6,<4",
+  "python-multipart>=0.0.20,<1",
+  "argon2-cffi>=23.1,<26",
+  "cryptography>=44,<49",
+  "itsdangerous>=2.2,<3",
 ]
 
 [project.optional-dependencies]
-test = ["pytest>=6,<9"]
+test = ["pytest>=8,<9"]
+dev = ["pytest>=8,<9", "ruff>=0.11,<1", "mypy>=1.15,<2", "types-PyYAML", "types-beautifulsoup4"]
 
 [project.scripts]
+campushallen-admin = "campushallen.cli:main"
+campushallen-worker = "campushallen.worker:main"
 campushallen-login = "campushallen.auth:main"
 campushallen-book = "campushallen.booking:main"
 campushallen-inspect-schedule = "campushallen.inspect_schedule:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+campushallen = ["web/templates/*.html", "web/static/*.css"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+
+[tool.mypy]
+python_version = "3.12"
+files = ["src/campushallen/settings.py", "src/campushallen/database", "src/campushallen/services", "src/campushallen/web", "src/campushallen/cli.py", "src/campushallen/worker.py"]
+check_untyped_defs = true
+ignore_missing_imports = true
+follow_imports = "silent"
+
+[[tool.mypy.overrides]]
+module = ["campushallen.api", "campushallen.booking", "campushallen.browser", "campushallen.nettrace", "campushallen.config", "campushallen.schedule"]
+ignore_errors = true
