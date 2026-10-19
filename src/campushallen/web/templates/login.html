@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block title %}Log in · Campushallen Booker{% endblock %}
+{% block content %}<section class="login card"><p class="eyebrow">YOUR WEEK, BOOKED</p><h1>Welcome back.</h1><p>Manage your Campushallen accounts and booking rules.</p>
+<form action="/login" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<label>Application username<input name="username" autocomplete="username" maxlength="254" required autofocus></label>
+<label>Password<input type="password" name="password" autocomplete="current-password" maxlength="1024" required></label>
+<button>Log in</button></form><p class="muted">Ask the application owner to create your login.</p></section>{% endblock %}

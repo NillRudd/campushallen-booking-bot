@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Campushallen Booker{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='app.css') }}">
+</head>
+<body>
+<header><a class="brand" href="/">Campushallen <span>Booker</span></a>
+{% if user %}<nav aria-label="Main"><a href="/">Overview</a><a href="/accounts">Accounts</a><a href="/rules">Rules</a><a href="/history">History</a></nav>
+<form action="/logout" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="quiet">Log out · {{ user.username }}</button></form>{% endif %}</header>
+<main>{% if error %}<div class="error" role="alert">{{ error }}</div>{% endif %}{% block content %}{% endblock %}</main>
+<footer>Development · Booking previews are read-only · Times shown in {{ request.app.state.settings.campushallen_timezone }}</footer>
+</body></html>

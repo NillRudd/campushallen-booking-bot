@@ -130,7 +130,7 @@ class GroupActivitySelection:
 class CampushallenHttpClient:
     """HTTP client for Campushallen's Go Active/BRP API."""
 
-    def __init__(self, config: AppConfig) -> None:
+    def __init__(self, config: AppConfig, *, load_saved_auth: bool = True) -> None:
         self.config = config
         self.client = httpx.Client(
             base_url=API_BASE_URL,
@@ -144,9 +144,9 @@ class CampushallenHttpClient:
                 "User-Agent": "Mozilla/5.0 CampushallenBookingBot/0.1",
             },
         )
-        if config.auth.storage_state_path.exists():
+        if load_saved_auth and config.auth.storage_state_path.exists():
             self._load_storage_state(config.auth.storage_state_path)
-        if config.auth.token_state_path.exists():
+        if load_saved_auth and config.auth.token_state_path.exists():
             self._load_token_state(config.auth.token_state_path)
 
     def _load_storage_state(self, storage_state_path: Path) -> None:

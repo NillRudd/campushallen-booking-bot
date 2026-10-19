@@ -1,0 +1,1 @@
+{% extends 'base.html' %}{% block content %}<p class="eyebrow">ACTIVITY LOG</p><h1>Booking history.</h1>{% include 'attempts.html' %}<div class="actions">{% if page > 1 %}<a href="/history?page={{ page - 1 }}">← Newer</a>{% endif %}<span>Page {{ page }}</span>{% if recent|length == 50 %}<a href="/history?page={{ page + 1 }}">Older →</a>{% endif %}</div>{% endblock %}
