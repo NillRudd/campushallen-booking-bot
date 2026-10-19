@@ -58,3 +58,12 @@ follow_imports = "silent"
 [[tool.mypy.overrides]]
 module = ["campushallen.api", "campushallen.booking", "campushallen.browser", "campushallen.nettrace", "campushallen.config", "campushallen.schedule"]
 ignore_errors = true
+
+# Leave the established CLI formatting intact while formatting all new modules.
+[tool.ruff.format]
+exclude = ["scripts/book.py", "scripts/login.py", "scripts/inspect_schedule.py", "tests/test_schedule.py", "tests/test_dynamic_group_activity.py", "tests/test_api.py", "tests/test_booking_target.py", "src/campushallen/auth.py", "src/campushallen/config.py", "src/campushallen/logging_config.py", "src/campushallen/booking.py", "src/campushallen/__init__.py", "src/campushallen/browser.py", "src/campushallen/api.py", "src/campushallen/schedule.py", "src/campushallen/nettrace.py", "src/campushallen/inspect_schedule.py"]
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/*.py" = ["I001"]
+"src/campushallen/{booking,config,logging_config,nettrace,schedule}.py" = ["I001"]
+"tests/test_{api,booking_target,dynamic_group_activity,schedule}.py" = ["I001"]

@@ -1,4 +1,5 @@
 """Web/worker settings, separate from the legacy bot's YAML configuration."""
+
 from pathlib import Path
 from zoneinfo import ZoneInfo
 

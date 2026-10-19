@@ -1,9 +1,21 @@
 """Tenant data and durable, conservative booking claims."""
+
 from datetime import datetime, time, timezone
 from enum import StrEnum
 from typing import Any
 
-from sqlalchemy import JSON, Boolean, CheckConstraint, ForeignKey, Index, Integer, String, Text, Time, UniqueConstraint
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    CheckConstraint,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    Time,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.types import DateTime, TypeDecorator
 
@@ -14,6 +26,7 @@ def utcnow() -> datetime:
 
 class UTCDateTime(TypeDecorator[datetime]):
     """SQLite stores naive UTC; callers always receive aware UTC datetimes."""
+
     impl = DateTime
     cache_ok = True
 
@@ -74,7 +87,9 @@ class BookingRule(Timestamps, Base):
         CheckConstraint("earliest_allowed_time <= latest_allowed_time", name="valid_window"),
     )
     id: Mapped[int] = mapped_column(primary_key=True)
-    campushallen_account_id: Mapped[int] = mapped_column(ForeignKey("campushallen_accounts.id", ondelete="CASCADE"), index=True)
+    campushallen_account_id: Mapped[int] = mapped_column(
+        ForeignKey("campushallen_accounts.id", ondelete="CASCADE"), index=True
+    )
     name: Mapped[str] = mapped_column(String(120))
     activity: Mapped[str] = mapped_column(String(200))
     product_name: Mapped[str | None] = mapped_column(String(200))
@@ -114,11 +129,17 @@ class BookingAttempt(Base):
     __tablename__ = "booking_attempts"
     __table_args__ = (
         Index("ix_attempt_account_created", "campushallen_account_id", "created_at"),
-        CheckConstraint("result IN (" + ",".join(f"'{x.value}'" for x in Outcome) + ")", name="valid_result"),
+        CheckConstraint(
+            "result IN (" + ",".join(f"'{x.value}'" for x in Outcome) + ")", name="valid_result"
+        ),
     )
     id: Mapped[int] = mapped_column(primary_key=True)
-    campushallen_account_id: Mapped[int] = mapped_column(ForeignKey("campushallen_accounts.id", ondelete="CASCADE"))
-    booking_rule_id: Mapped[int | None] = mapped_column(ForeignKey("booking_rules.id", ondelete="SET NULL"), index=True)
+    campushallen_account_id: Mapped[int] = mapped_column(
+        ForeignKey("campushallen_accounts.id", ondelete="CASCADE")
+    )
+    booking_rule_id: Mapped[int | None] = mapped_column(
+        ForeignKey("booking_rules.id", ondelete="SET NULL"), index=True
+    )
     activity_id: Mapped[int | None] = mapped_column(Integer)
     activity_name: Mapped[str | None] = mapped_column(String(200))
     activity_start: Mapped[datetime | None] = mapped_column(UTCDateTime())
@@ -134,7 +155,10 @@ class BookingClaim(Base):
 
     Uncertain outcomes require manual investigation, never an automatic retry.
     """
+
     __tablename__ = "booking_claims"
-    campushallen_account_id: Mapped[int] = mapped_column(ForeignKey("campushallen_accounts.id", ondelete="CASCADE"), primary_key=True)
+    campushallen_account_id: Mapped[int] = mapped_column(
+        ForeignKey("campushallen_accounts.id", ondelete="CASCADE"), primary_key=True
+    )
     activity_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
