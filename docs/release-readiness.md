@@ -1,7 +1,7 @@
 # Release readiness after the 20 October incident
 
-**NOT READY TO SHARE LINK WITH USERS.** The corrected first real booking has not
-been independently verified. Active Pi undervoltage is a separate release blocker.
+**NOT READY TO SHARE LINK WITH USERS.** The corrected live waitlist mutation path
+is independently production-validated. Active Pi undervoltage remains a release blocker.
 Router forwarding cannot be verified from the application host alone.
 
 This record supersedes earlier deployment status summaries. Historical evidence
@@ -30,7 +30,7 @@ temporary failures back off. POST 401/403 never causes a second POST: the API do
 not provide proven safe nonacceptance semantics. After a POST response or timeout,
 only an independent bookings GET may reconcile the result. A verification 401/403
 may refresh authentication and repeat that GET once. Read success distinguishes
-BOOKED from NOT_BOOKED; unreadable state stays UNKNOWN. Both absent and unknown
+BOOKED, WAITLISTED and NOT_BOOKED; unreadable state stays UNKNOWN. Both absent and unknown
 results retain their durable claim. A restart cannot replay the mutation.
 
 Connection approval has two explicit forms: controlled grants with a target and
@@ -51,8 +51,8 @@ allows recovery; a compromised running host can read credentials during login.
 
 | Requirement | Status | Evidence / limit |
 | --- | --- | --- |
-| First corrected real Niklas booking independently verified | BLOCKED | Wait for the next legitimate API opening; never manufacture a test booking |
-| No duplicate mutation in corrected real run | BLOCKED | Mocked restart/concurrency/one-POST tests pass; real run still pending |
+| Corrected real Niklas mutation independently verified | PASS | Explicitly approved 4343840: 201 Created, two independent GETs confirm WAITLISTED position 9; scheduled opening-time run still pending |
+| No duplicate mutation in corrected real run | PASS | Transport trace: exactly one booking POST, no cancellation; consumed one-use approval plus unchanged original claim |
 | Auth phase handling and automatic reauth | PASS | Deterministic Oct 20/27 DST fixture, POST 401/403/400/500, verification 401, timeout, restart, bad-password latch and shared login budget |
 | Single connection per website user | PASS | Unique database index, concurrent creation and ownership tests |
 | Secure credential storage by default | PASS | Checked connect form, encrypted account-bound credential, replacement/removal tests and browser smoke |
@@ -64,7 +64,7 @@ allows recovery; a compromised running host can read credentials during login.
 | Per-connection live gating; new users off | PASS | Atomic eligibility/claim check; controlled and ongoing approval tests; global dry-run remains authoritative |
 | Admin activation/stop and clear user status | PASS | Admin-only confirmed activation, audit, owner dashboard/account/rules pending/active messages; browser smoke |
 | Swedish/mobile journey | PASS | Complete mocked invite/onboarding/search/rules/preview/history/security journey at desktop and 390px; no overflow or JavaScript errors |
-| Production schema/image/health | PASS | Deployed c3a1787; a71e420f9c03 head, no drift, integrity/FK clean; all containers healthy |
+| Production schema/image/health | PASS | Deployed dbcf5a3; b2d934a8e710 head, no drift, integrity/FK clean; all containers healthy |
 | Backup/restore/off-Pi recovery | PASS | Pre/post-deploy online snapshots restored; off-Pi integrity and matching separate recovery key verified |
 | Scheduled backup independent of worker | PASS | Installed systemd service succeeded with worker stopped; timer enabled/waiting, safe Admin status successful |
 | Secret/privacy audit | PASS | Targeted historical/tracked-file scan and logging review; not a penetration test or proof against every secret format |
@@ -113,112 +113,88 @@ Do not distribute invitations until all release blockers are resolved.
    encryption key separately with mode 0600. For a real restore, stop web/worker,
    preserve the current DB and claims first, restore a consistent snapshot and
    reconcile every live claim with Campushallen before any booking source resumes.
-   A pre-incident backup must never erase the spent 4343840 claim.
+   A pre-incident backup must never erase the spent 4343840 claim or the
+   consumed reconciliation. Downgrade refuses to discard consumed approvals;
+   any rollback worker must account for that additional spent allowance.
 10. Read dashboard worker health and **Historik** for the phase, HTTP status and
     independent verification. Unknown outcomes require manual review; there is no
     claim reset or cancellation function. Admin shows reconnect and backup status.
 
-## Validation record
+## Current deployed state, 20 October 2026, 21:56 CEST
 
-Local Python 3.14.4: 228 tests passed, including migration preservation of the
-spent incident claim; Ruff and formatting pass, mypy passes for 43 modules. Swedish catalog
-contains 489/489 translated messages. Chrome browser smoke passes pending approval,
-admin activation and stop as well as the full desktop/mobile user journey. Exact ARM64 image/deployment evidence is recorded below. Automated fixtures prohibit external networking; all
-Campushallen mutation requests are mocked. Production read-only checks enforce GET.
+Application/source and image tag: `dbcf5a33fc335f1db974d2afff95100b928c631a`.
+Image ID: `sha256:c6b48ab0ae275117ce621630d2ee095df4e3fafa17c42fe31f0f25dfbdb3d1c1`.
+Documentation can advance separately. Schema `b2d934a8e710` is at head;
+Alembic drift, integrity and foreign-key checks passed. Migration preserved old
+rows, tokens, credentials and the exact original incident claim/history.
 
+See [the full old/new wire audit, selectors and actual test](booking-client-audit.md).
+At 21:53 CEST the separately approved one-use reconciliation for 4343840 sent
+**one POST**, received **201 Created**, and independently confirmed **WAITLISTED
+at position 9** twice. The final local event is VERIFIED_WAITLISTED / WAITLISTED
+(history 55); the original claim and historical AUTH_FAILED event are unchanged.
+No cancellation occurred. The prior failure's provider-side cause remains unknown.
+A separate real saved-password login and authenticated reads succeeded before
+this test; no login was needed during the booking operation itself.
 
-## Deployed state, 20 October 2026, 21:17 CEST
+The healthy worker uses both live flags. Only connection 2 (niklas, user 1) is
+eligible. It is restored to target **4342668**, ongoing approval **false**,
+lifetime allowance **3**, used **2**, remaining **1**. Usage counts the original
+claim and consumed manual approval; neither was reset. The next target starts
+**29 October 18:45 CET** and opens **22 October 18:45 CEST**. Stored planned action
+matches the API opening. At that opening the normal worker will reauthenticate
+if needed, reselect, duplicate-check, enforce waitlist policy and atomically
+reserve the one remaining mutation before an at-most-once POST and verification.
+Keep this scope until the scheduled opening-time run is independently verified;
+ongoing Tuesday/Thursday/Sunday approval is deliberately not enabled yet.
+All three rules now use exact product 1401, business unit 1, Vallastaden and
+fixed Tuesday/Thursday 18:45 / Sunday 12:00; enabled/waitlist choices are unchanged.
 
-Application/source commit: `c3a1787af388d96cc22fb8b3407a217f0a715fbc`.
-ARM64 image: `campushallenbot:c3a1787af388d96cc22fb8b3407a217f0a715fbc`,
-local image/index digest `sha256:565e43a906861e026293a87a544acb26274e4145d69d0e601baf7c7a811af942`.
-Documentation can advance separately. Migration `a71e420f9c03` is at head;
-`alembic check`, integrity and foreign keys pass. Migration preserved every
-previous row, token, credential and the exact incident history/claim.
+Web, worker and cloudflared are healthy, non-root, read-only at the root
+filesystem, with zero restarts/OOM, no published host ports and unless-stopped
+restart policies. Niklas's old timer is disabled/inactive, service PID 0;
+the friend's remains enabled/active/waiting and its installation is untouched.
+The daily independent backup timer remains enabled/waiting. No reboot occurred.
 
-The separate worker runs both live flags. Only connection 2 (niklas, user 1)
-is eligible, ongoing approval is false, target is **4342668**, total lifetime
-claim allowance is **2**, used **1**, remaining **1**. Increasing the total from
-1 to 2 grants one additional attempt; no claim was cleared or reset. Claim
-4343840 retains its original `2026-10-20 16:45:01.027998` UTC timestamp and history
-40 CLAIMED / 41 AUTH_FAILED, with historical phase unknown. No new booking POST
-has started, and no cancellation was performed during this phase.
+## Verification and recovery
 
-Fresh guarded provider reads confirmed Innebandy 85 Vallastaden, product 1401,
-Campushallen/LSIF business unit 1, rooms C-salen/C1/C2/C3/C4. Target **4342668**
-starts **29 October 2026 18:45 CET** (17:45 UTC) and opens **22 October 2026
-18:45 CEST** (16:45 UTC). It had 15/15 free places and no existing booking.
-All three production rule previews matched worker discovery; all 34 guarded GETs
-returned 200, with a healthy token and an encrypted saved credential present.
-No authentication login or booking mutation was needed for preflight.
+Local Python 3.14.4: **256 tests passed**, Ruff/93-file formatting passed,
+mypy passed for 43 modules, and 494/494 Swedish catalog entries are translated.
+Final Chrome browser smoke and exact ARM64 production image smoke passed.
+New tests cover one-use reconciliation, unchanged claims, concurrency, quota,
+expiry/identity/admin/scope checks, restart/unknown outcomes, CLI execution,
+disconnect, downgrade preservation and waitlist classification. Automated tests
+forbid external networking; the explicitly authorized real test was separate.
+One existing Starlette/httpx deprecation warning remains.
 
-The live worker started at 19:15:53 UTC. It independently observed the target at
-19:16:59 UTC, with a fresh heartbeat at 19:17:23 UTC. The stored state is waiting,
-and planned action equals the API opening, 22 October 16:45 UTC. At that opening
-it will authenticate, reselect the same target, check bookings/capacity/policy,
-atomically acquire the single remaining claim, issue at most one POST and verify
-through an independent GET. Recovery cannot repeat that POST. Unrelated targets
-fail the target gate. Niklas remains controlled after this attempt, even if it
-succeeds; independently verify the remote booking and local phase before using
-the explicit Admin confirmation to approve ongoing Tuesday/Thursday/Sunday rules.
+Before this migration: `campushallen-20261020T194620509296Z-ace0c3.sqlite3`.
+After the successful real test: `campushallen-20261020T195519366647Z-12b3d4.sqlite3`.
+Both passed isolated restore, off-Pi integrity and matching separate 0600
+recovery-key checks. The latter also verifies consumed approval 1, original
+claim/history, WAITLISTED result and the restored finite future target scope.
+Daily backup status remains successful. Private evidence is outside Git in
+`~/Documents/CampushallenBot-Incidents/live-waitlist-dbcf5a3/`.
 
-Web, live worker and cloudflared are healthy, non-root, read-only at the root
-filesystem, with no published host ports and `unless-stopped` restart policies.
-There were zero restarts and no OOM kills. Docker is enabled at boot, user
-lingering is enabled, NTP is synchronized to Europe/Stockholm. Final capacity check showed 7.8 GiB disk free and 527 MiB memory available. No host reboot was performed under unstable power. Niklas's old timer is
-disabled/inactive, its service has PID 0. Friend's timer remains enabled, active
-and waiting, and its unit/config/auth files were not edited.
+Retained production logs contained no known secret-file values or scanned
+bearer/cookie/invite/password patterns. Targeted history/private-path scanning
+and logging review are not an exhaustive security assessment. Earlier public
+HTTPS/mobile/cookie/invitation acceptance remains recorded in the production
+validation notes; final authenticated browser smoke used mocked Campushallen.
 
-A production temporary invite was created through the trusted operator service,
-verified at the canonical public HTTPS URL, revoked, and checked through GET and
-a valid-CSRF registration POST: both returned unavailable (400), and no user was
-created. The bearer remained only in memory and was not printed. Public Chrome
-checks at 1280px and 390px confirmed Swedish login, no horizontal overflow,
-Secure/HttpOnly/SameSite=Strict CSRF cookie, strict-origin Referrer-Policy and
-private/no-store responses. Authenticated production sessions were not minted or
-impersonated for this audit. The full authenticated flow uses mocked local
-browser smoke. Additional 390px checks covered onboarding, connection, rules,
-manual rule form, history, settings, admin and activation confirmation.
+Never restore an older snapshot over spent claims or consumed manual approvals.
+Schema downgrade intentionally refuses to erase consumed approvals, and older
+worker images do not count this ledger: use a schema-compatible worker for image
+rollback. To return to legacy, stop/drain the new worker, reconcile remote state
+including the 27 October waitlist entry, disable app live approval and set global
+dry-run before considering the old timer. Never run both booking sources.
 
-Final verification: **228 tests passed**, Ruff/90-file formatting passed, mypy
-passed for 43 modules, 489/489 Swedish catalog entries translated. Both final
-Chrome smoke and exact-image production smoke passed. The production smoke also
-proved backup with worker stopped, isolated restore, and database/key persistence
-across container restart. One existing Starlette/httpx deprecation warning remains.
-A targeted Git-history/private-path scan and retained production-log scan found
-no high-confidence secrets or known secret-file values; this does not establish
-an exhaustive security assessment.
+## Remaining release blockers
 
-Before migration: `campushallen-20261020T190219412441Z-6b65b1.sqlite3`.
-After deployment/approval: `campushallen-20261020T191608307320Z-ac70b0.sqlite3`.
-Both passed isolated restore, off-Pi integrity/FK checks and matching separate
-0600 recovery-key checks. The latter preserves schema a71, the new finite target
-grant and the spent incident claim. The installed daily backup service was run
-successfully, including while the worker was stopped; Admin status records
-success at 19:15:29 UTC. The timer remains enabled/waiting. Backup retention is
-14 completed snapshots; incident evidence lives separately and was not pruned.
-Private verification evidence is under
-`~/Documents/CampushallenBot-Incidents/corrected-release-c3a1787/`.
-
-To test a selected backup without a running worker, from the Pi release:
-
-```sh
-./scripts/production run --rm --no-deps --interactive=false \
-  --entrypoint python \
-  -v "$HOME/.config/campushallenbot/encryption_key:/run/secrets/encryption_key:ro" \
-  -e ENCRYPTION_KEY_FILE=/run/secrets/encryption_key \
-  backup -m campushallen.cli restore-test /backups/FILE --expect-user niklas
-```
-
-Remaining blockers are **first corrected real booking validation** (including
-independent confirmation and no duplicate mutation), **current active undervoltage
-and throttling** (`0x50005`: bits 0/2 current, 16/18 historical), and **unverified
-router forwarding**. The operator requested continuing work despite power warnings
-and reported the router configuration not yet checked. No claim that the site is
-ready to share is made. The next API opening is still in the future.
-
-
-Power follow-up: the final capacity probe briefly showed **0x50000** (historical
-flags only), but the next reading at **21:21 CEST** returned **0x50005** (active
-undervoltage/throttling again). Power is intermittent; its release gate remains
-BLOCKED. No reboot or artificial hardware load was used for these checks.
+The live mutation path is now validated for a real waitlist entry. Regular-place
+booking and the next opening-time run have not yet been observed with this build.
+The public-launch blockers remain **current/recurring active undervoltage** and
+**unverified router forwarding**. A brief earlier reading was `0x50000`
+(historical only), but the final 21:56 CEST reading is **0x50005**: bits 0/2 are
+current undervoltage/throttling, bits 16/18 historical undervoltage/throttling.
+The operator requested continuing work despite power warnings. No published
+Docker ports does not prove the router has no forwarding rules.

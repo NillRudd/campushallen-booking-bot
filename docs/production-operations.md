@@ -4,7 +4,9 @@ Current release status is maintained in [the release gate and operator guide](re
 Earlier incident-freeze and rollout descriptions below are historical snapshots.
 
 The corrected release runs one controlled Niklas-only live target, 4342668,
-opening 22 October 2026 at 18:45 CEST. Its old claim remains spent. Niklas's old
+opening 22 October 2026 at 18:45 CEST. Its old claim remains spent. A separately approved one-use manual reconciliation
+successfully joined the 27 October waitlist at position 9; that approval is also
+spent. Ongoing live scope remains off until the scheduled opening is verified. Niklas's old
 timer is disabled; the friend's remains enabled. See the
 [release gate and operator guide](release-readiness.md) before changing scope or
 restarting booking sources. The daily backup helper now uses an independent

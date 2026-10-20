@@ -12,12 +12,15 @@ The existing production site is <https://campushallenbot.se>; see the
 one-connection/activity-discovery redesign is deployed; see the
 [production verification record](docs/production-validation.md) for checked
 behavior and remaining private browser acceptance.
-**Not ready to share with other users.** Corrected live validation and active Pi
-undervoltage remain release blockers. See the [release gate and operator guide](docs/release-readiness.md)
-for current checks, safe phase recovery, per-user admin activation and deployment status.
-The corrected release is deployed; connection 2 has one controlled attempt waiting
-for 22 October 2026 at 18:45 CEST. New users remain live disabled.
-The old activity's durable claim remains preserved; it must never be retried.
+**Not ready to share with other users.** The corrected live waitlist path is
+production-validated: the explicitly approved 27 October session was independently
+confirmed at position 9 after one POST. Active Pi undervoltage and unchecked
+router forwarding remain public-launch blockers. See the
+[release gate and operator guide](docs/release-readiness.md) and
+[old/new client audit and real test](docs/booking-client-audit.md).
+Connection 2 remains controlled for the 22 October 2026 18:45 CEST opening;
+new users remain live disabled. The original claim/history are preserved,
+and the separate manual approval is permanently consumed.
 No real booking is needed to run tests or start the application.
 
 ## Local development

@@ -1,6 +1,17 @@
 # First Niklas live attempt: evidence and investigation limit
 
-## Current disposition
+## Subsequent explicitly approved operation
+
+At 21:53 CEST on 20 October, after a separate explicit user instruction to join
+next Tuesday's waitlist, the corrected worker sent one POST for 4343840 and
+received 201 Created. Two independent reads confirmed WAITLISTED, position 9.
+The original claim/history below remain unchanged; a separate durable one-use
+approval was consumed. This does not resolve the original rejection's cause.
+The worker now runs only for future target 4342668. See
+[the current release record](release-readiness.md) and [client audit](booking-client-audit.md).
+The following disposition describes the earlier investigation snapshot.
+
+## Historical investigation disposition
 
 **Remote absence verified. New worker stopped. Claim and allowance preserved.
 Exact API rejection cause is not recoverable from the recorded evidence.**

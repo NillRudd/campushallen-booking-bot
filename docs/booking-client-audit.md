@@ -125,5 +125,68 @@ WAITLISTED and phase VERIFIED_WAITLISTED. The historical broad result BOOKED
 remains compatible; history displays “På reservlistan” for this verified subtype.
 No raw provider bodies, credentials, tokens or cookie values enter history/logs.
 
-Execution remains pending deployment and final fresh preflight. The original
-future target 4342668 and all three exact rules remain intact.
+## Executed result, 20 October 2026, 21:53 CEST
+
+**PASS: the corrected live waitlist mutation path is production-validated.**
+Application/image `dbcf5a33fc335f1db974d2afff95100b928c631a`, schema
+`b2d934a8e710`, executed the normal worker with the explicit one-use approval.
+Fresh preflight still found zero regular places, eight waiting and no existing
+Niklas entry. Exactly **one booking POST** returned **201 Created** at
+19:53:14 UTC. The engine's independent bookings GET and a second GET using a
+fresh client both confirmed **WAITLISTED, position 9**, for **4343840,
+Innebandy 85 Vallastaden, 27 October 18:45 CET**. No cancellation was sent.
+
+No password login occurred during this actual test; it used the token obtained
+by the separately verified single saved-password login above. The transport
+trace counted one booking POST and zero login POSTs, with no duplicate mutation.
+Local records agree:
+
+| History ID | Phase | HTTP status | Verification |
+| --- | --- | --- | --- |
+| 52 | AUTH_VALIDATED | 200, authenticated bookings read | — |
+| 53 | BOOK_POST_STARTED | no response yet | UNKNOWN |
+| 54 | BOOK_POST_ACCEPTED | 201, booking POST | UNKNOWN |
+| 55 | VERIFIED_WAITLISTED | 200, verification GET | WAITLISTED |
+
+Record 55 uses the compatible broad result BOOKED; its specific verified state
+and Swedish history label are WAITLISTED / “På reservlistan”, not a regular place.
+The original claim timestamp `2026-10-20 16:45:01.027998` UTC and original records
+40 CLAIMED / 41 AUTH_FAILED remain unchanged. Reconciliation approval 1 was
+atomically consumed before POST and cannot be reused or reissued. The earlier
+provider rejection remains historically unexplained; this success does not
+retroactively change that incident.
+
+The worker was restored to controlled target **4342668**, opening **22 October
+18:45 CEST**, for **29 October 18:45 CET**. Lifetime allowance is **3**, used
+**2** (original claim plus consumed manual approval), remaining **1**. Ongoing
+approval remains off, all other connections remain ineligible, and the exact
+three rules remain intact. Keep this scope until the scheduled opening-time run
+is independently verified; that timing path has not yet been observed live.
+Niklas's legacy timer remains disabled/inactive; the friend's remains
+enabled/active/waiting and was not modified. No legacy files were changed.
+
+Validation: **256 tests**, Ruff/format (93 files), mypy (43 modules), 494/494
+Swedish translations, Chrome browser smoke and exact ARM64 image production
+smoke all passed. New reconciliation coverage includes concurrency, expiry,
+identity/admin/scope checks, consumed allowance, restart/unknown outcomes,
+normal-worker CLI execution, disconnect and downgrade preservation. Automated
+tests prohibit external networking; the authorized live operation was separate.
+One existing Starlette/httpx deprecation warning remains.
+
+Final web/worker/tunnel checks were healthy, with zero restarts/OOM and no
+published Docker ports. Retained log scanning found no known secret-file values
+or sensitive bearer/cookie/invite/password patterns; this is a targeted check,
+not an exhaustive security assessment. Post-test backup
+`campushallen-20261020T195519366647Z-12b3d4.sqlite3` passed isolated restore,
+off-Pi integrity and matching separate recovery-key checks, including preserved
+original claim/history and consumed reconciliation. Consumed approvals prevent
+schema downgrade; any rollback worker must understand the extra spent allowance.
+
+Power was briefly historical-only (`0x50000`) earlier, but the final check at
+21:56 CEST returned **0x50005**: bits 0/2 mean current undervoltage/throttling;
+bits 16/18 record prior undervoltage/throttling. Active power trouble is recurring.
+Public launch remains blocked by power and unverified router forwarding, despite
+the now successful live mutation test. No reboot was performed.
+
+Private evidence is retained outside Git under
+`~/Documents/CampushallenBot-Incidents/live-waitlist-dbcf5a3/`.
