@@ -68,7 +68,7 @@ application behavior. No branch was pushed.
 | Public browser smoke | Chrome desktop/mobile login rendered without overflow or page errors, TLS verification enabled; ignored screenshots under diagnostics/production-browser/ |
 | Public security | private/no-store, DYNAMIC caching, HSTS, CSP, nosniff, DENY framing, no-referrer; CSRF cookie Secure/HttpOnly/SameSite=strict; cross-origin and missing-CSRF POSTs rejected 403 |
 | Debug endpoints | /docs, /redoc and /openapi.json return 404; /health returns 200; unauthenticated /admin redirects |
-| HTTP redirect | Plain HTTP currently 400; operator asked to enable Always Use HTTPS at the Cloudflare edge |
+| HTTP redirect | Operator enabled Always Use HTTPS; public HTTP now returns 301 to the same HTTPS path, which returns 200 |
 | Real admin/invite UI | Operator asked to test private login, dashboard/admin, invitation creation, correct public link, revocation/unavailability; pending |
 | Backup | Automatic daily run succeeded 20 October 03:38 CEST; fresh online snapshot and isolated restore including niklas metadata/synthetic encryption checks passed |
 | Off-Pi database | `~/Documents/CampushallenBot-Backups/campushallen-20261020T131535961565Z-45a79c.sqlite3`, directory 0700 / file 0600; separate from key directory |
@@ -104,7 +104,7 @@ The corrected worker passed its container health check on the actual Pi.
 ## Remaining production acceptance
 
 Public route, certificate, login rendering, security headers and form rejection
-checks passed after the stack reboot. Finish the edge HTTP-to-HTTPS redirect and
+checks passed after the stack reboot. The edge HTTP-to-HTTPS redirect also passed. Finish
 private operator browser checks for authenticated cookie/session behavior, admin
 and invitation creation/revocation. The operator must enter the website password
 privately; admin metadata alone does not prove browser login. Do not claim full
@@ -120,3 +120,14 @@ Same-card daily snapshots plus a manually copied Mac snapshot are not an
 automated offsite disaster-recovery policy. Current undervoltage, single-host/
 microSD failure, and untested concurrent legacy-booking peak memory remain risks.
 Real booking remains disabled and the separate future cutover plan is unexecuted.
+
+## Local DNS follow-up
+
+Cloudflare authoritative DNS, 1.1.1.1 and 8.8.8.8 all return the public Cloudflare
+IPv4 addresses. The Mac uses the router at 192.168.1.1; this resolver returns no
+A answers, although its AAAA lookup succeeds. Normal system lookup and the
+operator's Chrome therefore fail; this is not proof of a broken public route.
+Curl using a confirmed public address while retaining the real hostname and TLS
+verification returns HTTP 301 / HTTPS 200. The operator was guided to select
+Cloudflare under Chrome's Secure DNS setting to bypass the failing home resolver.
+Browser login and invitation acceptance remain pending until name resolution works.

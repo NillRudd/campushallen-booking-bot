@@ -12,8 +12,8 @@ Debian 13.7 (trixie), arm64, UID/GID 1000 runs Docker CE 29.9.1 and Compose 5.6.
 installed from Docker's official repository. Web, dry-run worker and the official
 cloudflared connector all passed their health checks on 20 October 2026. Admin
 niklas was created with the operator's private password. Alembic is at
-`d8426c9ef017` with no schema drift. The public route is saved, and HTTPS login/security checks passed. Operator
-admin/invite acceptance and the HTTP-to-HTTPS edge redirect remain pending.
+`d8426c9ef017` with no schema drift. The public route is saved, and HTTPS login/security checks passed. The Cloudflare edge redirects HTTP to HTTPS. Operator admin/invite acceptance
+remains pending resolution of the home DNS lookup issue.
 
 Separate production configuration/data/backup directories and private keys exist.
 The daily backup succeeded automatically, and an isolated restore verified admin
