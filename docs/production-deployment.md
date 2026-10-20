@@ -3,7 +3,7 @@
 Current release status is maintained in [the release gate and operator guide](release-readiness.md).
 Earlier incident-freeze and rollout descriptions below are historical snapshots.
 
-## Current status
+## Historical status before the corrected release
 
 **Incident freeze: web/tunnel healthy; new worker stopped after failed first live attempt.**
 The source and arm64 image currently deployed are

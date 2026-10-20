@@ -1,14 +1,14 @@
-# Production operations (dry-run web worker)
+# Production operations
 
 Current release status is maintained in [the release gate and operator guide](release-readiness.md).
 Earlier incident-freeze and rollout descriptions below are historical snapshots.
 
-**Current incident freeze:** the worker is deliberately stopped after the first
-Niklas-only live attempt failed. Niklas's old timer remains disabled; the friend's
-remains enabled. Do not use the worker restart commands below to resume the old
-live configuration. See the [incident record](incident-2026-10-20-first-live-booking.md).
-The worker-based daily backup helper also needs attention while it is stopped;
-verified private incident/recovery snapshots are retained.
+The corrected release runs one controlled Niklas-only live target, 4342668,
+opening 22 October 2026 at 18:45 CEST. Its old claim remains spent. Niklas's old
+timer is disabled; the friend's remains enabled. See the
+[release gate and operator guide](release-readiness.md) before changing scope or
+restarting booking sources. The daily backup helper now uses an independent
+network-isolated container and works while the worker is stopped.
 
 Use these commands on the installed Pi stack. Public acceptance status is recorded
 in [the verification record](production-validation.md). SSH as niklas and
@@ -32,7 +32,7 @@ systemctl --user status --no-pager campushallen-bot.timer campushallen-friend.ti
 sudo ss -tulpn
 ```
 
-Check the website dashboard's recent Bokningsmotor heartbeat and Testläge status.
+Check the website dashboard's recent Bokningsmotor heartbeat and current mode.
 The worker probe requires a fresh heartbeat matching `WORKER_EXPECTED_MODE`
 (dry-run by default, live only through the explicit production overlay). Healthchecks report
 failure; Docker restart policy restarts crashed processes, not merely unhealthy

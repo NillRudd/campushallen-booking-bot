@@ -15,6 +15,8 @@ behavior and remaining private browser acceptance.
 **Not ready to share with other users.** Corrected live validation and active Pi
 undervoltage remain release blockers. See the [release gate and operator guide](docs/release-readiness.md)
 for current checks, safe phase recovery, per-user admin activation and deployment status.
+The corrected release is deployed; connection 2 has one controlled attempt waiting
+for 22 October 2026 at 18:45 CEST. New users remain live disabled.
 The old activity's durable claim remains preserved; it must never be retried.
 No real booking is needed to run tests or start the application.
 
@@ -491,7 +493,7 @@ CAMPUSHALLEN_BROWSER_CHANNEL=chrome make browser-smoke
 
 The smoke script starts a temporary loopback server/database, creates temporary
 users and an invitation, and mocks every Campushallen call. It exercises admin
-invite creation, registration, onboarding, email connection and credential opt-in,
+invite creation, registration, onboarding, email connection and default encrypted credential storage with opt-out,
 partial activity search, multiple weekday selection, recurring rule creation,
 duplicate protection, per-rule previews, history, credential removal and logout-all. Desktop/mobile
 screenshots go to ignored `diagnostics/browser-smoke/`. It never authenticates
