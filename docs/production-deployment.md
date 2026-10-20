@@ -12,8 +12,10 @@ Debian 13.7 (trixie), arm64, UID/GID 1000 runs Docker CE 29.9.1 and Compose 5.6.
 installed from Docker's official repository. Web, dry-run worker and the official
 cloudflared connector all passed their health checks on 20 October 2026. Admin
 niklas was created with the operator's private password. Alembic is at
-`d8426c9ef017` with no schema drift. The public route is saved, and HTTPS login/security checks passed. The Cloudflare edge redirects HTTP to HTTPS. Operator admin/invite acceptance
-remains pending resolution of the home DNS lookup issue.
+`d8426c9ef017` with no schema drift. Public HTTPS login/security checks passed,
+and Cloudflare redirects HTTP to HTTPS. The operator confirmed the site loads on
+a mobile network; home DNS still fails to resolve its IPv4 address. Operator
+admin/invite acceptance remains pending on the working connection.
 
 Separate production configuration/data/backup directories and private keys exist.
 The daily backup succeeded automatically, and an isolated restore verified admin
@@ -29,8 +31,8 @@ reboot enabled enforced container limits. The original boot line is retained at
 `~/.cache/campushallen-provision/cmdline.txt.before-memory`.
 
 Legacy live timers remain enabled and active; neither service was manually
-triggered. All three containers recovered healthy in a controlled full-stack reboot; public
-HTTPS login is also reachable through the recovered tunnel. The
+triggered. All three containers recovered healthy in a controlled full-stack
+reboot; public HTTPS login is reachable through the recovered tunnel. The
 [verification record](production-validation.md) separates completed checks from
 outstanding acceptance. No live cutover has occurred.
 

@@ -130,4 +130,6 @@ operator's Chrome therefore fail; this is not proof of a broken public route.
 Curl using a confirmed public address while retaining the real hostname and TLS
 verification returns HTTP 301 / HTTPS 200. The operator was guided to select
 Cloudflare under Chrome's Secure DNS setting to bypass the failing home resolver.
-Browser login and invitation acceptance remain pending until name resolution works.
+The operator confirmed the site loads after switching to a mobile network. This
+supports the diagnosis of a home-network resolver issue. Private admin login and
+invitation acceptance remain pending on the working connection.
