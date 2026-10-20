@@ -47,7 +47,10 @@ owned connection.
 same API endpoint as schedule inspection. ActivityOccurrence contains only
 allowlisted metadata, not raw API responses, credentials or tokens. The in-process
 cache lasts 60 seconds and holds at most eight datasets of at most 1,000 entries.
-A shorter range is requested when the server returns more. Cache keys separate
+The live API rejects a single 21-day period with HTTP 403 while accepting weekly
+periods with the same token. Browsing therefore uses at most three contiguous
+weekly requests, including across Stockholm's clock change. If the dataset exceeds
+the limit, the UI asks the user to select a shorter range. Cache keys separate
 account, token-state fingerprint, date and lookahead. Disabled/disconnected
 connections cannot use even cached results. Invalid response shapes produce a
 schedule error; timestamps without timezone information are rejected.

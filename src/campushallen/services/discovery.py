@@ -155,16 +155,26 @@ class ActivityDiscovery:
             if cached and now - cached[0] < self.ttl:
                 self.cache.move_to_end(key)
                 return cached[1]
-        # One bounded range request, not one request per search keystroke or product.
+        # The live API rejects long periods with 403 despite accepting the token.
+        # Use at most three weekly reads, never a request per keystroke or product.
         lower = datetime.combine(start, time.min, self.timezone)
         upper = datetime.combine(start + timedelta(days=days), time.min, self.timezone)
         try:
             with self.gateway.client(account) as (client, _):
-                raw = client.group_activities(lower, upper - timedelta(milliseconds=1))
+                raw = []
+                cursor = lower
+                while cursor < upper:
+                    chunk_end = min(cursor + timedelta(days=7), upper)
+                    raw.extend(
+                        client.group_activities(cursor, chunk_end - timedelta(milliseconds=1))
+                    )
+                    if len(raw) > 1000:
+                        raise DiscoveryUnavailable(
+                            "Too many activities. Choose a shorter date range."
+                        )
+                    cursor = chunk_end
         except (ValueError, TypeError, KeyError):
             raise DiscoveryUnavailable("Invalid schedule response") from None
-        if len(raw) > 1000:
-            raise DiscoveryUnavailable("Too many activities. Choose a shorter date range.")
         occurrences = {}
         current = datetime.now(self.timezone)
         for item in raw:

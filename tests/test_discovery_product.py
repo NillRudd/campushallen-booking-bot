@@ -91,6 +91,9 @@ def schedule(web, monkeypatch):
                 request.url.params["period.start"].replace("Z", "+00:00")
             )
             end = datetime.fromisoformat(request.url.params["period.end"].replace("Z", "+00:00"))
+            # Production accepts weekly reads but rejects a single 21-day period.
+            if (end.astimezone(TZ) - start.astimezone(TZ)) >= timedelta(days=7):
+                return httpx.Response(403, json={"error": "synthetic-period-limit"})
             return httpx.Response(
                 200,
                 json=[
@@ -231,6 +234,36 @@ def test_search_facility_dates_and_short_lived_cache(schedule):
     assert all(
         "synthetic-token" not in str(value) for _, value in s.app.state.discovery.cache.values()
     )
+
+
+def test_21_day_search_uses_cached_weekly_reads_with_api_period_limit(schedule):
+    s = schedule
+    today = datetime.now(TZ).date()
+    # Include an occurrence in every chunk, including across Stockholm's DST change.
+    for week in (1, 2):
+        item = copy.deepcopy(s.data[0])
+        item["id"] += week * 100
+        for field in ("start", "end"):
+            stamp = datetime.fromisoformat(item["duration"][field]).astimezone(TZ)
+            item["duration"][field] = (stamp + timedelta(days=week * 7)).isoformat()
+        s.data.append(item)
+    url = f"/activities?start={today.isoformat()}&days=21&q=innebandy"
+    response = s.client.get(url)
+    assert response.status_code == 200
+    assert "Innebandy 85" in response.text
+    assert "Anslut eller aktivera" not in response.text
+    for item in s.data:
+        stamp = datetime.fromisoformat(item["duration"]["start"]).astimezone(TZ)
+        if today <= stamp.date() < today + timedelta(days=21) and "Innebandy" in item["name"]:
+            assert f'value="{item["id"]}"' in response.text
+    calls = [r for r in s.calls if "/apps/" in r.url.path]
+    assert len(calls) == 3
+    for left, right in zip(calls, calls[1:]):
+        end = datetime.fromisoformat(left.url.params["period.end"].replace("Z", "+00:00"))
+        start = datetime.fromisoformat(right.url.params["period.start"].replace("Z", "+00:00"))
+        assert start - end == timedelta(milliseconds=1)
+    assert "Innebandy 85" in s.client.get(url + "&facility=Vallastaden").text
+    assert len([r for r in s.calls if "/apps/" in r.url.path]) == 3
 
 
 @pytest.mark.parametrize("failure", [401, 503])
