@@ -1,5 +1,12 @@
 # Production operations (dry-run web worker)
 
+**Current incident freeze:** the worker is deliberately stopped after the first
+Niklas-only live attempt failed. Niklas's old timer remains disabled; the friend's
+remains enabled. Do not use the worker restart commands below to resume the old
+live configuration. See the [incident record](incident-2026-10-20-first-live-booking.md).
+The worker-based daily backup helper also needs attention while it is stopped;
+verified private incident/recovery snapshots are retained.
+
 Use these commands on the installed Pi stack. Public acceptance status is recorded
 in [the verification record](production-validation.md). SSH as niklas and
 `cd ~/campushallenbot`.
@@ -23,7 +30,8 @@ sudo ss -tulpn
 ```
 
 Check the website dashboard's recent Bokningsmotor heartbeat and Testläge status.
-The worker probe requires a fresh heartbeat **and dry-run**. Healthchecks report
+The worker probe requires a fresh heartbeat matching `WORKER_EXPECTED_MODE`
+(dry-run by default, live only through the explicit production overlay). Healthchecks report
 failure; Docker restart policy restarts crashed processes, not merely unhealthy
 ones. Investigate stale heartbeat rather than blindly restarting repeatedly.
 Cloudflared request/error logs are intentionally suppressed below fatal because

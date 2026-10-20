@@ -1,6 +1,12 @@
 # Production preparation verification
 
-Updated on 20 October 2026. **Activity discovery deployed; automated production checks pass; final private browser acceptance pending.**
+Updated on 20 October 2026. **First controlled live attempt failed; worker stopped,
+claim preserved, investigation blocked on missing API error evidence.** The
+operator confirmed private feature acceptance before cutover. Current source is
+`c981a44e35d5c14c1d5654d7045343766225d68d`, schema `f2c9a71e6b04`. Niklas's old
+timer remains disabled; the friend's remains enabled. See the
+[full incident timeline, failure-mode audit and current limits](incident-2026-10-20-first-live-booking.md).
+Earlier sections below are historical rollout evidence.
 
 ## Source and local checks
 

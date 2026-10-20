@@ -3,10 +3,14 @@
 This feature was developed on `feature/activity-discovery` and deployed on
 20 October 2026 at `cf4d4d5852a4e1626f9fc4cec9edbf90c44d3cb6`. The operator
 explicitly approved resolving the duplicate connections before migration;
-connection 2 and all three rules/history were retained. Production uses a dry-run
-worker and unchanged legacy live timers. See the
+connection 2 and all three rules/history were retained. Production used a dry-run
+worker at that feature rollout. A later, separately approved Niklas-only live
+cutover failed; the worker is now stopped and Niklas's old timer disabled while
+the friend's remains enabled. See the
+[incident record](incident-2026-10-20-first-live-booking.md) and
 [production verification record](production-validation.md) for the API-range
-correction, preview/worker parity and pending private browser acceptance.
+correction and preview/worker parity. The operator subsequently confirmed private
+browser acceptance before authorizing the controlled cutover.
 
 ## Product flow
 

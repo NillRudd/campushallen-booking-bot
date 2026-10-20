@@ -1,5 +1,12 @@
 # Controlled production cutover: Niklas only
 
+**Incident freeze:** the first attempt failed. Worker is stopped, Niklas's old
+timer remains disabled and the friend remains enabled. Preserve the spent claim;
+do not repeat the activation procedure below. See the
+[incident evidence and investigation limit](incident-2026-10-20-first-live-booking.md).
+The ordered procedure describes the original approval; rollback remains a separate
+deliberate decision after remote reconciliation.
+
 The operator explicitly approved this phase on 20 October 2026 after manually
 accepting the UI. This authorizes one normal real booking for Niklas at the next
 API opening. It never authorizes cancellations, friend migration, blind claim

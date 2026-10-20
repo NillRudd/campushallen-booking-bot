@@ -12,8 +12,10 @@ The existing production site is <https://campushallenbot.se>; see the
 one-connection/activity-discovery redesign is deployed; see the
 [production verification record](docs/production-validation.md) for checked
 behavior and remaining private browser acceptance.
-The new worker remains **dry-run**. Existing systemd bots continue live bookings
-until a later, explicitly approved cutover.
+**Niklas's new worker is currently stopped for investigation after its first
+controlled live attempt failed.** His old timer remains disabled; the friend's
+legacy timer remains enabled. No automatic booking currently runs for Niklas.
+See the [incident evidence and current limits](docs/incident-2026-10-20-first-live-booking.md).
 No real booking is needed to run tests or start the application.
 
 ## Local development

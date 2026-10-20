@@ -2,11 +2,18 @@
 
 ## Current status
 
-**Activity discovery is deployed; automated production checks pass; final private browser acceptance is pending.**
+**Incident freeze: web/tunnel healthy; new worker stopped after failed first live attempt.**
 The source and arm64 image currently deployed are
-`cf4d4d5852a4e1626f9fc4cec9edbf90c44d3cb6`. Source lives in
+`c981a44e35d5c14c1d5654d7045343766225d68d`. Source lives in
 `/home/niklas/campushallenbot-releases/<commit>`; `~/campushallenbot` points to that
 release. Documentation commits can advance independently of the deployed image.
+Schema is now `f2c9a71e6b04`, including operator-only account eligibility and
+finite, target-specific live authorization. Niklas's old timer is disabled; the
+friend's remains enabled. The first target is confirmed unbooked remotely; its
+claim/allowance are preserved. The exact failing API response was not recorded,
+so no speculative fix/retry has been deployed. See the
+[incident record](incident-2026-10-20-first-live-booking.md). The following feature
+rollout/acceptance notes are historical and do not describe current worker mode.
 
 Debian 13.7 (trixie), arm64, UID/GID 1000 runs Docker CE 29.9.1 and Compose 5.6.0,
 installed from Docker's official repository. Web, dry-run worker and the official
