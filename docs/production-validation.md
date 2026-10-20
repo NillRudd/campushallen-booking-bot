@@ -263,3 +263,64 @@ operator was instructed to move the rules through the UI to connected account 2,
 set fixed times 18:45 / 18:45 / 12:00 and preview from that account. Identical
 account labels in the selector are a confirmed usability limitation. Legacy
 timers remain active and all three containers were healthy at this check.
+
+## Activity-discovery deployment preflight, 20 October 2026
+
+Feature tip inspected: `05f4106` on `feature/activity-discovery`; the application
+code and tested ARM64 image revision is `39a291f4854e597939147121368bde2a23eda01d`.
+The deployment branch is its ancestor at `a803c6b`; main remains `45cc370`.
+The working tree was clean, with no history rewrite or push. All required local
+checks were repeated: 182 tests, Ruff/format, mypy (42 modules), mocked
+desktop/390px browser smoke and isolated ARM64 production smoke passed. The smoke
+included migrations/schema agreement, backup/restore and restart persistence.
+One existing Starlette TestClient deprecation warning remains.
+
+Production inspection around 17:04 CEST used read-only SQLite connections. User
+niklas is active admin ID 1; duplicate connections still block migration:
+
+| Connection | State | Token / remembered credential | Rules | Attempts | Claims | Snapshots |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | Disabled, reconnect required; non-email identifier | None / none | 0 | 3 | 0 | 0 |
+| 2 | Enabled, connected; email identifier | Decryptable, expires 27 October 14:08 UTC / present | 3 | 13 | 0 | 10 |
+
+Rules 1–3 already belong to connection 2, retaining their IDs. Their configured
+preferred times are Tuesday/Thursday 18:45 and Sunday 12:00; fixed times remain
+unset and the existing one-hour windows/waitlist policy are unchanged. A guarded
+diagnostic allowed only outgoing GET requests and made no database writes or
+password-login/token-validation POSTs. The customer GET accepted the existing
+token; the bookings GET and existing shared selectors returned:
+
+| Rule | Activity ID | Stockholm start | API bookableEarliest | Free / capacity | Waitlist | Already booked |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 Tuesday | 4343839 | 20 October 18:45 +02:00 | 13 October 18:45 +02:00 | 0 / 15 | Enabled, 6 | Yes |
+| 2 Thursday | 4342667 | 22 October 18:45 +02:00 | 15 October 18:45 +02:00 | 0 / 15 | Enabled, 11 | Yes |
+| 3 Sunday | 4410856 | 25 October 12:00 +01:00 | 18 October 12:00 +02:00 | 0 / 15 | Enabled, 0 | Yes |
+
+All three API products/activities are **Innebandy 85 Vallastaden**, product 1401.
+The API business unit is **Campushallen/LSIF** (ID 1), with locations C-salen, C1,
+C2, C3 and C4. Vallastaden is part of the activity/product name rather than the
+business-unit label. These are checks of the existing deployment's selectors;
+post-deployment UI/worker parity has not yet been verified.
+
+Consistent online backup
+`campushallen-20261020T150553237050Z-2d4303.sqlite3` passed integrity/foreign-key
+checks and isolated restore including niklas admin metadata and synthetic
+encryption checks. An additional private copy in the Mac's
+`~/Documents/CampushallenBot-Backups/` passed integrity/foreign-key checks. The
+existing private off-Pi recovery encryption key matches production; no key value
+was displayed. This manual backup retained all existing snapshots.
+
+**Awaiting explicit deletion approval:** retain connection 2 and its existing
+rules, reassign only the three historical AUTH_FAILED attempts (IDs 1–3) from
+connection 1 to connection 2, then delete obsolete connection 1. Its eight audit
+events remain with the deleted connection reference set to NULL by the existing
+foreign key. No rules, claims, credentials or tokens need transferring. Recheck
+all assumptions transactionally and take a fresh backup before the approved
+resolution/migration. No production data changes, source integration, deployment
+or migration have occurred in this preflight; Alembic remains `d8426c9ef017`.
+
+Web, worker and cloudflared are healthy on image/source `b09e2ce`. The inspected
+worker command is exactly `python -m campushallen.worker`. Both legacy timers
+remain active, with next run 20 October 18:30 CEST; neither was triggered or
+modified. No reboot has been performed in this continuation. No real booking,
+cancellation or live cutover was performed.
