@@ -24,6 +24,8 @@ campushallen-friend.timer; its directory/config/auth/units must not change.
   separately approved allowance/target update. No claim is reset automatically.
 - Website forms cannot enable eligibility. The trusted local CLI requires the
   expected owner, positive allowance and reviewed activity ID.
+- Disconnecting or changing the login identity revokes the grant without deleting
+  existing claims; a replacement identity needs fresh operator approval.
 - scripts/production selects deployment/compose.niklas-live.yaml only when the
   external production.env contains WORKER_MODE=live. Default Compose stays dry-run.
 - Health requires a fresh heartbeat matching the explicitly expected mode.

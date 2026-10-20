@@ -194,3 +194,20 @@ def test_confirmation_flag_alone_cannot_start_live_worker(booking, tmp_path, mon
     monkeypatch.setattr("sys.argv", ["worker", "--confirm-real-bookings", "--once"])
     worker.main()
     assert observed == [True]
+
+
+def test_disconnect_and_identity_replacement_revoke_scope_without_resetting_claims(booking):
+    from campushallen.services.account_management import disconnect
+
+    b = booking
+    assert b.engine.run(b.plan, dry_run=False).result == "BOOKED"
+    with b.sessions() as db:
+        row = db.get(CampushallenAccount, b.accounts[0])
+        disconnect(db, row)
+        row.username = "replacement@example.com"
+        row.auth_state = "synthetic-new-identity"
+        row.requires_reconnect = False
+        db.commit()
+        assert not row.live_booking_enabled
+        assert row.live_booking_claim_limit == 0 and row.live_booking_activity_id is None
+        assert db.get(BookingClaim, (b.accounts[0], 101)) is not None
