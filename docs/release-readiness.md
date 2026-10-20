@@ -165,9 +165,7 @@ the explicit Admin confirmation to approve ongoing Tuesday/Thursday/Sunday rules
 Web, live worker and cloudflared are healthy, non-root, read-only at the root
 filesystem, with no published host ports and `unless-stopped` restart policies.
 There were zero restarts and no OOM kills. Docker is enabled at boot, user
-lingering is enabled, NTP is synchronized to Europe/Stockholm. Disk had 8.2 GiB
-free before image staging, and 577 MiB memory was available at the reliability
-check. No host reboot was performed under unstable power. Niklas's old timer is
+lingering is enabled, NTP is synchronized to Europe/Stockholm. Final capacity check showed 7.8 GiB disk free and 527 MiB memory available. No host reboot was performed under unstable power. Niklas's old timer is
 disabled/inactive, its service has PID 0. Friend's timer remains enabled, active
 and waiting, and its unit/config/auth files were not edited.
 
@@ -218,3 +216,9 @@ and throttling** (`0x50005`: bits 0/2 current, 16/18 historical), and **unverifi
 router forwarding**. The operator requested continuing work despite power warnings
 and reported the router configuration not yet checked. No claim that the site is
 ready to share is made. The next API opening is still in the future.
+
+
+Power follow-up: the final capacity probe briefly showed **0x50000** (historical
+flags only), but the next reading at **21:21 CEST** returned **0x50005** (active
+undervoltage/throttling again). Power is intermittent; its release gate remains
+BLOCKED. No reboot or artificial hardware load was used for these checks.
