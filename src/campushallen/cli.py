@@ -16,7 +16,7 @@ from campushallen.schedule import BookingRule as DomainRule
 from campushallen.services.authentication import create_user
 from campushallen.services.backups import backup_database, verify_restore
 from campushallen.services.invitations import create_invite, invite_status, revoke_invite
-from campushallen.services.live_policy import configure_live
+from campushallen.services.live_policy import approve_reconciliation, configure_live
 from campushallen.services.rules import RuleInput
 from campushallen.services.secrets import runtime_key
 from campushallen.services.user_security import set_admin
@@ -78,6 +78,15 @@ def main() -> None:
     switch.add_argument("--disable", action="store_true")
     live.add_argument("--max-claims", type=int)
     live.add_argument("--activity-id", type=int)
+    reconciliation = commands.add_parser(
+        "approve-reconciliation",
+        help="One additional manually reconciled request; never resets the original claim",
+    )
+    reconciliation.add_argument("account_id", type=int)
+    reconciliation.add_argument("--user", required=True)
+    reconciliation.add_argument("--activity-id", type=int, required=True)
+    reconciliation.add_argument("--operator", required=True)
+    reconciliation.add_argument("--confirm-remote-absent", action="store_true")
     create = commands.add_parser(
         "create-user", help="Create an application user; password is prompted"
     )
@@ -154,6 +163,16 @@ def main() -> None:
                         )
                     )
                 )
+            elif args.command == "approve-reconciliation":
+                identifier = approve_reconciliation(
+                    db,
+                    args.account_id,
+                    args.user,
+                    args.activity_id,
+                    args.operator,
+                    confirm_remote_absent=args.confirm_remote_absent,
+                )
+                print(f"Manual approval {identifier} created; expires in 10 minutes; single use.")
             elif args.command == "invite":
                 if args.invite_action == "create":
                     if not 1 <= args.count <= 100 or not 0 <= args.expires_days <= 365:

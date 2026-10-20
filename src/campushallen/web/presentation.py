@@ -143,6 +143,7 @@ def safe_error(message: str) -> str:
 
 
 REASONS = {
+    N_("Waiting-list entry independently verified."),
     N_("Live operation phase recorded; inspect verification outcome."),
     N_("A previous live attempt exists; inspect booking history before any manual retry."),
     N_("API booking opening time has not arrived."),
@@ -181,6 +182,7 @@ def reason(message: str) -> str:
 
 
 EVENT_LABELS = {
+    "RECONCILIATION_APPROVED": N_("One additional manual booking approved"),
     "LIVE_BOOKING_ENABLED": N_("Real booking activated"),
     "LIVE_BOOKING_DISABLED": N_("Real booking stopped"),
     "WEBSITE_LOGIN_FAILED": N_("Website sign-in failed"),
@@ -251,6 +253,8 @@ def rule_errors(exc: ValidationError) -> str:
 
 
 PHASE_LABELS = {
+    "AUTH_VALIDATED": N_("Authentication confirmed before booking"),
+    "VERIFIED_WAITLISTED": N_("Waiting-list place independently confirmed"),
     "PREBOOK_AUTH_FAILED": N_("Authentication failed before booking"),
     "BOOK_POST_STARTED": N_("Booking request started; result unknown"),
     "BOOK_POST_AUTH_REJECTED": N_("Booking request rejected authentication"),

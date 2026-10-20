@@ -8,7 +8,7 @@ from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import httpx
-from sqlalchemy import delete, func, or_, select, update
+from sqlalchemy import delete, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
@@ -18,6 +18,7 @@ from campushallen.database.models import (
     BookingAttempt,
     BookingClaim,
     BookingOpportunity,
+    BookingReconciliation,
     BookingRule,
     CampushallenAccount,
     Outcome,
@@ -27,6 +28,7 @@ from campushallen.database.models import (
 from campushallen.schedule import BookingState
 
 from .accounts import AccountGateway
+from .live_policy import used_claims
 from .notifications import (
     NoopNotifier,
     Notification,
@@ -280,13 +282,20 @@ class BookingEngine:
         return plans
 
     def run(
-        self, plan: Plan, *, dry_run: bool = True, now: datetime | None = None
+        self,
+        plan: Plan,
+        *,
+        dry_run: bool = True,
+        now: datetime | None = None,
+        manual_approval_id: int | None = None,
     ) -> BookingAttempt:
         """Re-select and check duplicates immediately before any possible mutation.
 
         A durable claim is committed before issuing a live request. Unknown results
         are never automatically retried. No cancellation path exists here.
         """
+        if manual_approval_id is not None and dry_run:
+            raise ValueError("Manual reconciliation requires explicit live execution")
         now = now or utcnow()
         result, message = Outcome.BOOKING_FAILED, "Booking could not be completed."
         request_started = False
@@ -383,7 +392,7 @@ class BookingEngine:
                         )
                     # End the read transaction before attempting to acquire the write claim.
                     db.rollback()
-                    claim_result = self.claim_live(plan)
+                    claim_result = self.claim_live(plan, manual_approval_id=manual_approval_id)
                     if claim_result is not None:
                         return self.record(
                             plan,
@@ -394,6 +403,9 @@ class BookingEngine:
                         plan,
                         Outcome.CLAIMED,
                         "Live request reserved; an interrupted request requires manual verification.",
+                        phase="AUTH_VALIDATED",
+                        http_status=200,
+                        endpoint_category="bookings",
                     )
                     request_started = True
                     # Commit intent before transport. A crash from here leaves a durable
@@ -459,16 +471,27 @@ class BookingEngine:
                             customer_id = self.gateway.reauthenticate(account.id, client)
                             bookings = client.customer_group_activity_bookings(customer_id)
                         verified = _verified_booking_for_activity(bookings, slot.id)
+                        waitlisted = bool(verified and verified.get("type") == "waitingListBooking")
                         return self.record(
                             plan,
                             Outcome.BOOKED if verified else Outcome.VERIFICATION_FAILED,
-                            "Booking independently verified."
+                            "Waiting-list entry independently verified."
+                            if waitlisted
+                            else "Booking independently verified."
                             if verified
                             else "Request sent but booking could not be verified. Check Campushallen before retrying.",
-                            phase="VERIFIED_BOOKED" if verified else "VERIFY_FAILED",
+                            phase="VERIFIED_WAITLISTED"
+                            if waitlisted
+                            else "VERIFIED_BOOKED"
+                            if verified
+                            else "VERIFY_FAILED",
                             endpoint_category="bookings",
                             http_status=200,
-                            verification_outcome="BOOKED" if verified else "NOT_BOOKED",
+                            verification_outcome="WAITLISTED"
+                            if waitlisted
+                            else "BOOKED"
+                            if verified
+                            else "NOT_BOOKED",
                         )
                     except (
                         ReconnectRequired,
@@ -519,7 +542,7 @@ class BookingEngine:
             plan, result, message, phase=phase, http_status=status, endpoint_category=endpoint
         )
 
-    def claim_live(self, plan: Plan) -> Outcome | None:
+    def claim_live(self, plan: Plan, *, manual_approval_id: int | None = None) -> Outcome | None:
         """Serialize account eligibility, finite allowance and durable claim.
 
         A no-op UPDATE acquires SQLite's writer lock before counting claims.
@@ -564,19 +587,44 @@ class BookingEngine:
             if changed.rowcount != 1:
                 db.rollback()
                 return Outcome.DISABLED
-            if db.get(BookingClaim, (plan.account_id, plan.slot.id)):
+            original_claim = db.get(BookingClaim, (plan.account_id, plan.slot.id))
+            if original_claim and manual_approval_id is None:
                 db.rollback()
                 return Outcome.CLAIMED
+            approval = None
+            if manual_approval_id is not None:
+                approval = db.get(BookingReconciliation, manual_approval_id)
+                account = db.get(CampushallenAccount, plan.account_id)
+                actor = (
+                    db.get(User, approval.approved_by_user_id)
+                    if approval and approval.approved_by_user_id
+                    else None
+                )
+                if (
+                    not original_claim
+                    or not approval
+                    or not actor
+                    or not actor.is_active
+                    or not actor.is_admin
+                    or account.live_booking_ongoing
+                    or account.live_booking_activity_id != plan.slot.id
+                    or approval.campushallen_account_id != plan.account_id
+                    or approval.activity_id != plan.slot.id
+                    or original_claim.created_at > utcnow() - timedelta(minutes=5)
+                    or approval.original_claim_created_at != original_claim.created_at
+                    or approval.expires_at <= utcnow()
+                ):
+                    db.rollback()
+                    return Outcome.DISABLED
+                if approval.consumed_at is not None:
+                    db.rollback()
+                    return Outcome.CLAIMED
             limit = db.scalar(
                 select(CampushallenAccount.live_booking_claim_limit).where(
                     CampushallenAccount.id == plan.account_id
                 )
             )
-            used = db.scalar(
-                select(func.count())
-                .select_from(BookingClaim)
-                .where(BookingClaim.campushallen_account_id == plan.account_id)
-            )
+            used = used_claims(db, plan.account_id)
             ongoing = db.scalar(
                 select(CampushallenAccount.live_booking_ongoing).where(
                     CampushallenAccount.id == plan.account_id
@@ -585,7 +633,12 @@ class BookingEngine:
             if not ongoing and used >= limit:
                 db.rollback()
                 return Outcome.DISABLED
-            db.add(BookingClaim(campushallen_account_id=plan.account_id, activity_id=plan.slot.id))
+            if approval is not None:
+                approval.consumed_at = utcnow()
+            else:
+                db.add(
+                    BookingClaim(campushallen_account_id=plan.account_id, activity_id=plan.slot.id)
+                )
             try:
                 db.commit()
             except IntegrityError:

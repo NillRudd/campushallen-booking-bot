@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Campushallen Booker 0.1.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-20 21:01+0200\n"
+"POT-Creation-Date: 2026-10-20 21:46+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -189,7 +189,7 @@ msgid "Not supported"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:48
-#: src/campushallen/web/presentation.py:266
+#: src/campushallen/web/presentation.py:272
 msgid "Unknown result"
 msgstr ""
 
@@ -245,434 +245,450 @@ msgstr ""
 msgid "Backup successful"
 msgstr ""
 
-#: src/campushallen/web/presentation.py:94
+#: src/campushallen/web/presentation.py:95
 msgid "Backup failed"
 msgstr ""
 
-#: src/campushallen/web/presentation.py:95
+#: src/campushallen/web/presentation.py:96
 msgid "Backup overdue"
 msgstr ""
 
-#: src/campushallen/web/presentation.py:95
+#: src/campushallen/web/presentation.py:97
 msgid "Backup status unavailable"
 msgstr ""
 
-#: src/campushallen/web/presentation.py:100
+#: src/campushallen/web/presentation.py:102
 msgid "Worker healthy"
 msgstr ""
 
-#: src/campushallen/web/presentation.py:101
+#: src/campushallen/web/presentation.py:103
 msgid "Worker hasn't reported recently"
 msgstr ""
 
-#: src/campushallen/web/presentation.py:102
-#: src/campushallen/web/presentation.py:108
+#: src/campushallen/web/presentation.py:104
+#: src/campushallen/web/presentation.py:110
 msgid "Worker disabled / not running"
 msgstr ""
 
-#: src/campushallen/web/presentation.py:113
+#: src/campushallen/web/presentation.py:115
 msgid "At least one active admin must remain."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:114
+#: src/campushallen/web/presentation.py:116
 msgid "Choose a different username."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:115
+#: src/campushallen/web/presentation.py:117
 msgid "Earliest time must be before latest time"
 msgstr ""
 
-#: src/campushallen/web/presentation.py:116
+#: src/campushallen/web/presentation.py:118
 msgid "Login state changed; sign in again."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:117
+#: src/campushallen/web/presentation.py:119
 msgid "Name and activity must not be blank"
 msgstr ""
 
-#: src/campushallen/web/presentation.py:118
+#: src/campushallen/web/presentation.py:120
 msgid "Password changed in another session; log in again."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:119
+#: src/campushallen/web/presentation.py:121
 msgid "Rule times must be local clock times without a timezone offset"
 msgstr ""
 
-#: src/campushallen/web/presentation.py:120
+#: src/campushallen/web/presentation.py:122
 msgid "Service rules require a fixed start time"
 msgstr ""
 
-#: src/campushallen/web/presentation.py:121
+#: src/campushallen/web/presentation.py:123
 msgid "Start time must be inside the allowed window"
 msgstr ""
 
-#: src/campushallen/web/presentation.py:122
+#: src/campushallen/web/presentation.py:124
 msgid ""
 "The last active admin cannot be deleted. Create or promote another admin "
 "first."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:123
+#: src/campushallen/web/presentation.py:125
 msgid "The new website passwords do not match."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:124
+#: src/campushallen/web/presentation.py:126
 msgid "This invitation is unavailable. Ask the owner for a new invitation."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:125
+#: src/campushallen/web/presentation.py:127
 msgid "Type DELETE to confirm local account removal."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:126
+#: src/campushallen/web/presentation.py:128
 msgid "Type DELETE to confirm local data removal."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:127
+#: src/campushallen/web/presentation.py:129
 msgid "Use a label of at most 120 characters and a future expiry."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:128
+#: src/campushallen/web/presentation.py:130
 msgid "Use a username of 1–254 characters without spaces or control characters."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:129
+#: src/campushallen/web/presentation.py:131
 msgid "Use a website password of 12–4096 characters."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:130
+#: src/campushallen/web/presentation.py:132
 msgid "Website password is incorrect."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:131
+#: src/campushallen/web/presentation.py:133
 msgid "Website passwords do not match."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:139
+#: src/campushallen/web/presentation.py:141
 msgid "Unable to complete the request. Check the form and try again."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:144
+#: src/campushallen/web/presentation.py:146
+msgid "Waiting-list entry independently verified."
+msgstr ""
+
+#: src/campushallen/web/presentation.py:147
 msgid "Live operation phase recorded; inspect verification outcome."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:145
+#: src/campushallen/web/presentation.py:148
 msgid ""
 "A previous live attempt exists; inspect booking history before any manual"
 " retry."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:146
+#: src/campushallen/web/presentation.py:149
 msgid "API booking opening time has not arrived."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:147
+#: src/campushallen/web/presentation.py:150
 msgid "API did not supply bookableEarliest; no booking sent."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:148
+#: src/campushallen/web/presentation.py:151
 msgid "Account was removed"
 msgstr ""
 
-#: src/campushallen/web/presentation.py:149
+#: src/campushallen/web/presentation.py:152
 msgid "Account, user, or rule is disabled."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:150
+#: src/campushallen/web/presentation.py:153
 msgid "Activity discovery failed; try again later."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:151
+#: src/campushallen/web/presentation.py:154
 msgid "Activity has already started."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:152
+#: src/campushallen/web/presentation.py:155
 msgid "Activity is already booked."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:153
+#: src/campushallen/web/presentation.py:156
 msgid "Booking could not be completed."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:154
+#: src/campushallen/web/presentation.py:157
 msgid "Booking independently verified."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:155
+#: src/campushallen/web/presentation.py:158
 msgid "Campushallen request failed; no booking confirmed."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:156
+#: src/campushallen/web/presentation.py:159
 msgid "Dry-run; no booking sent."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:157
+#: src/campushallen/web/presentation.py:160
 msgid "Fixed start time no longer matches."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:158
+#: src/campushallen/web/presentation.py:161
 msgid ""
 "Live request reserved; an interrupted request requires manual "
 "verification."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:159
+#: src/campushallen/web/presentation.py:162
 msgid "Matching activity discovered."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:160
+#: src/campushallen/web/presentation.py:163
 msgid "No regular spots available; no booking sent."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:161
+#: src/campushallen/web/presentation.py:164
 msgid "No safe upcoming target with API bookableEarliest was found."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:162
+#: src/campushallen/web/presentation.py:165
 msgid "No unique safe target was selected."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:163
+#: src/campushallen/web/presentation.py:166
 msgid "Queued target changed; no booking sent."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:164
+#: src/campushallen/web/presentation.py:167
 msgid "Reconnect this Campushallen account."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:165
+#: src/campushallen/web/presentation.py:168
 msgid "Request outcome is uncertain; check Campushallen before retrying."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:166
+#: src/campushallen/web/presentation.py:169
 msgid ""
 "Request sent but booking could not be verified. Check Campushallen before"
 " retrying."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:167
+#: src/campushallen/web/presentation.py:170
 msgid "Selection is ambiguous or outside the allowed time window."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:168
+#: src/campushallen/web/presentation.py:171
 msgid "Service booking is available only through the legacy CLI."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:169
+#: src/campushallen/web/presentation.py:172
 msgid ""
 "Service rules remain available through the legacy CLI; web worker does "
 "not book services."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:177
+#: src/campushallen/web/presentation.py:180
 msgid "See the result and check Campushallen if you are unsure."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:182
-msgid "Real booking activated"
-msgstr ""
-
-#: src/campushallen/web/presentation.py:183
-msgid "Real booking stopped"
-msgstr ""
-
-#: src/campushallen/web/presentation.py:184
-msgid "Website sign-in failed"
-msgstr ""
-
 #: src/campushallen/web/presentation.py:185
-msgid "Website sign-in temporarily locked"
+msgid "One additional manual booking approved"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:186
-msgid "Website sign-in successful"
+msgid "Real booking activated"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:187
-msgid "Website sign-in lock expired"
+msgid "Real booking stopped"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:188
-msgid "User registered"
+msgid "Website sign-in failed"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:189
-msgid "User created"
+msgid "Website sign-in temporarily locked"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:190
-msgid "User deleted"
+msgid "Website sign-in successful"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:191
-msgid "Admin promoted"
+msgid "Website sign-in lock expired"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:192
-msgid "Admin demoted"
+msgid "User registered"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:193
-msgid "Login success"
+msgid "User created"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:194
-msgid "Login failed"
+msgid "User deleted"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:195
-msgid "Logout"
+msgid "Admin promoted"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:196
-msgid "Sessions revoked"
+msgid "Admin demoted"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:197
-msgid "Password changed"
+msgid "Login success"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:198
-msgid "Campushallen connected"
+msgid "Login failed"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:199
-msgid "Campushallen reconnected"
+msgid "Logout"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:200
-msgid "Account disabled"
+msgid "Sessions revoked"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:201
-msgid "Account enabled"
+msgid "Password changed"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:202
-msgid "Account disconnected"
+msgid "Campushallen connected"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:203
-msgid "Account deleted"
+msgid "Campushallen reconnected"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:204
-msgid "Stored credential enabled"
+msgid "Account disabled"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:205
-msgid "Stored credential removed"
+msgid "Account enabled"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:206
-msgid "Stored credential replaced"
+msgid "Account disconnected"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:207
-msgid "Booking rule created"
+msgid "Account deleted"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:208
-msgid "Booking rule updated"
+msgid "Stored credential enabled"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:209
-msgid "Booking rule deleted"
+msgid "Stored credential removed"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:210
-msgid "Invite created"
+msgid "Stored credential replaced"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:211
-msgid "Invite used"
+msgid "Booking rule created"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:212
-msgid "Invite revoked"
+msgid "Booking rule updated"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:213
-msgid "Token expired"
+msgid "Booking rule deleted"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:214
-msgid "Reauth success"
+msgid "Invite created"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:215
-msgid "Reauth failed"
+msgid "Invite used"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:216
+msgid "Invite revoked"
+msgstr ""
+
+#: src/campushallen/web/presentation.py:217
+msgid "Token expired"
+msgstr ""
+
+#: src/campushallen/web/presentation.py:218
+msgid "Reauth success"
+msgstr ""
+
+#: src/campushallen/web/presentation.py:219
+msgid "Reauth failed"
+msgstr ""
+
+#: src/campushallen/web/presentation.py:220
 msgid "Reconnect required"
 msgstr ""
 
-#: src/campushallen/web/presentation.py:221
+#: src/campushallen/web/presentation.py:225
 msgid "Security event"
 msgstr ""
 
-#: src/campushallen/web/presentation.py:236
+#: src/campushallen/web/presentation.py:240
 msgid "Enter a rule name (1–120 characters) and an activity (1–200 characters)."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:239
+#: src/campushallen/web/presentation.py:243
 msgid "Choose a weekday from Monday to Sunday."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:241
+#: src/campushallen/web/presentation.py:245
 msgid "Choose a valid booking type."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:243
+#: src/campushallen/web/presentation.py:247
 msgid "Enter numeric IDs. The category ID must be greater than zero."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:245
+#: src/campushallen/web/presentation.py:249
 msgid "Use at most 30 facility filters."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:247
+#: src/campushallen/web/presentation.py:251
 msgid "Enter valid local times, for example 18:45, without a timezone."
 msgstr ""
 
-#: src/campushallen/web/presentation.py:252
-msgid "Authentication failed before booking"
-msgstr ""
-
-#: src/campushallen/web/presentation.py:253
-msgid "Booking request started; result unknown"
-msgstr ""
-
-#: src/campushallen/web/presentation.py:254
-msgid "Booking request rejected authentication"
-msgstr ""
-
-#: src/campushallen/web/presentation.py:255
-msgid "Booking request rejected"
-msgstr ""
-
 #: src/campushallen/web/presentation.py:256
-msgid "Booking request outcome uncertain"
+msgid "Authentication confirmed before booking"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:257
-msgid "Booking response received; verification required"
+msgid "Waiting-list place independently confirmed"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:258
-msgid "Verification authentication failed"
+msgid "Authentication failed before booking"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:259
-msgid "Independent verification did not confirm booking"
+msgid "Booking request started; result unknown"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:260
-msgid "Booking independently confirmed"
+msgid "Booking request rejected authentication"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:261
+msgid "Booking request rejected"
+msgstr ""
+
+#: src/campushallen/web/presentation.py:262
+msgid "Booking request outcome uncertain"
+msgstr ""
+
+#: src/campushallen/web/presentation.py:263
+msgid "Booking response received; verification required"
+msgstr ""
+
+#: src/campushallen/web/presentation.py:264
+msgid "Verification authentication failed"
+msgstr ""
+
+#: src/campushallen/web/presentation.py:265
+msgid "Independent verification did not confirm booking"
+msgstr ""
+
+#: src/campushallen/web/presentation.py:266
+msgid "Booking independently confirmed"
+msgstr ""
+
+#: src/campushallen/web/presentation.py:267
 msgid "Existing booking independently confirmed"
 msgstr ""
 
@@ -1356,6 +1372,10 @@ msgstr ""
 
 #: src/campushallen/web/templates/attempts.html:1
 msgid "Reason / verification"
+msgstr ""
+
+#: src/campushallen/web/templates/attempts.html:2
+msgid "Waitlisted"
 msgstr ""
 
 #: src/campushallen/web/templates/attempts.html:2

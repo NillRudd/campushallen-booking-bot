@@ -192,6 +192,34 @@ class BookingClaim(Base):
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
 
 
+class BookingReconciliation(Base):
+    """One explicit operator-approved additional request; original claim stays immutable.
+
+    A scheduled worker never supplies this approval ID. Consumed approvals count
+    against the same account allowance forever, including uncertain outcomes.
+    """
+
+    __tablename__ = "booking_reconciliations"
+    __table_args__ = (
+        UniqueConstraint(
+            "campushallen_account_id", "activity_id", name="uq_reconciliation_account_activity"
+        ),
+        Index("ix_reconciliation_account_consumed", "campushallen_account_id", "consumed_at"),
+    )
+    id: Mapped[int] = mapped_column(primary_key=True)
+    campushallen_account_id: Mapped[int] = mapped_column(
+        ForeignKey("campushallen_accounts.id", ondelete="CASCADE")
+    )
+    activity_id: Mapped[int] = mapped_column(Integer)
+    approved_by_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL")
+    )
+    original_claim_created_at: Mapped[datetime] = mapped_column(UTCDateTime())
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(UTCDateTime())
+    consumed_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
+
+
 class CampushallenCredential(Timestamps, Base):
     __tablename__ = "campushallen_credentials"
     id: Mapped[int] = mapped_column(primary_key=True)

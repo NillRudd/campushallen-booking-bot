@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Campushallen Booker 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-20 21:01+0200\n"
+"POT-Creation-Date: 2026-10-20 21:46+0200\n"
 "PO-Revision-Date: 2026-10-19 20:30+0200\n"
 "Last-Translator: Campushallen Booker contributors\n"
 "Language: sv_SE\n"
@@ -173,7 +173,7 @@ msgstr "Bokningen behandlas redan"
 msgid "Not supported"
 msgstr "Stöds inte"
 
-#: src/campushallen/web/presentation.py:48 src/campushallen/web/presentation.py:266
+#: src/campushallen/web/presentation.py:48 src/campushallen/web/presentation.py:272
 msgid "Unknown result"
 msgstr "Okänt resultat"
 
@@ -229,429 +229,445 @@ msgstr "Tillgänglig"
 msgid "Backup successful"
 msgstr "Säkerhetskopieringen lyckades"
 
-#: src/campushallen/web/presentation.py:94
+#: src/campushallen/web/presentation.py:95
 msgid "Backup failed"
 msgstr "Säkerhetskopieringen misslyckades"
 
-#: src/campushallen/web/presentation.py:95
+#: src/campushallen/web/presentation.py:96
 msgid "Backup overdue"
 msgstr "Säkerhetskopieringen är försenad"
 
-#: src/campushallen/web/presentation.py:95
+#: src/campushallen/web/presentation.py:97
 msgid "Backup status unavailable"
 msgstr "Status för säkerhetskopiering saknas"
 
-#: src/campushallen/web/presentation.py:100
+#: src/campushallen/web/presentation.py:102
 msgid "Worker healthy"
 msgstr "Bokningsmotorn fungerar"
 
-#: src/campushallen/web/presentation.py:101
+#: src/campushallen/web/presentation.py:103
 msgid "Worker hasn't reported recently"
 msgstr "Bokningsmotorn har inte rapporterat nyligen"
 
-#: src/campushallen/web/presentation.py:102 src/campushallen/web/presentation.py:108
+#: src/campushallen/web/presentation.py:104 src/campushallen/web/presentation.py:110
 msgid "Worker disabled / not running"
 msgstr "Bokningsmotorn körs inte"
 
-#: src/campushallen/web/presentation.py:113
+#: src/campushallen/web/presentation.py:115
 msgid "At least one active admin must remain."
 msgstr "Det måste finnas minst en aktiv administratör kvar."
 
-#: src/campushallen/web/presentation.py:114
+#: src/campushallen/web/presentation.py:116
 msgid "Choose a different username."
 msgstr "Användarnamnet är redan upptaget. Välj ett annat."
 
-#: src/campushallen/web/presentation.py:115
+#: src/campushallen/web/presentation.py:117
 msgid "Earliest time must be before latest time"
 msgstr "Den tidigaste starttiden måste vara före den senaste."
 
-#: src/campushallen/web/presentation.py:116
+#: src/campushallen/web/presentation.py:118
 msgid "Login state changed; sign in again."
 msgstr "Din inloggning har ändrats. Logga in igen."
 
-#: src/campushallen/web/presentation.py:117
+#: src/campushallen/web/presentation.py:119
 msgid "Name and activity must not be blank"
 msgstr "Ange både ett namn på regeln och ett pass."
 
-#: src/campushallen/web/presentation.py:118
+#: src/campushallen/web/presentation.py:120
 msgid "Password changed in another session; log in again."
 msgstr "Lösenordet har ändrats i en annan session. Logga in igen."
 
-#: src/campushallen/web/presentation.py:119
+#: src/campushallen/web/presentation.py:121
 msgid "Rule times must be local clock times without a timezone offset"
 msgstr "Ange lokal tid utan tidszon, till exempel 18:45."
 
-#: src/campushallen/web/presentation.py:120
+#: src/campushallen/web/presentation.py:122
 msgid "Service rules require a fixed start time"
 msgstr "Regler för tjänster behöver en fast starttid."
 
-#: src/campushallen/web/presentation.py:121
+#: src/campushallen/web/presentation.py:123
 msgid "Start time must be inside the allowed window"
 msgstr "Starttiden måste ligga inom det tillåtna tidsintervallet."
 
-#: src/campushallen/web/presentation.py:122
+#: src/campushallen/web/presentation.py:124
 msgid "The last active admin cannot be deleted. Create or promote another admin first."
 msgstr "Den sista aktiva administratören kan inte tas bort. Skapa eller utse en annan administratör först."
 
-#: src/campushallen/web/presentation.py:123
+#: src/campushallen/web/presentation.py:125
 msgid "The new website passwords do not match."
 msgstr "De nya lösenorden för webbplatsen stämmer inte överens."
 
-#: src/campushallen/web/presentation.py:124
+#: src/campushallen/web/presentation.py:126
 msgid "This invitation is unavailable. Ask the owner for a new invitation."
 msgstr "Den här inbjudningslänken är inte längre giltig. Be ägaren om en ny inbjudan."
 
-#: src/campushallen/web/presentation.py:125
+#: src/campushallen/web/presentation.py:127
 msgid "Type DELETE to confirm local account removal."
 msgstr "Skriv DELETE för att bekräfta att anslutningen ska tas bort lokalt."
 
-#: src/campushallen/web/presentation.py:126
+#: src/campushallen/web/presentation.py:128
 msgid "Type DELETE to confirm local data removal."
 msgstr "Skriv DELETE för att bekräfta att dina lokala uppgifter ska tas bort."
 
-#: src/campushallen/web/presentation.py:127
+#: src/campushallen/web/presentation.py:129
 msgid "Use a label of at most 120 characters and a future expiry."
 msgstr "Ange en etikett med högst 120 tecken och ett giltighetsdatum i framtiden."
 
-#: src/campushallen/web/presentation.py:128
+#: src/campushallen/web/presentation.py:130
 msgid "Use a username of 1–254 characters without spaces or control characters."
 msgstr "Användarnamnet måste innehålla 1–254 tecken utan blanksteg eller kontrolltecken."
 
-#: src/campushallen/web/presentation.py:129
+#: src/campushallen/web/presentation.py:131
 msgid "Use a website password of 12–4096 characters."
 msgstr "Lösenordet för webbplatsen måste innehålla minst 12 och högst 4096 tecken."
 
-#: src/campushallen/web/presentation.py:130
+#: src/campushallen/web/presentation.py:132
 msgid "Website password is incorrect."
 msgstr "Lösenordet för webbplatsen är felaktigt."
 
-#: src/campushallen/web/presentation.py:131
+#: src/campushallen/web/presentation.py:133
 msgid "Website passwords do not match."
 msgstr "Lösenorden för webbplatsen stämmer inte överens."
 
-#: src/campushallen/web/presentation.py:139
+#: src/campushallen/web/presentation.py:141
 msgid "Unable to complete the request. Check the form and try again."
 msgstr "Det gick inte att slutföra åtgärden. Kontrollera formuläret och försök igen."
 
-#: src/campushallen/web/presentation.py:144
+#: src/campushallen/web/presentation.py:146
+msgid "Waiting-list entry independently verified."
+msgstr "Reservplatsen har bekräftats genom en oberoende kontroll."
+
+#: src/campushallen/web/presentation.py:147
 msgid "Live operation phase recorded; inspect verification outcome."
 msgstr "Bokningssteget har sparats; se resultatet av den oberoende kontrollen."
 
-#: src/campushallen/web/presentation.py:145
+#: src/campushallen/web/presentation.py:148
 msgid "A previous live attempt exists; inspect booking history before any manual retry."
 msgstr ""
 "Ett tidigare bokningsförsök finns. Kontrollera historiken och Campushallen innan du försöker igen"
 " manuellt."
 
-#: src/campushallen/web/presentation.py:146
+#: src/campushallen/web/presentation.py:149
 msgid "API booking opening time has not arrived."
 msgstr "Bokningen har inte öppnat hos Campushallen ännu."
 
-#: src/campushallen/web/presentation.py:147
+#: src/campushallen/web/presentation.py:150
 msgid "API did not supply bookableEarliest; no booking sent."
 msgstr "Campushallen angav ingen öppningstid. Ingen bokning skickades."
 
-#: src/campushallen/web/presentation.py:148
+#: src/campushallen/web/presentation.py:151
 msgid "Account was removed"
 msgstr "Kontot har tagits bort"
 
-#: src/campushallen/web/presentation.py:149
+#: src/campushallen/web/presentation.py:152
 msgid "Account, user, or rule is disabled."
 msgstr "Kontot, användaren eller bokningsregeln är inaktiv."
 
-#: src/campushallen/web/presentation.py:150
+#: src/campushallen/web/presentation.py:153
 msgid "Activity discovery failed; try again later."
 msgstr "Det gick inte att hämta pass. Försök igen senare."
 
-#: src/campushallen/web/presentation.py:151
+#: src/campushallen/web/presentation.py:154
 msgid "Activity has already started."
 msgstr "Passet har redan börjat."
 
-#: src/campushallen/web/presentation.py:152
+#: src/campushallen/web/presentation.py:155
 msgid "Activity is already booked."
 msgstr "Passet är redan bokat."
 
-#: src/campushallen/web/presentation.py:153
+#: src/campushallen/web/presentation.py:156
 msgid "Booking could not be completed."
 msgstr "Bokningen kunde inte slutföras."
 
-#: src/campushallen/web/presentation.py:154
+#: src/campushallen/web/presentation.py:157
 msgid "Booking independently verified."
 msgstr "Bokningen har bekräftats genom en separat kontroll."
 
-#: src/campushallen/web/presentation.py:155
+#: src/campushallen/web/presentation.py:158
 msgid "Campushallen request failed; no booking confirmed."
 msgstr "Det gick inte att kontakta Campushallen. Ingen bokning har bekräftats."
 
-#: src/campushallen/web/presentation.py:156
+#: src/campushallen/web/presentation.py:159
 msgid "Dry-run; no booking sent."
 msgstr "Testkörning. Ingen bokning skickades."
 
-#: src/campushallen/web/presentation.py:157
+#: src/campushallen/web/presentation.py:160
 msgid "Fixed start time no longer matches."
 msgstr "Den fasta starttiden stämmer inte längre."
 
-#: src/campushallen/web/presentation.py:158
+#: src/campushallen/web/presentation.py:161
 msgid "Live request reserved; an interrupted request requires manual verification."
 msgstr "Bokningsförsöket har påbörjats. Om det avbryts behöver bokningen kontrolleras manuellt."
 
-#: src/campushallen/web/presentation.py:159
+#: src/campushallen/web/presentation.py:162
 msgid "Matching activity discovered."
 msgstr "Ett matchande pass hittades."
 
-#: src/campushallen/web/presentation.py:160
+#: src/campushallen/web/presentation.py:163
 msgid "No regular spots available; no booking sent."
 msgstr "Det finns inga ordinarie platser kvar. Ingen bokning skickades."
 
-#: src/campushallen/web/presentation.py:161
+#: src/campushallen/web/presentation.py:164
 msgid "No safe upcoming target with API bookableEarliest was found."
 msgstr "Inget kommande pass med säker matchning och angiven öppningstid hittades."
 
-#: src/campushallen/web/presentation.py:162
+#: src/campushallen/web/presentation.py:165
 msgid "No unique safe target was selected."
 msgstr "Det gick inte att välja ett entydigt och säkert matchande pass."
 
-#: src/campushallen/web/presentation.py:163
+#: src/campushallen/web/presentation.py:166
 msgid "Queued target changed; no booking sent."
 msgstr "Passet ändrades medan försöket väntade. Ingen bokning skickades."
 
-#: src/campushallen/web/presentation.py:164
+#: src/campushallen/web/presentation.py:167
 msgid "Reconnect this Campushallen account."
 msgstr "Återanslut det här Campushallen-kontot."
 
-#: src/campushallen/web/presentation.py:165
+#: src/campushallen/web/presentation.py:168
 msgid "Request outcome is uncertain; check Campushallen before retrying."
 msgstr "Resultatet är osäkert. Kontrollera Campushallen innan du försöker igen."
 
-#: src/campushallen/web/presentation.py:166
+#: src/campushallen/web/presentation.py:169
 msgid "Request sent but booking could not be verified. Check Campushallen before retrying."
 msgstr ""
 "Förfrågan skickades men bokningen kunde inte bekräftas. Kontrollera Campushallen innan du "
 "försöker igen."
 
-#: src/campushallen/web/presentation.py:167
+#: src/campushallen/web/presentation.py:170
 msgid "Selection is ambiguous or outside the allowed time window."
 msgstr "Flera pass matchar, eller så ligger passet utanför det tillåtna tidsintervallet."
 
-#: src/campushallen/web/presentation.py:168
+#: src/campushallen/web/presentation.py:171
 msgid "Service booking is available only through the legacy CLI."
 msgstr "Tjänster kan bara bokas via det befintliga kommandoradsverktyget."
 
-#: src/campushallen/web/presentation.py:169
+#: src/campushallen/web/presentation.py:172
 msgid "Service rules remain available through the legacy CLI; web worker does not book services."
 msgstr ""
 "Regler för tjänster kan användas via kommandoradsverktyget. Webbplatsens bokningsmotor bokar inte"
 " tjänster."
 
-#: src/campushallen/web/presentation.py:177
+#: src/campushallen/web/presentation.py:180
 msgid "See the result and check Campushallen if you are unsure."
 msgstr "Se resultatet och kontrollera Campushallen om du är osäker."
 
-#: src/campushallen/web/presentation.py:182
+#: src/campushallen/web/presentation.py:185
+msgid "One additional manual booking approved"
+msgstr "Ytterligare en manuell bokning godkänd"
+
+#: src/campushallen/web/presentation.py:186
 msgid "Real booking activated"
 msgstr "Riktig bokning aktiverad"
 
-#: src/campushallen/web/presentation.py:183
+#: src/campushallen/web/presentation.py:187
 msgid "Real booking stopped"
 msgstr "Riktig bokning stoppad"
 
-#: src/campushallen/web/presentation.py:184
+#: src/campushallen/web/presentation.py:188
 msgid "Website sign-in failed"
 msgstr "Inloggning på webbplatsen misslyckades"
 
-#: src/campushallen/web/presentation.py:185
+#: src/campushallen/web/presentation.py:189
 msgid "Website sign-in temporarily locked"
 msgstr "Inloggningen på webbplatsen är tillfälligt låst"
 
-#: src/campushallen/web/presentation.py:186
+#: src/campushallen/web/presentation.py:190
 msgid "Website sign-in successful"
 msgstr "Inloggning på webbplatsen lyckades"
 
-#: src/campushallen/web/presentation.py:187
+#: src/campushallen/web/presentation.py:191
 msgid "Website sign-in lock expired"
 msgstr "Inloggningsspärren på webbplatsen har gått ut"
 
-#: src/campushallen/web/presentation.py:188
+#: src/campushallen/web/presentation.py:192
 msgid "User registered"
 msgstr "Användare registrerad"
 
-#: src/campushallen/web/presentation.py:189
+#: src/campushallen/web/presentation.py:193
 msgid "User created"
 msgstr "Användare skapad"
 
-#: src/campushallen/web/presentation.py:190
+#: src/campushallen/web/presentation.py:194
 msgid "User deleted"
 msgstr "Användare borttagen"
 
-#: src/campushallen/web/presentation.py:191
+#: src/campushallen/web/presentation.py:195
 msgid "Admin promoted"
 msgstr "Administratör utsedd"
 
-#: src/campushallen/web/presentation.py:192
+#: src/campushallen/web/presentation.py:196
 msgid "Admin demoted"
 msgstr "Administratörsbehörighet borttagen"
 
-#: src/campushallen/web/presentation.py:193
+#: src/campushallen/web/presentation.py:197
 msgid "Login success"
 msgstr "Inloggning lyckades"
 
-#: src/campushallen/web/presentation.py:194
+#: src/campushallen/web/presentation.py:198
 msgid "Login failed"
 msgstr "Inloggning misslyckades"
 
-#: src/campushallen/web/presentation.py:195
+#: src/campushallen/web/presentation.py:199
 msgid "Logout"
 msgstr "Utloggning"
 
-#: src/campushallen/web/presentation.py:196
+#: src/campushallen/web/presentation.py:200
 msgid "Sessions revoked"
 msgstr "Alla sessioner avslutade"
 
-#: src/campushallen/web/presentation.py:197
+#: src/campushallen/web/presentation.py:201
 msgid "Password changed"
 msgstr "Lösenord ändrat"
 
-#: src/campushallen/web/presentation.py:198
+#: src/campushallen/web/presentation.py:202
 msgid "Campushallen connected"
 msgstr "Ansluten till Campushallen"
 
-#: src/campushallen/web/presentation.py:199
+#: src/campushallen/web/presentation.py:203
 msgid "Campushallen reconnected"
 msgstr "Återansluten till Campushallen"
 
-#: src/campushallen/web/presentation.py:200
+#: src/campushallen/web/presentation.py:204
 msgid "Account disabled"
 msgstr "Konto inaktiverat"
 
-#: src/campushallen/web/presentation.py:201
+#: src/campushallen/web/presentation.py:205
 msgid "Account enabled"
 msgstr "Konto aktiverat"
 
-#: src/campushallen/web/presentation.py:202
+#: src/campushallen/web/presentation.py:206
 msgid "Account disconnected"
 msgstr "Konto frånkopplat"
 
-#: src/campushallen/web/presentation.py:203
+#: src/campushallen/web/presentation.py:207
 msgid "Account deleted"
 msgstr "Konto borttaget"
 
-#: src/campushallen/web/presentation.py:204
+#: src/campushallen/web/presentation.py:208
 msgid "Stored credential enabled"
 msgstr "Inloggningsuppgifter sparade"
 
-#: src/campushallen/web/presentation.py:205
+#: src/campushallen/web/presentation.py:209
 msgid "Stored credential removed"
 msgstr "Sparat lösenord borttaget"
 
-#: src/campushallen/web/presentation.py:206
+#: src/campushallen/web/presentation.py:210
 msgid "Stored credential replaced"
 msgstr "Sparat lösenord ersatt"
 
-#: src/campushallen/web/presentation.py:207
+#: src/campushallen/web/presentation.py:211
 msgid "Booking rule created"
 msgstr "Bokningsregel skapad"
 
-#: src/campushallen/web/presentation.py:208
+#: src/campushallen/web/presentation.py:212
 msgid "Booking rule updated"
 msgstr "Bokningsregel uppdaterad"
 
-#: src/campushallen/web/presentation.py:209
+#: src/campushallen/web/presentation.py:213
 msgid "Booking rule deleted"
 msgstr "Bokningsregel borttagen"
 
-#: src/campushallen/web/presentation.py:210
+#: src/campushallen/web/presentation.py:214
 msgid "Invite created"
 msgstr "Inbjudan skapad"
 
-#: src/campushallen/web/presentation.py:211
+#: src/campushallen/web/presentation.py:215
 msgid "Invite used"
 msgstr "Inbjudan använd"
 
-#: src/campushallen/web/presentation.py:212
+#: src/campushallen/web/presentation.py:216
 msgid "Invite revoked"
 msgstr "Inbjudan återkallad"
 
-#: src/campushallen/web/presentation.py:213
+#: src/campushallen/web/presentation.py:217
 msgid "Token expired"
 msgstr "Anslutningen har gått ut"
 
-#: src/campushallen/web/presentation.py:214
+#: src/campushallen/web/presentation.py:218
 msgid "Reauth success"
 msgstr "Automatisk återanslutning lyckades"
 
-#: src/campushallen/web/presentation.py:215
+#: src/campushallen/web/presentation.py:219
 msgid "Reauth failed"
 msgstr "Automatisk återanslutning misslyckades"
 
-#: src/campushallen/web/presentation.py:216
+#: src/campushallen/web/presentation.py:220
 msgid "Reconnect required"
 msgstr "Återanslutning krävs"
 
-#: src/campushallen/web/presentation.py:221
+#: src/campushallen/web/presentation.py:225
 msgid "Security event"
 msgstr "Säkerhetshändelse"
 
-#: src/campushallen/web/presentation.py:236
+#: src/campushallen/web/presentation.py:240
 msgid "Enter a rule name (1–120 characters) and an activity (1–200 characters)."
 msgstr "Ange ett regelnamn med 1–120 tecken och ett pass med 1–200 tecken."
 
-#: src/campushallen/web/presentation.py:239
+#: src/campushallen/web/presentation.py:243
 msgid "Choose a weekday from Monday to Sunday."
 msgstr "Välj en veckodag från måndag till söndag."
 
-#: src/campushallen/web/presentation.py:241
+#: src/campushallen/web/presentation.py:245
 msgid "Choose a valid booking type."
 msgstr "Välj en giltig bokningstyp."
 
-#: src/campushallen/web/presentation.py:243
+#: src/campushallen/web/presentation.py:247
 msgid "Enter numeric IDs. The category ID must be greater than zero."
 msgstr "Ange numeriska ID:n. Kategori-ID måste vara större än noll."
 
-#: src/campushallen/web/presentation.py:245
+#: src/campushallen/web/presentation.py:249
 msgid "Use at most 30 facility filters."
 msgstr "Ange högst 30 anläggningsfilter."
 
-#: src/campushallen/web/presentation.py:247
+#: src/campushallen/web/presentation.py:251
 msgid "Enter valid local times, for example 18:45, without a timezone."
 msgstr "Ange giltiga lokala tider utan tidszon, till exempel 18:45."
 
-#: src/campushallen/web/presentation.py:252
+#: src/campushallen/web/presentation.py:256
+msgid "Authentication confirmed before booking"
+msgstr "Inloggningen har bekräftats före bokningen"
+
+#: src/campushallen/web/presentation.py:257
+msgid "Waiting-list place independently confirmed"
+msgstr "Reservplats bekräftad genom en oberoende kontroll"
+
+#: src/campushallen/web/presentation.py:258
 msgid "Authentication failed before booking"
 msgstr "Inloggningen misslyckades före bokningen"
 
-#: src/campushallen/web/presentation.py:253
+#: src/campushallen/web/presentation.py:259
 msgid "Booking request started; result unknown"
 msgstr "Bokningsförfrågan påbörjad; resultatet är okänt"
 
-#: src/campushallen/web/presentation.py:254
+#: src/campushallen/web/presentation.py:260
 msgid "Booking request rejected authentication"
 msgstr "Bokningsförfrågan nekades vid inloggningskontroll"
 
-#: src/campushallen/web/presentation.py:255
+#: src/campushallen/web/presentation.py:261
 msgid "Booking request rejected"
 msgstr "Bokningsförfrågan nekades"
 
-#: src/campushallen/web/presentation.py:256
+#: src/campushallen/web/presentation.py:262
 msgid "Booking request outcome uncertain"
 msgstr "Bokningsförfrågans resultat är osäkert"
 
-#: src/campushallen/web/presentation.py:257
+#: src/campushallen/web/presentation.py:263
 msgid "Booking response received; verification required"
 msgstr "Svar på bokningsförfrågan mottaget; bekräftelse krävs"
 
-#: src/campushallen/web/presentation.py:258
+#: src/campushallen/web/presentation.py:264
 msgid "Verification authentication failed"
 msgstr "Inloggningskontrollen misslyckades vid bekräftelse"
 
-#: src/campushallen/web/presentation.py:259
+#: src/campushallen/web/presentation.py:265
 msgid "Independent verification did not confirm booking"
 msgstr "Den oberoende kontrollen kunde inte bekräfta bokningen"
 
-#: src/campushallen/web/presentation.py:260
+#: src/campushallen/web/presentation.py:266
 msgid "Booking independently confirmed"
 msgstr "Bokningen har bekräftats genom en oberoende kontroll"
 
-#: src/campushallen/web/presentation.py:261
+#: src/campushallen/web/presentation.py:267
 msgid "Existing booking independently confirmed"
 msgstr "En befintlig bokning har bekräftats genom en oberoende kontroll"
 
@@ -1295,6 +1311,10 @@ msgstr "Försök gjordes"
 #: src/campushallen/web/templates/attempts.html:1
 msgid "Reason / verification"
 msgstr "Orsak / bekräftelse"
+
+#: src/campushallen/web/templates/attempts.html:2
+msgid "Waitlisted"
+msgstr "På reservlistan"
 
 #: src/campushallen/web/templates/attempts.html:2 src/campushallen/web/templates/dashboard.html:9
 #: src/campushallen/web/templates/onboarding.html:6

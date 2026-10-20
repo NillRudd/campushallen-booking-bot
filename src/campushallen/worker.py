@@ -1,8 +1,10 @@
 import argparse
 import asyncio
+import json
 import logging
 import signal
 
+from campushallen.database.models import BookingReconciliation, Outcome
 from campushallen.database.session import make_engine, session_factory
 from campushallen.services.account_auth import AccountAuthentication
 from campushallen.services.accounts import AccountGateway
@@ -37,7 +39,16 @@ def main() -> None:
         "--live", action="store_true", help="Send real bookings; requires a second explicit opt-in"
     )
     parser.add_argument("--confirm-real-bookings", action="store_true")
+    parser.add_argument(
+        "--manual-approval-id",
+        type=int,
+        help="Consume one operator approval; requires --once and both live flags",
+    )
     args = parser.parse_args()
+    if args.manual_approval_id is not None and not (
+        args.once and args.live and args.confirm_real_bookings
+    ):
+        parser.error("Manual approval requires --once --live --confirm-real-bookings")
     if args.live and not args.confirm_real_bookings:
         parser.error("Real mutations require both --live and --confirm-real-bookings")
     settings = Settings()
@@ -59,6 +70,36 @@ def main() -> None:
         concurrency=settings.worker_concurrency,
     )
     try:
+        if args.manual_approval_id is not None:
+            with session_factory(database)() as db:
+                approval = db.get(BookingReconciliation, args.manual_approval_id)
+                if not approval:
+                    parser.error("Manual approval not found")
+                account_id, activity_id = approval.campushallen_account_id, approval.activity_id
+            plans = [
+                p
+                for p in scheduler.engine.discover(account_id)
+                if p.slot and p.slot.id == activity_id
+            ]
+            if len(plans) != 1:
+                parser.error("No unique approved rule target; no booking sent")
+            result = scheduler.engine.run(
+                plans[0], dry_run=False, manual_approval_id=args.manual_approval_id
+            )
+            print(
+                json.dumps(
+                    {
+                        "attempt_id": result.id,
+                        "result": result.result,
+                        "phase": result.phase,
+                        "http_status": result.http_status,
+                        "verification": result.verification_outcome,
+                    }
+                )
+            )
+            if result.result not in (Outcome.BOOKED, Outcome.ALREADY_BOOKED):
+                raise SystemExit(1)
+            return
         asyncio.run(run_worker(scheduler, once=args.once, interval=settings.worker_poll_seconds))
     except KeyboardInterrupt:
         pass

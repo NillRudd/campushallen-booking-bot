@@ -2,9 +2,10 @@
 
 from datetime import timedelta
 
+from sqlalchemy import update
 from sqlalchemy.orm import Session
 
-from campushallen.database.models import CampushallenAccount, utcnow
+from campushallen.database.models import BookingReconciliation, CampushallenAccount, utcnow
 
 from .account_auth import TemporaryAuthenticationError
 from .accounts import AccountGateway
@@ -63,6 +64,14 @@ def connect_account(
 
 def disconnect(db: Session, account: CampushallenAccount) -> None:
     forget(db, account)
+    db.execute(
+        update(BookingReconciliation)
+        .where(
+            BookingReconciliation.campushallen_account_id == account.id,
+            BookingReconciliation.consumed_at.is_(None),
+        )
+        .values(expires_at=utcnow())
+    )
     # Approval belongs to the reviewed identity, never a replacement email/login.
     account.live_booking_ongoing = False
     account.live_booking_enabled = False
