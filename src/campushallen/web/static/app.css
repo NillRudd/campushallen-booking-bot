@@ -322,3 +322,8 @@ input[readonly] {
     gap: 0.75rem 1.2rem;
   }
 }
+
+.occurrence { border-top: 1px solid #dae4dd; padding: 1rem 0; }
+.occurrence p { margin: .4rem 0; overflow-wrap: anywhere; }
+input[type="search"], input[type="email"] { width: 100%; min-width: 0; }
+.search-form { margin-bottom: 1.5rem; }

@@ -8,7 +8,7 @@ from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import httpx
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
@@ -60,7 +60,9 @@ class BookingEngine:
         self.notifier = notifier or NoopNotifier()
         self.timezone = ZoneInfo(gateway.settings.campushallen_timezone)
 
-    def discover(self, account_id: int, *, now: datetime | None = None) -> list[Plan]:
+    def discover(
+        self, account_id: int, *, now: datetime | None = None, rule_id: int | None = None
+    ) -> list[Plan]:
         now = (now or utcnow()).astimezone(self.timezone)
         plans: list[Plan] = []
         with self.sessions() as db:
@@ -69,7 +71,9 @@ class BookingEngine:
                 return []
             rules = db.scalars(
                 select(BookingRule).where(
-                    BookingRule.campushallen_account_id == account_id, BookingRule.enabled.is_(True)
+                    BookingRule.campushallen_account_id == account_id,
+                    BookingRule.enabled.is_(True),
+                    *([BookingRule.id == rule_id] if rule_id is not None else []),
                 )
             ).all()
             for rule in rules:
@@ -136,6 +140,15 @@ class BookingEngine:
                                     )
                                 )
                         # Persist only after network reads finish, keeping SQLite writes brief.
+                        # A successful fresh discovery replaces observations for this rule.
+                        db.execute(
+                            delete(BookingOpportunity).where(
+                                BookingOpportunity.booking_rule_id == rule.id,
+                                BookingOpportunity.activity_id.not_in(
+                                    [slot.id for slot in discovered]
+                                ),
+                            )
+                        )
                         for discovered_slot in discovered:
                             snapshot(
                                 db,
@@ -184,7 +197,12 @@ class BookingEngine:
         return plans
 
     def record(
-        self, plan: Plan, result: Outcome | None = None, message: str | None = None
+        self,
+        plan: Plan,
+        result: Outcome | None = None,
+        message: str | None = None,
+        *,
+        update_schedule: bool = True,
     ) -> BookingAttempt:
         with self.sessions() as db:
             slot = plan.slot
@@ -196,6 +214,7 @@ class BookingEngine:
                 activity_start=slot.starts_at if slot else None,
                 bookable_earliest=slot.bookable_earliest if slot else None,
                 result=(result or plan.outcome).value,
+                is_preview=not update_schedule,
                 message=message or plan.message,
             )
             account = db.get(CampushallenAccount, plan.account_id)
@@ -219,7 +238,7 @@ class BookingEngine:
                         BookingOpportunity.activity_id == slot.id,
                     )
                 )
-                if opportunity:
+                if opportunity and update_schedule:
                     opportunity.worker_status = attempt.result.lower()
                     if attempt.result in (Outcome.BOOKED, Outcome.ALREADY_BOOKED):
                         opportunity.already_booked = True
@@ -234,12 +253,18 @@ class BookingEngine:
                     else None
                 )
             )
-            if kind:
+            if kind and update_schedule:
                 deliver(self.notifier, Notification(kind, account.user_id, account.id, attempt.id))
             return attempt
 
     def preview_account(self, account_id: int) -> list[BookingAttempt]:
-        return [self.record(plan) for plan in self.discover(account_id)]
+        return [self.record(plan, update_schedule=False) for plan in self.discover(account_id)]
+
+    def preview_rule(self, account_id: int, rule_id: int) -> list[Plan]:
+        plans = self.discover(account_id, rule_id=rule_id)
+        for plan in plans:
+            self.record(plan, update_schedule=False)
+        return plans
 
     def run(
         self, plan: Plan, *, dry_run: bool = True, now: datetime | None = None

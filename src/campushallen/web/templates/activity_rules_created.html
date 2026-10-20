@@ -1,0 +1,6 @@
+{% extends 'base.html' %}{% block title %}{{ _('Booking rules') }} · Campushallen Booker{% endblock %}{% block content %}
+<h1>{{ _('Your selected recurring sessions') }}</h1>
+{% for rule in created %}<section class="card"><h2>{{ rule.name }}</h2><p>{{ _('Rule saved. The worker remains in its configured mode.') }}</p><form method="post" action="/rules/{{ rule.id }}/preview"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button>{{ _('Preview matching upcoming sessions') }}</button></form><a href="/rules/{{ rule.id }}/edit">{{ _('Edit rule') }}</a></section>{% endfor %}
+{% for rule in duplicates %}<section class="card"><p>{{ _('You already have a booking rule for this session.') }}</p><a href="/rules/{{ rule.id }}/edit">{{ _('View rule') }} · {{ rule.name }}</a></section>{% endfor %}
+<a href="/activities">{{ _('Find more sessions') }}</a> · <a href="/rules">{{ _('My booking rules') }}</a>
+{% endblock %}

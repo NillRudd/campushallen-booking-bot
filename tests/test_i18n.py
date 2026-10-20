@@ -53,7 +53,7 @@ def test_default_locale_and_no_browser_language_negotiation(web):
     [
         ("/", "Din vecka på Campushallen"),
         ("/onboarding", "Välj vilka pass du vill boka"),
-        ("/accounts", "Dina Campushallen-konton"),
+        ("/accounts", "Mitt Campushallen-konto"),
         ("/rules", "Bokningsregler"),
         ("/rules/new", "Önskad starttid"),
         ("/history", "Bokningshistorik"),

@@ -80,7 +80,7 @@ def login(client):
 
 def own_account(client, app):
     response = post(
-        client, "/accounts", {"display_name": "My account", "username": "alice-external"}
+        client, "/accounts", {"display_name": "My account", "username": "alice@example.com"}
     )
     assert response.status_code == 303
     with app.state.sessions() as db:

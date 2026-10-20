@@ -10,8 +10,14 @@ from sqlalchemy.exc import IntegrityError
 from starlette.datastructures import FormData
 from starlette.responses import RedirectResponse
 
-from campushallen.database.models import BookingOpportunity, BookingRule, CampushallenAccount
+from campushallen.database.models import (
+    BookingOpportunity,
+    BookingRule,
+    CampushallenAccount,
+    utcnow,
+)
 from campushallen.services.audit import Event, audit
+from campushallen.services.discovery import selection_key
 from campushallen.services.rules import RuleInput
 from campushallen.web.dependencies import DB, CurrentUser, Form, owned_account, owned_rule, render
 from campushallen.web.i18n import gettext as _
@@ -190,6 +196,12 @@ def save_rule(rule_id, request, db, user, form):
             rule=SimpleNamespace(**submitted),
             error=error,
         )
+    key = selection_key(data)
+    existing = db.scalars(
+        select(BookingRule).where(BookingRule.campushallen_account_id == account_id)
+    ).all()
+    if any(other.id != rule_id and selection_key(other) == key for other in existing):
+        raise HTTPException(409, _("You already have a booking rule for this session."))
     if rule is None:
         rule = BookingRule(campushallen_account_id=account_id, **data.model_dump())
         db.add(rule)
@@ -198,6 +210,7 @@ def save_rule(rule_id, request, db, user, form):
         rule.campushallen_account_id = account_id
         for name, value in data.model_dump().items():
             setattr(rule, name, value)
+    rule.selection_key = key
     audit(
         db,
         Event.BOOKING_RULE_UPDATED if rule_id else Event.BOOKING_RULE_CREATED,
@@ -240,3 +253,29 @@ def delete_rule(rule_id: int, request: Request, db: DB, user: CurrentUser, form:
     db.delete(rule)
     db.commit()
     return RedirectResponse("/rules", status_code=303)
+
+
+@router.post("/rules/{rule_id}/preview")
+def preview_rule(rule_id: int, request: Request, db: DB, user: CurrentUser, form: Form):
+    rule = owned_rule(db, user.id, rule_id)
+    account = owned_account(db, user.id, rule.campushallen_account_id)
+    plans = request.app.state.engine.preview_rule(account.id, rule.id)
+    db.expire_all()
+    booked = set(
+        db.scalars(
+            select(BookingOpportunity.activity_id).where(
+                BookingOpportunity.booking_rule_id == rule.id,
+                BookingOpportunity.already_booked.is_(True),
+            )
+        )
+    )
+    return render(
+        request,
+        "rule_preview.html",
+        user=user,
+        rule=rule,
+        account=account,
+        plans=plans,
+        booked=booked,
+        now=utcnow(),
+    )

@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from starlette.responses import RedirectResponse
 
-from campushallen.database.models import CampushallenAccount
+from campushallen.database.models import BookingRule, CampushallenAccount
 from campushallen.services.account_management import connect_account, disconnect
 from campushallen.services.audit import Event, audit
 from campushallen.services.credentials import credential_for, forget
@@ -17,25 +17,38 @@ from campushallen.web.presentation import safe_error
 router = APIRouter()
 
 
+def valid_email(value: str) -> bool:
+    if not 3 <= len(value) <= 254 or any(c.isspace() or ord(c) < 32 for c in value):
+        return False
+    local, separator, domain = value.rpartition("@")
+    return bool(separator and local and domain and "@" not in local and not domain.startswith("."))
+
+
 @router.get("/accounts")
 def accounts(request: Request, db: DB, user: CurrentUser):
-    rows = db.scalars(
-        select(CampushallenAccount).where(CampushallenAccount.user_id == user.id)
-    ).all()
-    return render(request, "accounts.html", user=user, accounts=rows)
+    account = db.scalar(select(CampushallenAccount).where(CampushallenAccount.user_id == user.id))
+    if account:
+        return RedirectResponse(f"/accounts/{account.id}", status_code=303)
+    return render(request, "accounts.html", user=user)
 
 
 @router.post("/accounts")
 def add_account(request: Request, db: DB, user: CurrentUser, form: Form):
     name = str(form.get("display_name", "")).strip()
     username = str(form.get("username", "")).strip()
-    if not 1 <= len(name) <= 120 or not 1 <= len(username) <= 254:
-        raise HTTPException(422, _("Enter an account name and Campushallen username."))
+    if db.scalar(select(CampushallenAccount.id).where(CampushallenAccount.user_id == user.id)):
+        raise HTTPException(
+            409, _("You already have a Campushallen account. Open it to reconnect.")
+        )
+    if not 1 <= len(name) <= 120 or not valid_email(username):
+        raise HTTPException(422, _("Enter an account name and a valid Campushallen email address."))
     db.add(CampushallenAccount(user_id=user.id, display_name=name, username=username))
     try:
         db.commit()
     except IntegrityError:
-        raise HTTPException(409, _("That account is already added.")) from None
+        raise HTTPException(
+            409, _("You already have a Campushallen account. Open it to reconnect.")
+        ) from None
     return RedirectResponse("/accounts", status_code=303)
 
 
@@ -48,6 +61,9 @@ def account_detail(account_id: int, request: Request, db: DB, user: CurrentUser)
         user=user,
         account=account,
         remembered=credential_for(db, account.id) is not None,
+        account_rules=db.scalars(
+            select(BookingRule).where(BookingRule.campushallen_account_id == account.id)
+        ).all(),
     )
 
 
@@ -59,6 +75,14 @@ def connect(account_id: int, request: Request, db: DB, user: CurrentUser, form: 
     password = str(form.get("password", ""))
     if not 1 <= len(password) <= 1024:
         raise HTTPException(422, _("Enter the Campushallen password."))
+    if "username" in form:
+        email = str(form.get("username", "")).strip()
+        if not valid_email(email):
+            raise HTTPException(422, _("Enter a valid Campushallen email address."))
+        if email != account.username:
+            # An explicit identity change invalidates old tokens/remembered identity together.
+            disconnect(db, account)
+            account.username = email
     try:
         connect_account(
             db,
@@ -76,6 +100,9 @@ def connect(account_id: int, request: Request, db: DB, user: CurrentUser, form: 
             user=user,
             account=account,
             remembered=credential_for(db, account.id) is not None,
+            account_rules=db.scalars(
+                select(BookingRule).where(BookingRule.campushallen_account_id == account.id)
+            ).all(),
             error=_("Connection failed. Check your credentials or try again later."),
         )
     return RedirectResponse(f"/accounts/{account.id}?notice=connected", status_code=303)
@@ -115,6 +142,9 @@ def preview(account_id: int, request: Request, db: DB, user: CurrentUser, form: 
         account=account,
         results=results,
         remembered=credential_for(db, account.id) is not None,
+        account_rules=db.scalars(
+            select(BookingRule).where(BookingRule.campushallen_account_id == account.id)
+        ).all(),
     )
 
 

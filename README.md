@@ -1,14 +1,15 @@
 # Campushallen Booker
 
 A development-stage, multi-user web application built around the existing
-Campushallen / Go Active booking bot. Join by invitation, manage private accounts
-and booking rules, preview upcoming activities, and inspect booking history.
+Campushallen / Go Active booking bot. Join by invitation, connect one private Campushallen account,
+browse activities, manage booking rules and inspect booking history.
 Optional encrypted credentials allow automatic reconnection; a separate worker
 reports its health and planned actions. The original YAML-based CLI
 continues to work.
 
-The application is deployed at <https://campushallenbot.se>; see the
-[Raspberry Pi runbook](docs/production-deployment.md) for current acceptance status.
+The existing production site is <https://campushallenbot.se>; see the
+[Raspberry Pi runbook](docs/production-deployment.md) for its status. This branch’s
+one-connection/activity-discovery redesign has not been deployed.
 The new worker remains **dry-run**. Existing systemd bots continue live bookings
 until a later, explicitly approved cutover.
 No real booking is needed to run tests or start the application.
@@ -34,12 +35,26 @@ The operator can create users locally or issue single-use invitation links.
 
 After logging in:
 
-1. Add a Campushallen account under **Accounts**.
-2. Open the account and connect using its Campushallen password. Choose whether
-   to remember it for automatic reconnection; storage is off for a new account.
-3. Create a booking rule under **Rules**.
-4. Use **Preview matching activities** on the account page.
-5. Inspect matches, API opening times, and results in **History** and the dashboard.
+1. Open **Mitt Campushallen-konto** and enter your **E-postadress hos Campushallen**.
+   Each website user has zero or one Campushallen connection.
+2. Connect with your Campushallen password. Explicitly choose whether to save it
+   encrypted for automatic reconnection; storage is off for a new connection.
+3. Open **Hitta pass**, search a partial name such as `innebandy`, and filter dates
+   or facility. Searching needs no existing rule or knowledge of a product name.
+4. Select the desired occurrences and confirm **Skapa bokningsregler för valda pass**.
+   Several weekdays can be configured together; later weeks of the same weekday,
+   time and activity become one recurring rule. Duplicate rules link to the
+   existing rule instead. **Skapa regel manuellt** remains an advanced path.
+5. Use **Matchande kommande pass** to preview each rule's exact engine selection,
+   including opening time, capacity, waitlist and existing-booking state. Inspect
+   the dashboard and **Historik** for worker observations and preview records.
+
+Browsing uses real API schedule data with a bounded 60-second metadata cache;
+submitting the search form filters the upcoming dataset, with no per-keystroke
+API calls. Rule previews bypass this browser cache and share discovery/matching
+with the worker. A selected occurrence supplies stable product/facility/weekday/
+time selectors; its occurrence ID is never stored as the recurring rule identity.
+See [activity discovery and the one-connection migration](docs/activity-discovery.md).
 
 Preview is read-only against Campushallen. It saves local discovery results but
 never calls a booking or cancellation endpoint. Connecting performs the normal
@@ -380,8 +395,9 @@ usable again. Never commit, log, or bake generated links into an image.
 
 ## Onboarding and account controls
 
-First login opens a short **Get started** page. Add/connect Campushallen, make an
-explicit credential-storage choice, create a first rule, then preview a match.
+First login opens a short **Get started** page. Connect the single Campushallen
+account, make an explicit credential-storage choice, find sessions, choose one or
+several recurring weekdays, then preview each rule.
 Every step can be skipped and revisited.
 
 On an account page:
@@ -472,7 +488,8 @@ CAMPUSHALLEN_BROWSER_CHANNEL=chrome make browser-smoke
 
 The smoke script starts a temporary loopback server/database, creates temporary
 users and an invitation, and mocks every Campushallen call. It exercises admin
-invite creation, registration, onboarding, credential opt-in, rule creation,
-previews, history filters, credential removal and logout-all. Desktop/mobile
+invite creation, registration, onboarding, email connection and credential opt-in,
+partial activity search, multiple weekday selection, recurring rule creation,
+duplicate protection, per-rule previews, history, credential removal and logout-all. Desktop/mobile
 screenshots go to ignored `diagnostics/browser-smoke/`. It never authenticates
 against the real Campushallen API or permits booking/cancellation mutations.

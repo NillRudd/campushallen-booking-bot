@@ -103,8 +103,13 @@ def test_worker_uses_real_auth_adapter_reauth_and_account_failure_isolation(
                 weekday=utcnow().weekday(),
             )
         )
+        from campushallen.database.models import User
+
+        other_user = User(username="other-owner", password_hash="unused")
+        db.add(other_user)
+        db.flush()
         other = CampushallenAccount(
-            user_id=account.user_id,
+            user_id=other_user.id,
             username="other",
             display_name="Other",
             auth_state=b.tokens.seal({"access_token": "valid-token", "customer_id": 100}),

@@ -90,6 +90,11 @@ class Scheduler:
                     select(BookingAttempt.id)
                     .where(
                         BookingAttempt.campushallen_account_id == plan.account_id,
+                        # Unknown legacy dry-runs may have come from previews. Re-reading is safe.
+                        # Preserve all historical live outcomes, including unknown provenance.
+                        BookingAttempt.is_preview.is_(False)
+                        if self.dry_run
+                        else BookingAttempt.is_preview.is_not(True),
                         BookingAttempt.booking_rule_id == plan.rule_id,
                         BookingAttempt.activity_id == plan.slot.id,
                         BookingAttempt.result.in_(results),
@@ -115,6 +120,7 @@ class Scheduler:
                     select(BookingAttempt.result)
                     .where(
                         BookingAttempt.campushallen_account_id == plan.account_id,
+                        BookingAttempt.is_preview.is_not(True),
                         BookingAttempt.booking_rule_id == plan.rule_id,
                         BookingAttempt.activity_id == plan.slot.id,
                     )

@@ -115,8 +115,11 @@ def booking(database):
         db.commit()
         accounts, rules = [], []
         for name in ("a", "b"):
+            owner = User(username="owner-" + name, password_hash="unused")
+            db.add(owner)
+            db.flush()
             account = CampushallenAccount(
-                user_id=user.id, display_name=name, username=name, auth_status="connected"
+                user_id=owner.id, display_name=name, username=name, auth_status="connected"
             )
             db.add(account)
             db.commit()
@@ -345,3 +348,25 @@ def test_worker_requires_both_flags_before_live_mode(monkeypatch):
     with pytest.raises(SystemExit) as exc:
         main()
     assert exc.value.code == 2
+
+
+def test_legacy_attempt_provenance_cannot_suppress_preview_or_weaken_live_dedup(booking):
+    from sqlalchemy import update
+
+    from campushallen.database.models import BookingAttempt
+
+    b = booking
+    attempt = b.engine.record(b.plan)
+    with b.sessions() as db:
+        db.execute(
+            update(BookingAttempt).where(BookingAttempt.id == attempt.id).values(is_preview=None)
+        )
+        db.commit()
+    assert not Scheduler(b.engine).already_processed(b.plan)
+    with b.sessions() as db:
+        db.execute(
+            update(BookingAttempt).where(BookingAttempt.id == attempt.id).values(result="BOOKED")
+        )
+        db.commit()
+    assert Scheduler(b.engine, dry_run=False).already_processed(b.plan)
+    assert not b.gateway.posts

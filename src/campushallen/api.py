@@ -297,7 +297,10 @@ class CampushallenHttpClient:
             },
         )
         response.raise_for_status()
-        return list(response.json())
+        payload = response.json()
+        if not isinstance(payload, list) or any(not isinstance(item, dict) for item in payload):
+            raise ValueError("Invalid group activity response shape")
+        return payload
 
     def _result(self, method: str, url: str, response: httpx.Response) -> ApiProbeResult:
         content_type = response.headers.get("content-type")

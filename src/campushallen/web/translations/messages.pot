@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Campushallen Booker 0.1.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-19 21:30+0200\n"
+"POT-Creation-Date: 2026-10-20 16:25+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,20 +18,20 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: src/campushallen/web/app.py:135
+#: src/campushallen/web/app.py:147
 msgid "Page not found."
 msgstr ""
 
-#: src/campushallen/web/app.py:136
+#: src/campushallen/web/app.py:148
 msgid "This action is not allowed."
 msgstr ""
 
-#: src/campushallen/web/app.py:145 src/campushallen/web/app.py:151
+#: src/campushallen/web/app.py:157 src/campushallen/web/app.py:163
 #: src/campushallen/web/ingress.py:31
 msgid "Invalid request. Check the form and try again."
 msgstr ""
 
-#: src/campushallen/web/app.py:157
+#: src/campushallen/web/app.py:169
 msgid "Something went wrong. Please try again later."
 msgstr ""
 
@@ -94,7 +94,6 @@ msgstr ""
 #: src/campushallen/web/presentation.py:12
 #: src/campushallen/web/presentation.py:41
 #: src/campushallen/web/templates/account.html:4
-#: src/campushallen/web/templates/accounts.html:2
 #: src/campushallen/web/templates/admin.html:11
 #: src/campushallen/web/templates/dashboard.html:5
 #: src/campushallen/web/templates/dashboard.html:8
@@ -171,6 +170,7 @@ msgid "Booking could not be verified"
 msgstr ""
 
 #: src/campushallen/web/presentation.py:39
+#: src/campushallen/web/templates/rule_preview.html:7
 msgid "Dry run – no booking made"
 msgstr ""
 
@@ -605,34 +605,92 @@ msgstr ""
 msgid "Enter valid local times, for example 18:45, without a timezone."
 msgstr ""
 
-#: src/campushallen/web/routes/accounts.py:33
-msgid "Enter an account name and Campushallen username."
+#: src/campushallen/web/routes/accounts.py:41
+#: src/campushallen/web/routes/accounts.py:50
+msgid "You already have a Campushallen account. Open it to reconnect."
 msgstr ""
 
-#: src/campushallen/web/routes/accounts.py:38
-msgid "That account is already added."
+#: src/campushallen/web/routes/accounts.py:44
+msgid "Enter an account name and a valid Campushallen email address."
 msgstr ""
 
-#: src/campushallen/web/routes/accounts.py:58
+#: src/campushallen/web/routes/accounts.py:74
 msgid "Too many connection attempts. Try again in five minutes."
 msgstr ""
 
-#: src/campushallen/web/routes/accounts.py:61
+#: src/campushallen/web/routes/accounts.py:78
+msgid "Enter a valid Campushallen email address."
+msgstr ""
+
+#: src/campushallen/web/routes/accounts.py:85
 msgid "Enter the Campushallen password."
 msgstr ""
 
-#: src/campushallen/web/routes/accounts.py:79
+#: src/campushallen/web/routes/accounts.py:106
 msgid "Connection failed. Check your credentials or try again later."
 msgstr ""
 
-#: src/campushallen/web/routes/accounts.py:135
+#: src/campushallen/web/routes/accounts.py:165
 msgid "Confirm disconnect to remove local tokens and saved credentials."
 msgstr ""
 
-#: src/campushallen/web/routes/accounts.py:145
+#: src/campushallen/web/routes/accounts.py:175
 #: src/campushallen/web/routes/security.py:36
 #: src/campushallen/web/routes/security.py:59
 msgid "Too many attempts. Try again shortly."
+msgstr ""
+
+#: src/campushallen/web/routes/activities.py:32
+msgid "Choose a valid date."
+msgstr ""
+
+#: src/campushallen/web/routes/activities.py:57
+msgid "Connect or enable your Campushallen account before browsing sessions."
+msgstr ""
+
+#: src/campushallen/web/routes/activities.py:59
+msgid ""
+"The schedule could not be loaded. Try again or choose a shorter date "
+"range."
+msgstr ""
+
+#: src/campushallen/web/routes/activities.py:62
+#: src/campushallen/web/routes/activities.py:104
+msgid "Choose a date and range within the next 21 days."
+msgstr ""
+
+#: src/campushallen/web/routes/activities.py:65
+msgid "Connect your Campushallen account to find sessions. No rule is needed."
+msgstr ""
+
+#: src/campushallen/web/routes/activities.py:88
+msgid "Connect your Campushallen account first."
+msgstr ""
+
+#: src/campushallen/web/routes/activities.py:93
+msgid "Choose at least one session."
+msgstr ""
+
+#: src/campushallen/web/routes/activities.py:95
+msgid "Choose between one and 21 sessions."
+msgstr ""
+
+#: src/campushallen/web/routes/activities.py:100
+msgid "Reconnect your Campushallen account and try again."
+msgstr ""
+
+#: src/campushallen/web/routes/activities.py:102
+msgid "The schedule could not be loaded. Try again later."
+msgstr ""
+
+#: src/campushallen/web/routes/activities.py:107
+msgid "The selected session is no longer available. Search again."
+msgstr ""
+
+#: src/campushallen/web/routes/activities.py:139
+#: src/campushallen/web/routes/rules.py:204
+#: src/campushallen/web/templates/activity_rules_created.html:4
+msgid "You already have a booking rule for this session."
 msgstr ""
 
 #: src/campushallen/web/routes/admin.py:43
@@ -673,28 +731,38 @@ msgstr ""
 msgid "Invalid activity date."
 msgstr ""
 
-#: src/campushallen/web/routes/rules.py:93
+#: src/campushallen/web/routes/rules.py:99
 msgid "Activity not found"
 msgstr ""
 
-#: src/campushallen/web/routes/rules.py:99
+#: src/campushallen/web/routes/rules.py:105
 msgid "Source rule no longer exists"
 msgstr ""
 
-#: src/campushallen/web/routes/rules.py:154
+#: src/campushallen/web/routes/rules.py:160
 msgid "Choose an account."
 msgstr ""
 
-#: src/campushallen/web/routes/rules.py:211
+#: src/campushallen/web/routes/rules.py:224
 msgid "Rule names must be unique within an account."
 msgstr ""
 
 #: src/campushallen/web/templates/account.html:1
-msgid "Campushallen account"
+#: src/campushallen/web/templates/accounts.html:1
+#: src/campushallen/web/templates/accounts.html:2
+#: src/campushallen/web/templates/activities.html:4
+#: src/campushallen/web/templates/base.html:11
+msgid "My Campushallen account"
 msgstr ""
 
 #: src/campushallen/web/templates/account.html:2
 msgid "CAMPUSHALLEN CONNECTION"
+msgstr ""
+
+#: src/campushallen/web/templates/account.html:3
+#: src/campushallen/web/templates/account.html:10
+#: src/campushallen/web/templates/accounts.html:3
+msgid "Campushallen email address"
 msgstr ""
 
 #: src/campushallen/web/templates/account.html:4
@@ -712,7 +780,6 @@ msgid "OFF"
 msgstr ""
 
 #: src/campushallen/web/templates/account.html:4
-#: src/campushallen/web/templates/accounts.html:2
 #: src/campushallen/web/templates/admin.html:11
 #: src/campushallen/web/templates/dashboard.html:5
 #: src/campushallen/web/templates/rules.html:2
@@ -730,193 +797,208 @@ msgid "Temporary authentication error. Next retry after"
 msgstr ""
 
 #: src/campushallen/web/templates/account.html:7
+#: src/campushallen/web/templates/account.html:19
+#: src/campushallen/web/templates/activities.html:1
+#: src/campushallen/web/templates/activities.html:2
+#: src/campushallen/web/templates/base.html:11
+#: src/campushallen/web/templates/dashboard.html:9
+#: src/campushallen/web/templates/onboarding.html:5
+#: src/campushallen/web/templates/rule_preview.html:9
+#: src/campushallen/web/templates/rules.html:1
+msgid "Find sessions"
+msgstr ""
+
+#: src/campushallen/web/templates/account.html:8
 msgid "Connect or reconnect"
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:9
+#: src/campushallen/web/templates/account.html:11
 msgid "Campushallen password"
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:10
+#: src/campushallen/web/templates/account.html:12
 msgid "Remember Campushallen credentials for automatic reconnection"
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:11
+#: src/campushallen/web/templates/account.html:13
 msgid ""
 "Unchecked: use the password for this connection, then discard it and "
 "forget any previously saved password. Expired tokens need manual "
 "reconnection."
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:12
+#: src/campushallen/web/templates/account.html:14
 msgid ""
 "Checked: store an encrypted, recoverable password on the server. The "
 "worker may use it to reconnect. It is never displayed again. Anyone with "
 "both the application data and its encryption key may recover it."
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:13
+#: src/campushallen/web/templates/account.html:15
 msgid "Replace saved password and reconnect"
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:13
+#: src/campushallen/web/templates/account.html:15
 msgid "Connect account"
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:14
+#: src/campushallen/web/templates/account.html:16
 msgid "Forget saved password"
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:14
+#: src/campushallen/web/templates/account.html:16
 msgid ""
 "Forgetting keeps your current token. Later expiry will need a manual "
 "login."
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:15
-msgid "Upcoming activities"
+#: src/campushallen/web/templates/account.html:17
+#: src/campushallen/web/templates/rule_preview.html:1
+#: src/campushallen/web/templates/rule_preview.html:2
+msgid "Matching upcoming sessions"
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:15
+#: src/campushallen/web/templates/account.html:17
 msgid ""
 "Discover matches for enabled rules over the next 21 days. This may take a"
 " moment."
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:15
+#: src/campushallen/web/templates/account.html:17
 #: src/campushallen/web/templates/dashboard.html:10
 msgid "Preview matching activities"
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:15
+#: src/campushallen/web/templates/account.html:17
 msgid "Preview saves local results. It never sends a booking request."
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:15
+#: src/campushallen/web/templates/account.html:17
 msgid "Account activity"
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:15
+#: src/campushallen/web/templates/account.html:17
 msgid "Last successful authentication:"
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:15
+#: src/campushallen/web/templates/account.html:17
 msgid "Last failed authentication:"
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:15
+#: src/campushallen/web/templates/account.html:17
 msgid "Last discovery:"
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:15
+#: src/campushallen/web/templates/account.html:17
 msgid "Last error:"
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:16
-#: src/campushallen/web/templates/accounts.html:2
+#: src/campushallen/web/templates/account.html:18
 #: src/campushallen/web/templates/rules.html:2
 msgid "Disable"
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:16
-#: src/campushallen/web/templates/accounts.html:2
+#: src/campushallen/web/templates/account.html:18
 #: src/campushallen/web/templates/rules.html:2
 msgid "Enable"
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:16
+#: src/campushallen/web/templates/account.html:18
 msgid "account"
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:17
+#: src/campushallen/web/templates/account.html:19
+#: src/campushallen/web/templates/activity_rules_created.html:5
+msgid "My booking rules"
+msgstr ""
+
+#: src/campushallen/web/templates/account.html:19
+#: src/campushallen/web/templates/activity_rules_created.html:3
+#: src/campushallen/web/templates/rules.html:2
+msgid "Preview matching upcoming sessions"
+msgstr ""
+
+#: src/campushallen/web/templates/account.html:19
+msgid "Find sessions first. You do not need an existing rule to search."
+msgstr ""
+
+#: src/campushallen/web/templates/account.html:20
 msgid "Preview results"
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:17
+#: src/campushallen/web/templates/account.html:20
 msgid "No matching activity"
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:17
+#: src/campushallen/web/templates/account.html:20
 msgid "Opens"
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:17
+#: src/campushallen/web/templates/account.html:20
 msgid "No enabled rules, or this account is disabled."
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:17
+#: src/campushallen/web/templates/account.html:20
 #: src/campushallen/web/templates/rule_form.html:2
 msgid "Create a rule"
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:17
+#: src/campushallen/web/templates/account.html:20
 msgid "View activity details and create rules from matches on the dashboard →"
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:18
+#: src/campushallen/web/templates/account.html:21
 msgid "Remove local connection data"
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:18
+#: src/campushallen/web/templates/account.html:21
 msgid ""
 "These actions never cancel Campushallen bookings. A request already in "
 "flight cannot be recalled."
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:18
+#: src/campushallen/web/templates/account.html:21
 msgid "Disconnect or delete connection"
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:19
+#: src/campushallen/web/templates/account.html:22
 msgid ""
 "Disconnect removes saved credentials and tokens, keeping your rules and "
 "history."
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:19
+#: src/campushallen/web/templates/account.html:22
 msgid "I confirm disconnection"
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:19
+#: src/campushallen/web/templates/account.html:22
 msgid "Disconnect account"
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:20
+#: src/campushallen/web/templates/account.html:23
 msgid ""
 "Delete removes this connection, its rules, credentials, snapshots, and "
 "local booking history."
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:20
+#: src/campushallen/web/templates/account.html:23
 #: src/campushallen/web/templates/settings.html:11
 msgid "Website password"
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:20
+#: src/campushallen/web/templates/account.html:23
 #: src/campushallen/web/templates/settings.html:11
 msgid "Type DELETE to confirm"
 msgstr ""
 
-#: src/campushallen/web/templates/account.html:20
+#: src/campushallen/web/templates/account.html:23
 msgid "Delete local account connection"
 msgstr ""
 
-#: src/campushallen/web/templates/accounts.html:1
-#: src/campushallen/web/templates/base.html:11
-msgid "Accounts"
-msgstr ""
-
-#: src/campushallen/web/templates/accounts.html:1
-msgid "CONNECTIONS"
-msgstr ""
-
-#: src/campushallen/web/templates/accounts.html:1
-msgid "Your Campushallen accounts."
-msgstr ""
-
-#: src/campushallen/web/templates/accounts.html:3
-#: src/campushallen/web/templates/rule_form.html:14
-msgid "Add an account"
+#: src/campushallen/web/templates/accounts.html:2
+msgid ""
+"Connect one Campushallen account, then find sessions and create your "
+"rules."
 msgstr ""
 
 #: src/campushallen/web/templates/accounts.html:3
@@ -924,11 +1006,127 @@ msgid "Display name"
 msgstr ""
 
 #: src/campushallen/web/templates/accounts.html:3
-msgid "Campushallen username"
+#: src/campushallen/web/templates/onboarding.html:3
+msgid "Connect Campushallen"
 msgstr ""
 
-#: src/campushallen/web/templates/accounts.html:3
-msgid "Add account"
+#: src/campushallen/web/templates/activities.html:2
+msgid "CAMPUSHALLEN"
+msgstr ""
+
+#: src/campushallen/web/templates/activities.html:3
+msgid ""
+"Browse the schedule, select recurring sessions and confirm to create "
+"rules. Searching never books."
+msgstr ""
+
+#: src/campushallen/web/templates/activities.html:6
+msgid "Search sessions"
+msgstr ""
+
+#: src/campushallen/web/templates/activities.html:6
+msgid "For example, floorball"
+msgstr ""
+
+#: src/campushallen/web/templates/activities.html:7
+msgid "From date"
+msgstr ""
+
+#: src/campushallen/web/templates/activities.html:8
+msgid "Upcoming days"
+msgstr ""
+
+#: src/campushallen/web/templates/activities.html:9
+msgid "Facility"
+msgstr ""
+
+#: src/campushallen/web/templates/activities.html:9
+msgid "All facilities"
+msgstr ""
+
+#: src/campushallen/web/templates/activities.html:10
+msgid "Search"
+msgstr ""
+
+#: src/campushallen/web/templates/activities.html:12
+msgid ""
+"Choose the weekdays and times you want. Repeated occurrences become one "
+"rule per weekday and time."
+msgstr ""
+
+#: src/campushallen/web/templates/activities.html:15
+#: src/campushallen/web/templates/rule_preview.html:6
+msgid "Available spots"
+msgstr ""
+
+#: src/campushallen/web/templates/activities.html:15
+#: src/campushallen/web/templates/rule_preview.html:6
+msgid "Waiting list"
+msgstr ""
+
+#: src/campushallen/web/templates/activities.html:15
+#: src/campushallen/web/templates/rule_preview.html:6
+msgid "Unavailable"
+msgstr ""
+
+#: src/campushallen/web/templates/activities.html:16
+#: src/campushallen/web/templates/dashboard.html:7
+#: src/campushallen/web/templates/rule_preview.html:5
+msgid "Booking opens"
+msgstr ""
+
+#: src/campushallen/web/templates/activities.html:16
+msgid "Opening time unavailable; booking will remain blocked"
+msgstr ""
+
+#: src/campushallen/web/templates/activities.html:17
+#: src/campushallen/web/templates/rule_form.html:10
+msgid "Allow waiting-list bookings"
+msgstr ""
+
+#: src/campushallen/web/templates/activities.html:17
+msgid "Create booking rules for selected sessions"
+msgstr ""
+
+#: src/campushallen/web/templates/activities.html:18
+msgid "No sessions found"
+msgstr ""
+
+#: src/campushallen/web/templates/activities.html:18
+msgid "Try a shorter search, another date or all facilities."
+msgstr ""
+
+#: src/campushallen/web/templates/activities.html:19
+#: src/campushallen/web/templates/rules.html:1
+msgid "Create a rule manually"
+msgstr ""
+
+#: src/campushallen/web/templates/activity_rules_created.html:1
+#: src/campushallen/web/templates/rules.html:1
+msgid "Booking rules"
+msgstr ""
+
+#: src/campushallen/web/templates/activity_rules_created.html:2
+msgid "Your selected recurring sessions"
+msgstr ""
+
+#: src/campushallen/web/templates/activity_rules_created.html:3
+msgid "Rule saved. The worker remains in its configured mode."
+msgstr ""
+
+#: src/campushallen/web/templates/activity_rules_created.html:3
+#: src/campushallen/web/templates/rule_form.html:2
+#: src/campushallen/web/templates/rule_preview.html:9
+msgid "Edit rule"
+msgstr ""
+
+#: src/campushallen/web/templates/activity_rules_created.html:4
+msgid "View rule"
+msgstr ""
+
+#: src/campushallen/web/templates/activity_rules_created.html:5
+#: src/campushallen/web/templates/dashboard.html:11
+msgid "Find more sessions"
 msgstr ""
 
 #: src/campushallen/web/templates/admin.html:1
@@ -1157,10 +1355,6 @@ msgid "NEXT RELEVANT ACTIVITY"
 msgstr ""
 
 #: src/campushallen/web/templates/dashboard.html:7
-msgid "Booking opens"
-msgstr ""
-
-#: src/campushallen/web/templates/dashboard.html:7
 msgid "Already booked ✓"
 msgstr ""
 
@@ -1206,6 +1400,7 @@ msgid "No current schedule; worker not reporting"
 msgstr ""
 
 #: src/campushallen/web/templates/dashboard.html:8
+#: src/campushallen/web/templates/rule_preview.html:7
 msgid "Already booked; no booking request planned"
 msgstr ""
 
@@ -1236,7 +1431,7 @@ msgid "Find your next session."
 msgstr ""
 
 #: src/campushallen/web/templates/dashboard.html:9
-msgid "Add a rule, then preview this account to discover matching activities."
+msgid "Search the schedule to choose your sessions. No existing rule is needed."
 msgstr ""
 
 #: src/campushallen/web/templates/dashboard.html:10
@@ -1253,11 +1448,6 @@ msgstr ""
 
 #: src/campushallen/web/templates/dashboard.html:11
 msgid "Enabled rules"
-msgstr ""
-
-#: src/campushallen/web/templates/dashboard.html:11
-#: src/campushallen/web/templates/rules.html:1
-msgid "+ New rule"
 msgstr ""
 
 #: src/campushallen/web/templates/dashboard.html:11
@@ -1327,7 +1517,6 @@ msgid "Booking history."
 msgstr ""
 
 #: src/campushallen/web/templates/history.html:3
-#: src/campushallen/web/templates/rule_form.html:4
 msgid "Account"
 msgstr ""
 
@@ -1503,10 +1692,6 @@ msgid "1 · Website account created"
 msgstr ""
 
 #: src/campushallen/web/templates/onboarding.html:3
-msgid "Connect Campushallen"
-msgstr ""
-
-#: src/campushallen/web/templates/onboarding.html:3
 msgid ""
 "Add your account, then enter your Campushallen credentials on its "
 "connection page."
@@ -1556,12 +1741,8 @@ msgstr ""
 
 #: src/campushallen/web/templates/onboarding.html:5
 msgid ""
-"Pick an activity, weekday, preferred time and facility. Waitlist bookings"
+"Search the schedule and select your weekdays and times. Waitlist bookings"
 " are off by default."
-msgstr ""
-
-#: src/campushallen/web/templates/onboarding.html:5
-msgid "Create your first rule →"
 msgstr ""
 
 #: src/campushallen/web/templates/onboarding.html:6
@@ -1590,119 +1771,143 @@ msgstr ""
 msgid "BOOKING RULE"
 msgstr ""
 
-#: src/campushallen/web/templates/rule_form.html:2
-msgid "Edit rule"
-msgstr ""
-
 #: src/campushallen/web/templates/rule_form.html:5
-msgid "Rule name"
-msgstr ""
-
-#: src/campushallen/web/templates/rule_form.html:5
-msgid "Activity"
-msgstr ""
-
-#: src/campushallen/web/templates/rule_form.html:5
-msgid "Product name"
-msgstr ""
-
-#: src/campushallen/web/templates/rule_form.html:5
-msgid "As shown by Campushallen"
+msgid "Find a session instead of entering its name →"
 msgstr ""
 
 #: src/campushallen/web/templates/rule_form.html:6
-msgid "Weekday"
+msgid "Rule name"
+msgstr ""
+
+#: src/campushallen/web/templates/rule_form.html:6
+msgid "Activity"
+msgstr ""
+
+#: src/campushallen/web/templates/rule_form.html:6
+msgid "Product name"
+msgstr ""
+
+#: src/campushallen/web/templates/rule_form.html:6
+msgid "As shown by Campushallen"
 msgstr ""
 
 #: src/campushallen/web/templates/rule_form.html:7
+msgid "Weekday"
+msgstr ""
+
+#: src/campushallen/web/templates/rule_form.html:8
 msgid "Preferred start time"
 msgstr ""
 
-#: src/campushallen/web/templates/rule_form.html:8
+#: src/campushallen/web/templates/rule_form.html:9
 msgid "Facility contains (comma-separated)"
 msgstr ""
 
-#: src/campushallen/web/templates/rule_form.html:8
+#: src/campushallen/web/templates/rule_form.html:9
 msgid "For example, the facility in your schedule"
 msgstr ""
 
-#: src/campushallen/web/templates/rule_form.html:9
-msgid "Allow waiting-list bookings"
-msgstr ""
-
-#: src/campushallen/web/templates/rule_form.html:9
+#: src/campushallen/web/templates/rule_form.html:10
 msgid "Rule enabled"
 msgstr ""
 
-#: src/campushallen/web/templates/rule_form.html:10
+#: src/campushallen/web/templates/rule_form.html:11
 msgid "Advanced matching options"
 msgstr ""
 
-#: src/campushallen/web/templates/rule_form.html:10
+#: src/campushallen/web/templates/rule_form.html:11
 msgid ""
 "When the time window is blank, use one hour on either side of your "
 "preferred time. Without a preferred time, consider the whole day and "
 "reject ambiguous matches."
 msgstr ""
 
-#: src/campushallen/web/templates/rule_form.html:11
+#: src/campushallen/web/templates/rule_form.html:12
 msgid "Booking type"
 msgstr ""
 
-#: src/campushallen/web/templates/rule_form.html:11
+#: src/campushallen/web/templates/rule_form.html:12
 msgid "Group activity"
 msgstr ""
 
-#: src/campushallen/web/templates/rule_form.html:11
+#: src/campushallen/web/templates/rule_form.html:12
 msgid "Service (CLI only)"
 msgstr ""
 
-#: src/campushallen/web/templates/rule_form.html:11
+#: src/campushallen/web/templates/rule_form.html:12
 msgid "Web category ID"
 msgstr ""
 
-#: src/campushallen/web/templates/rule_form.html:12
+#: src/campushallen/web/templates/rule_form.html:13
 msgid "Fixed start time (optional for groups)"
 msgstr ""
 
-#: src/campushallen/web/templates/rule_form.html:12
+#: src/campushallen/web/templates/rule_form.html:13
 msgid "Earliest allowed start"
 msgstr ""
 
-#: src/campushallen/web/templates/rule_form.html:12
+#: src/campushallen/web/templates/rule_form.html:13
 msgid "Latest allowed start"
 msgstr ""
 
-#: src/campushallen/web/templates/rule_form.html:13
+#: src/campushallen/web/templates/rule_form.html:14
 msgid "Product IDs"
 msgstr ""
 
-#: src/campushallen/web/templates/rule_form.html:13
+#: src/campushallen/web/templates/rule_form.html:14
 msgid "Business unit IDs"
 msgstr ""
 
-#: src/campushallen/web/templates/rule_form.html:13
+#: src/campushallen/web/templates/rule_form.html:14
 msgid "Product name fragments"
 msgstr ""
 
-#: src/campushallen/web/templates/rule_form.html:13
+#: src/campushallen/web/templates/rule_form.html:14
 msgid "(comma-separated)"
 msgstr ""
 
-#: src/campushallen/web/templates/rule_form.html:14
+#: src/campushallen/web/templates/rule_form.html:15
 msgid "Save rule"
 msgstr ""
 
-#: src/campushallen/web/templates/rule_form.html:14
+#: src/campushallen/web/templates/rule_form.html:15
 msgid "Cancel"
 msgstr ""
 
-#: src/campushallen/web/templates/rule_form.html:14
+#: src/campushallen/web/templates/rule_form.html:15
+msgid "Add an account"
+msgstr ""
+
+#: src/campushallen/web/templates/rule_form.html:15
 msgid "before creating a rule."
 msgstr ""
 
-#: src/campushallen/web/templates/rules.html:1
-msgid "Booking rules"
+#: src/campushallen/web/templates/rule_preview.html:2
+msgid ""
+"Fresh rule preview uses the same selection as the worker. It never sends "
+"a booking request."
+msgstr ""
+
+#: src/campushallen/web/templates/rule_preview.html:3
+msgid "Enable your Campushallen account to preview this rule."
+msgstr ""
+
+#: src/campushallen/web/templates/rule_preview.html:3
+msgid "Enable this rule to preview its matches."
+msgstr ""
+
+#: src/campushallen/web/templates/rule_preview.html:7
+msgid "Waiting for booking to open"
+msgstr ""
+
+#: src/campushallen/web/templates/rule_preview.html:8
+msgid "No matching upcoming sessions found."
+msgstr ""
+
+#: src/campushallen/web/templates/rule_preview.html:8
+msgid ""
+"Check weekday, time and facility. Connect and enable your account and "
+"rule, then try again."
 msgstr ""
 
 #: src/campushallen/web/templates/rules.html:1

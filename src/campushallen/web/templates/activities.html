@@ -1,0 +1,20 @@
+{% extends 'base.html' %}{% block title %}{{ _('Find sessions') }} · Campushallen Booker{% endblock %}{% block content %}
+<p class="eyebrow">{{ _('CAMPUSHALLEN') }}</p><h1>{{ _('Find sessions') }}</h1>
+<p>{{ _('Browse the schedule, select recurring sessions and confirm to create rules. Searching never books.') }}</p>
+{% if not account or error %}<p><a href="/accounts">{{ _('My Campushallen account') }} →</a></p>{% endif %}
+<form class="card search-form" method="get" action="/activities">
+<label>{{ _('Search sessions') }}<input type="search" name="q" value="{{ q }}" maxlength="150" placeholder="{{ _('For example, floorball') }}"></label>
+<div class="grid"><label>{{ _('From date') }}<input type="date" name="start" value="{{ start }}" required></label>
+<label>{{ _('Upcoming days') }}<select name="days" aria-label="{{ _('Upcoming days') }}">{% for value in [1,7,14,21] %}<option value="{{ value }}" {% if days == value %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></label>
+<label>{{ _('Facility') }}<select name="facility" aria-label="{{ _('Facility') }}"><option value="">{{ _('All facilities') }}</option>{% for value in facilities %}<option {% if facility == value %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></label></div>
+<button>{{ _('Search') }}</button></form>
+{% if groups %}<form method="post" action="/activities/select"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="start" value="{{ start }}"><input type="hidden" name="days" value="{{ days }}">
+<p>{{ _('Choose the weekdays and times you want. Repeated occurrences become one rule per weekday and time.') }}</p>
+<div class="grid">{% for key, occurrences in groups.items() %}<section class="card"><h2>{{ key[0] }}</h2><p>{{ key[1] }}</p>
+{% for occurrence in occurrences %}<div class="occurrence"><label class="check"><input type="checkbox" name="activity_ids" value="{{ occurrence.activity_id }}">{{ occurrence.start|localtime }}</label>
+<p>{{ _('Available spots') }}: {{ occurrence.available }} / {{ occurrence.capacity }} · {{ _('Waiting list') }}: {{ occurrence.waiting if occurrence.waitlist else _('Unavailable') }}</p>
+<p>{{ _('Booking opens') }}: {{ occurrence.bookable_earliest|localtime if occurrence.bookable_earliest else _('Opening time unavailable; booking will remain blocked') }}</p></div>{% endfor %}</section>{% endfor %}</div>
+<section class="card"><label class="check"><input type="checkbox" name="allow_waitlist">{{ _('Allow waiting-list bookings') }}</label><button>{{ _('Create booking rules for selected sessions') }}</button></section></form>
+{% elif not error %}<section class="card"><h2>{{ _('No sessions found') }}</h2><p>{{ _('Try a shorter search, another date or all facilities.') }}</p></section>{% endif %}
+<p><a href="/rules/new">{{ _('Create a rule manually') }} →</a></p>
+{% endblock %}

@@ -1,7 +1,8 @@
 {% extends 'base.html' %}{% block title %}{{ _('Booking rule') }} · Campushallen Booker{% endblock %}{% block content %}
 <p class="eyebrow">{{ _("BOOKING RULE") }}</p><h1>{{ _('Edit rule') if rule and rule.id else _('Create a rule') }}.</h1>
 {% if accounts %}<form class="card rule-form" action="{{ '/rules/' ~ rule.id if rule and rule.id else '/rules' }}" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-<label>{{ _("Account") }}<select name="campushallen_account_id" aria-label="{{ _('Account') }}" required>{% for account in accounts %}<option value="{{ account.id }}" {% if rule and rule.campushallen_account_id|int == account.id %}selected{% endif %}>{{ account.display_name }}</option>{% endfor %}</select></label>
+<input type="hidden" name="campushallen_account_id" value="{{ accounts[0].id }}">
+<p><a href="/activities">{{ _('Find a session instead of entering its name →') }}</a></p>
 <div class="grid"><label>{{ _("Rule name") }}<input name="name" value="{{ rule.name if rule else '' }}" maxlength="120" required></label><label>{{ _("Activity") }}<input name="activity" value="{{ rule.activity if rule else '' }}" maxlength="200" required></label><label>{{ _("Product name") }}<input name="product_name" value="{{ rule.product_name or '' if rule else '' }}" maxlength="200" placeholder="{{ _('As shown by Campushallen') }}"></label>
 <label>{{ _("Weekday") }}<select name="weekday" aria-label="{{ _('Weekday') }}">{% for day in weekdays %}<option value="{{ loop.index0 }}" {% if rule and rule.weekday|int == loop.index0 %}selected{% endif %}>{{ day }}</option>{% endfor %}</select></label>
 <label>{{ _("Preferred start time") }}<input type="time" name="preferred_start_time" value="{{ rule.preferred_start_time|clock if rule else '' }}"></label></div>

@@ -1,0 +1,10 @@
+{% extends 'base.html' %}{% block title %}{{ _('Matching upcoming sessions') }} · Campushallen Booker{% endblock %}{% block content %}
+<h1>{{ _('Matching upcoming sessions') }}</h1><h2>{{ rule.name }}</h2><p>{{ _('Fresh rule preview uses the same selection as the worker. It never sends a booking request.') }}</p>
+{% if not account.enabled %}<p role="status">{{ _('Enable your Campushallen account to preview this rule.') }}</p>{% elif not rule.enabled %}<p role="status">{{ _('Enable this rule to preview its matches.') }}</p>{% endif %}
+{% for plan in plans %}<article class="card">{% if plan.slot %}{% set slot = plan.slot %}<h3>{{ slot.product_name or slot.name }}</h3><p>{{ slot.starts_at|localtime }}<br>{{ slot.location_names|join(', ') or slot.business_unit_name }}</p>
+<p>{{ _('Booking opens') }}: {{ slot.bookable_earliest|localtime }}</p>
+<p>{{ _('Available spots') }}: {{ slot.left_to_book }} / {{ slot.total_bookable or slot.total_slots }}</p><p>{{ _('Waiting list') }}: {{ slot.in_waiting_list if slot.has_waiting_list else _('Unavailable') }}</p>
+<p>{{ _('Already booked; no booking request planned') if slot.id in booked else _('Waiting for booking to open') if slot.bookable_earliest > now else _('Dry run – no booking made') }}</p>
+{% else %}<h3>{{ plan.outcome.value|friendly_result }}</h3><p>{{ _('Check weekday, time and facility. Connect and enable your account and rule, then try again.') }}</p><a href="/accounts">{{ _('My Campushallen account') }}</a>{% endif %}</article>{% else %}<section class="card"><h3>{{ _('No matching upcoming sessions found.') }}</h3><p>{{ _('Check weekday, time and facility. Connect and enable your account and rule, then try again.') }}</p></section>{% endfor %}
+<a href="/rules/{{ rule.id }}/edit">{{ _('Edit rule') }}</a> · <a href="/activities">{{ _('Find sessions') }}</a>
+{% endblock %}

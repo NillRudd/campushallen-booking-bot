@@ -5,6 +5,7 @@ No real credentials or booking/cancellation mutations are used.
 """
 
 import os
+import copy
 import socket
 import secrets
 import tempfile
@@ -50,6 +51,22 @@ def main() -> None:
         "bookableEarliest": (local_start - timedelta(days=7)).isoformat(),
         "slots": {"leftToBook": 5, "total": 15, "totalBookable": 15, "hasWaitingList": True},
     }
+    # Three realistic recurring choices, including a mobile-only third selection.
+    monday = (datetime.now(ZoneInfo("Europe/Stockholm")) + timedelta(days=14)).date()
+    monday -= timedelta(days=monday.weekday())
+    activities = []
+    for identifier, weekday, hour, minute in [(101, 1, 18, 45), (102, 3, 18, 45), (103, 6, 12, 0)]:
+        item = copy.deepcopy(activity)
+        starts = datetime.combine(
+            monday + timedelta(days=weekday), datetime.min.time(), ZoneInfo("Europe/Stockholm")
+        ).replace(hour=hour, minute=minute)
+        item["id"] = identifier
+        item["duration"] = {
+            "start": starts.isoformat(),
+            "end": (starts + timedelta(minutes=85)).isoformat(),
+        }
+        item["bookableEarliest"] = (starts - timedelta(days=7)).isoformat()
+        activities.append(item)
     api_calls = []
 
     def respond(request):
@@ -73,7 +90,14 @@ def main() -> None:
                 request.url.params["period.start"].replace("Z", "+00:00")
             )
             end = datetime.fromisoformat(request.url.params["period.end"].replace("Z", "+00:00"))
-            return httpx.Response(200, json=[activity] if start <= local_start <= end else [])
+            return httpx.Response(
+                200,
+                json=[
+                    item
+                    for item in activities
+                    if start <= datetime.fromisoformat(item["duration"]["start"]) <= end
+                ],
+            )
         return httpx.Response(200, json={"id": 100})
 
     original_init = CampushallenHttpClient.__init__
@@ -169,11 +193,12 @@ def main() -> None:
                 page.get_by_role("button", name="Logga in", exact=True).click()
                 assert page.url.endswith("/onboarding")
                 page.screenshot(path=str(artifacts / "onboarding.png"), full_page=True)
-                page.get_by_role("link", name="Campushallen-konton", exact=True).click()
+                page.get_by_role("link", name="Mitt Campushallen-konto", exact=True).click()
                 page.get_by_label("Kontonamn").fill("Training account")
-                page.get_by_label("Användarnamn hos Campushallen").fill("temporary-browser-account")
-                page.get_by_role("button", name="Lägg till konto", exact=True).click()
-                page.get_by_role("link", name="Training account", exact=True).click()
+                page.get_by_label("E-postadress hos Campushallen").fill("browser@example.test")
+                page.get_by_role(
+                    "button", name="Anslut ditt Campushallen-konto", exact=True
+                ).click()
                 assert not page.get_by_label(
                     "Spara inloggningsuppgifter för automatisk återanslutning", exact=True
                 ).is_checked()
@@ -187,26 +212,28 @@ def main() -> None:
                     "Automatisk återanslutning:" in page.content()
                     and campu_password not in page.content()
                 )
-                page.get_by_role("link", name="Bokningsregler", exact=True).click()
-                page.get_by_role("link", name="+ Ny bokningsregel", exact=True).click()
-                page.screenshot(path=str(artifacts / "rule.png"), full_page=True)
-                page.get_by_label("Regelns namn", exact=True).fill("Daytime floorball")
-                page.get_by_label("Pass", exact=True).fill("Innebandy")
-                page.get_by_label("Passets namn hos Campushallen", exact=True).fill("Innebandy 85")
-                page.get_by_label("Veckodag", exact=True).select_option(str(local_start.weekday()))
-                page.get_by_label("Önskad starttid", exact=True).fill("12:00")
-                page.get_by_label("Anläggning (separera flera med kommatecken)", exact=True).fill(
-                    "Vallastaden"
-                )
-                page.get_by_role("button", name="Spara regel", exact=True).click()
-                page.get_by_role("link", name="Campushallen-konton", exact=True).click()
-                page.get_by_role("link", name="Training account", exact=True).click()
+                page.get_by_role("link", name="Hitta pass", exact=True).first.click()
+                page.get_by_label("Sök efter pass", exact=True).fill("innebandy")
+                page.get_by_label("Kommande dagar", exact=True).select_option("21")
+                page.get_by_role("button", name="Sök", exact=True).click()
+                assert page.get_by_role("heading", name="Innebandy 85", exact=True).is_visible()
+                page.screenshot(path=str(artifacts / "search-desktop.png"), full_page=True)
+                page.locator('input[name="activity_ids"][value="101"]').check()
+                page.locator('input[name="activity_ids"][value="102"]').check()
                 page.get_by_role(
-                    "button", name="Förhandsgranska matchande pass", exact=True
+                    "button", name="Skapa bokningsregler för valda pass", exact=True
                 ).click()
-                assert (
-                    page.get_by_text("Testkörning – ingen bokning gjordes", exact=True).count() == 1
-                )
+                page.screenshot(path=str(artifacts / "rule.png"), full_page=True)
+                page.get_by_role(
+                    "button", name="Förhandsgranska matchande kommande pass", exact=True
+                ).first.click()
+                assert page.get_by_role(
+                    "heading", name="Matchande kommande pass", exact=True
+                ).is_visible()
+                assert page.get_by_text(
+                    "Väntar på att bokningen ska öppna", exact=True
+                ).is_visible()
+                page.screenshot(path=str(artifacts / "rule-preview.png"), full_page=True)
                 page.get_by_role("link", name="Översikt", exact=True).click()
                 assert page.get_by_text("Innebandy 85 Vallastaden", exact=True).count() >= 1
                 page.screenshot(path=str(artifacts / "desktop.png"), full_page=True)
@@ -218,6 +245,37 @@ def main() -> None:
                 mobile_page = mobile.new_page()
                 mobile_page.goto(base_url + "/")
                 mobile_page.screenshot(path=str(artifacts / "mobile.png"), full_page=True)
+                mobile_page.goto(base_url + "/activities?q=INNEBANDY&days=21")
+                assert mobile_page.get_by_role(
+                    "heading", name="Innebandy 85", exact=True
+                ).is_visible()
+                mobile_page.screenshot(path=str(artifacts / "search-mobile.png"), full_page=True)
+                assert mobile_page.evaluate(
+                    "document.documentElement.scrollWidth <= window.innerWidth"
+                )
+                mobile_page.locator('input[name="activity_ids"][value="103"]').check()
+                mobile_page.get_by_role(
+                    "button", name="Skapa bokningsregler för valda pass", exact=True
+                ).click()
+                mobile_page.get_by_role(
+                    "button", name="Förhandsgranska matchande kommande pass", exact=True
+                ).click()
+                assert mobile_page.get_by_role(
+                    "heading", name="Matchande kommande pass", exact=True
+                ).is_visible()
+                mobile_page.screenshot(path=str(artifacts / "preview-mobile.png"), full_page=True)
+                assert mobile_page.evaluate(
+                    "document.documentElement.scrollWidth <= window.innerWidth"
+                )
+                mobile_page.goto(base_url + "/activities?q=innebandy&days=21")
+                mobile_page.locator('input[name="activity_ids"][value="103"]').check()
+                mobile_page.get_by_role(
+                    "button", name="Skapa bokningsregler för valda pass", exact=True
+                ).click()
+                assert mobile_page.get_by_text(
+                    "Du har redan en bokningsregel för detta pass.", exact=True
+                ).is_visible()
+
                 assert mobile_page.evaluate(
                     "document.documentElement.scrollWidth <= window.innerWidth"
                 )
@@ -226,10 +284,9 @@ def main() -> None:
                 page.screenshot(path=str(artifacts / "history.png"), full_page=True)
                 assert (
                     page.locator("tbody tr").filter(has_text="Innebandy 85 Vallastaden").count()
-                    == 1
+                    == 2
                 )
-                page.get_by_role("link", name="Campushallen-konton", exact=True).click()
-                page.get_by_role("link", name="Training account", exact=True).click()
+                page.get_by_role("link", name="Mitt Campushallen-konto", exact=True).click()
                 page.get_by_role("button", name="Ta bort sparat lösenord", exact=True).click()
                 assert "Det sparade lösenordet har tagits bort" in page.content()
                 page.get_by_role("link", name="Säkerhet", exact=True).click()
@@ -242,7 +299,7 @@ def main() -> None:
                 method == "GET" or path.endswith("/auth/login") for method, path in api_calls
             )
             print(
-                "Browser smoke passed: admin invitation, registration, onboarding, mocked connection with remember opt-in, basic rule, preview, dashboard, history filters, forget credential, logout-all, desktop/mobile; no real API mutations or JavaScript errors."
+                "Browser smoke passed: admin invitation, registration, onboarding, mocked connection with remember opt-in, activity search, select/create, duplicate protection, shared rule preview, dashboard, history filters, forget credential, logout-all, desktop/mobile; no real API mutations or JavaScript errors."
             )
         finally:
             server.should_exit = True

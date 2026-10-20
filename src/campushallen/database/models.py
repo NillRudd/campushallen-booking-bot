@@ -68,7 +68,10 @@ class WebSession(Base):
 
 class CampushallenAccount(Timestamps, Base):
     __tablename__ = "campushallen_accounts"
-    __table_args__ = (UniqueConstraint("user_id", "username"),)
+    __table_args__ = (
+        UniqueConstraint("user_id", "username"),
+        Index("uq_campushallen_account_user", "user_id", unique=True),
+    )
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     display_name: Mapped[str] = mapped_column(String(120))
@@ -93,6 +96,7 @@ class BookingRule(Timestamps, Base):
     __tablename__ = "booking_rules"
     __table_args__ = (
         UniqueConstraint("campushallen_account_id", "name"),
+        Index("uq_rule_selection", "campushallen_account_id", "selection_key", unique=True),
         CheckConstraint("weekday BETWEEN 0 AND 6", name="valid_weekday"),
         CheckConstraint("web_category_id > 0", name="valid_category"),
         CheckConstraint("booking_type IN ('group_activity', 'service')", name="valid_booking_type"),
@@ -102,6 +106,7 @@ class BookingRule(Timestamps, Base):
     campushallen_account_id: Mapped[int] = mapped_column(
         ForeignKey("campushallen_accounts.id", ondelete="CASCADE"), index=True
     )
+    selection_key: Mapped[str | None] = mapped_column(String(64))
     name: Mapped[str] = mapped_column(String(120))
     activity: Mapped[str] = mapped_column(String(200))
     product_name: Mapped[str | None] = mapped_column(String(200))
@@ -157,6 +162,8 @@ class BookingAttempt(Base):
     activity_start: Mapped[datetime | None] = mapped_column(UTCDateTime())
     bookable_earliest: Mapped[datetime | None] = mapped_column(UTCDateTime())
     attempted_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    # Legacy attempts have unknown provenance; new records always set this explicitly.
+    is_preview: Mapped[bool | None] = mapped_column(Boolean, default=False)
     result: Mapped[str] = mapped_column(String(40))
     message: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)

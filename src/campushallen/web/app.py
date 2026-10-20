@@ -17,6 +17,7 @@ from campushallen.database.session import make_engine, session_factory
 from campushallen.services.account_auth import AccountAuthentication
 from campushallen.services.accounts import AccountGateway
 from campushallen.services.authentication import LoginLimiter
+from campushallen.services.discovery import ActivityDiscovery
 from campushallen.services.engine import BookingEngine
 from campushallen.services.logging import InviteAccessFilter
 from campushallen.services.notifications import NoopNotifier
@@ -28,7 +29,16 @@ from campushallen.web.i18n import gettext as _
 from campushallen.web.ingress import TrustedIngress
 from campushallen.web.middleware import FormBodyLimit
 from campushallen.web.presentation import connection_status
-from campushallen.web.routes import accounts, admin, auth, invites, pages, rules, security
+from campushallen.web.routes import (
+    accounts,
+    activities,
+    admin,
+    auth,
+    invites,
+    pages,
+    rules,
+    security,
+)
 
 ROOT = Path(__file__).parent
 
@@ -83,6 +93,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         app.state.credential_vault,
         app.state.notifier,
     )
+    app.state.discovery = ActivityDiscovery(app.state.gateway, settings.campushallen_timezone)
     app.state.engine = BookingEngine(app.state.sessions, app.state.gateway, app.state.notifier)
     app.state.templates = Jinja2Templates(directory=str(ROOT / "templates"))
     env = app.state.templates.env
@@ -172,6 +183,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         auth.router,
         pages.router,
         accounts.router,
+        activities.router,
         rules.router,
         invites.router,
         admin.router,
