@@ -534,26 +534,31 @@ def test_unique_account_migration_preserves_children_and_can_downgrade(tmp_path)
     config.attributes["database_url"] = url
     command.upgrade(config, "d8426c9ef017")
     engine = make_engine(url)
+    metadata = MetaData()
+    accounts = Table("campushallen_accounts", metadata, autoload_with=engine)
     with Session(engine) as db:
         user = User(username="preserved", password_hash="synthetic")
         db.add(user)
         db.flush()
-        account = CampushallenAccount(
-            user_id=user.id,
-            username="user@example.com",
-            display_name="One",
-            auth_state="synthetic-ciphertext",
-        )
-        db.add(account)
-        db.flush()
+        account_id = db.execute(
+            accounts.insert().values(
+                user_id=user.id,
+                username="user@example.com",
+                display_name="One",
+                auth_state="synthetic-ciphertext",
+                enabled=True,
+                auth_status="disconnected",
+                created_at=utcnow(),
+                updated_at=utcnow(),
+            )
+        ).inserted_primary_key[0]
         db.add(
             CampushallenCredential(
-                campushallen_account_id=account.id,
+                campushallen_account_id=account_id,
                 encrypted_password="synthetic-encrypted-password",
             )
         )
         db.commit()
-    metadata = MetaData()
     rules = Table("booking_rules", metadata, autoload_with=engine)
     attempts = Table("booking_attempts", metadata, autoload_with=engine)
     with engine.begin() as db:

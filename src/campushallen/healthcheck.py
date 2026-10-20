@@ -8,7 +8,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 
-def healthy_worker(database_url: str, poll_seconds: float) -> bool:
+def healthy_worker(database_url: str, poll_seconds: float, *, dry_run: bool = True) -> bool:
     if not database_url.startswith("sqlite:///") or poll_seconds <= 0:
         return False
     path = Path(database_url.removeprefix("sqlite:///"))
@@ -17,7 +17,7 @@ def healthy_worker(database_url: str, poll_seconds: float) -> bool:
             "SELECT heartbeat_at, dry_run FROM worker_states "
             "WHERE stopped_at IS NULL ORDER BY heartbeat_at DESC LIMIT 1"
         ).fetchone()
-    if row is None or row[1] != 1:
+    if row is None or row[1] != int(dry_run):
         return False
     heartbeat = datetime.fromisoformat(row[0]).replace(tzinfo=UTC)
     return heartbeat > datetime.now(UTC) - timedelta(seconds=max(90, poll_seconds * 3))
@@ -27,8 +27,13 @@ def main() -> None:
     if sys.argv[1:] != ["worker"]:
         raise SystemExit(2)
     try:
+        mode = os.environ.get("WORKER_EXPECTED_MODE", "dry-run")
+        if mode not in ("dry-run", "live"):
+            raise ValueError("Invalid expected worker mode")
         healthy = healthy_worker(
-            os.environ["DATABASE_URL"], float(os.environ.get("WORKER_POLL_SECONDS", "60"))
+            os.environ["DATABASE_URL"],
+            float(os.environ.get("WORKER_POLL_SECONDS", "60")),
+            dry_run=mode == "dry-run",
         )
     except (KeyError, ValueError, OSError, sqlite3.Error):
         healthy = False

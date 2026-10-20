@@ -1,0 +1,7 @@
+# Selected only by scripts/production when external production.env has WORKER_MODE=live.
+# Database account eligibility and finite claim allowance are still mandatory.
+services:
+  worker:
+    command: [python, -m, campushallen.worker, --live, --confirm-real-bookings]
+    environment:
+      WORKER_EXPECTED_MODE: live

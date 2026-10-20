@@ -2,4 +2,10 @@
 # Non-secret configuration only. Never source/eval the environment file.
 set -eu
 cd "$(dirname "$0")/.."
-exec docker compose --env-file "${CAMPUSHALLEN_PROD_ENV:-$HOME/.config/campushallenbot/production.env}" -f compose.prod.yaml "$@"
+production_env=${CAMPUSHALLEN_PROD_ENV:-$HOME/.config/campushallenbot/production.env}
+worker_mode=$(sed -n 's/^WORKER_MODE=//p' "$production_env")
+case "$worker_mode" in
+  ""|dry-run) exec docker compose --env-file "$production_env" -f compose.prod.yaml "$@" ;;
+  live) exec docker compose --env-file "$production_env" -f compose.prod.yaml -f deployment/compose.niklas-live.yaml "$@" ;;
+  *) printf '%s\n' 'Invalid WORKER_MODE; use dry-run or live in production.env' >&2; exit 2 ;;
+esac

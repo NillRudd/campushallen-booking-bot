@@ -45,7 +45,15 @@ class Scheduler:
                 db.scalars(
                     select(CampushallenAccount.id)
                     .join(User)
-                    .where(CampushallenAccount.enabled.is_(True), User.is_active.is_(True))
+                    .where(
+                        CampushallenAccount.enabled.is_(True),
+                        User.is_active.is_(True),
+                        *(
+                            []
+                            if self.dry_run
+                            else [CampushallenAccount.live_booking_enabled.is_(True)]
+                        ),
+                    )
                 )
             )
 

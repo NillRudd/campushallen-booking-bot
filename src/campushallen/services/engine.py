@@ -8,7 +8,7 @@ from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import httpx
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
@@ -295,6 +295,12 @@ class BookingEngine:
                     Outcome.UNSUPPORTED,
                     "Service booking is available only through the legacy CLI.",
                 )
+            if not dry_run and not account.live_booking_enabled:
+                return self.record(
+                    plan,
+                    Outcome.DISABLED,
+                    "Operator has not enabled live booking for this account.",
+                )
             try:
                 with self.gateway.client(account) as (client, customer_id):
                     selection = select_group_activity_for_date(
@@ -358,17 +364,12 @@ class BookingEngine:
                         )
                     # End the read transaction before attempting to acquire the write claim.
                     db.rollback()
-                    db.add(
-                        BookingClaim(campushallen_account_id=plan.account_id, activity_id=slot.id)
-                    )
-                    try:
-                        db.commit()
-                    except IntegrityError:
-                        db.rollback()
+                    claim_result = self.claim_live(plan)
+                    if claim_result is not None:
                         return self.record(
                             plan,
-                            Outcome.CLAIMED,
-                            "A previous live attempt exists; inspect booking history before any manual retry.",
+                            claim_result,
+                            "Live claim already exists or operator eligibility/attempt allowance is unavailable; no booking sent.",
                         )
                     self.record(
                         plan,
@@ -404,6 +405,71 @@ class BookingEngine:
                     else "Campushallen request failed; no booking confirmed."
                 )
         return self.record(plan, result, message)
+
+    def claim_live(self, plan: Plan) -> Outcome | None:
+        """Serialize account eligibility, finite allowance and durable claim.
+
+        A no-op UPDATE acquires SQLite's writer lock before counting claims.
+        Uncertain claims permanently consume allowance, including across restarts.
+        """
+        assert plan.slot is not None
+        with self.sessions() as db:
+            active_rule = (
+                select(BookingRule.id)
+                .where(
+                    BookingRule.id == plan.rule_id,
+                    BookingRule.campushallen_account_id == plan.account_id,
+                    BookingRule.enabled.is_(True),
+                )
+                .exists()
+            )
+            active_user = (
+                select(User.id)
+                .where(User.id == CampushallenAccount.user_id, User.is_active.is_(True))
+                .exists()
+            )
+            changed = db.execute(
+                update(CampushallenAccount)
+                .where(
+                    CampushallenAccount.id == plan.account_id,
+                    CampushallenAccount.enabled.is_(True),
+                    CampushallenAccount.live_booking_enabled.is_(True),
+                    CampushallenAccount.live_booking_claim_limit > 0,
+                    or_(
+                        CampushallenAccount.live_booking_activity_id.is_(None),
+                        CampushallenAccount.live_booking_activity_id == plan.slot.id,
+                    ),
+                    active_rule,
+                    active_user,
+                )
+                .values(live_booking_claim_limit=CampushallenAccount.live_booking_claim_limit)
+            )
+            if changed.rowcount != 1:
+                db.rollback()
+                return Outcome.DISABLED
+            if db.get(BookingClaim, (plan.account_id, plan.slot.id)):
+                db.rollback()
+                return Outcome.CLAIMED
+            limit = db.scalar(
+                select(CampushallenAccount.live_booking_claim_limit).where(
+                    CampushallenAccount.id == plan.account_id
+                )
+            )
+            used = db.scalar(
+                select(func.count())
+                .select_from(BookingClaim)
+                .where(BookingClaim.campushallen_account_id == plan.account_id)
+            )
+            if used >= limit:
+                db.rollback()
+                return Outcome.DISABLED
+            db.add(BookingClaim(campushallen_account_id=plan.account_id, activity_id=plan.slot.id))
+            try:
+                db.commit()
+            except IntegrityError:
+                db.rollback()
+                return Outcome.CLAIMED
+            return None
 
 
 class StalePlan(Exception):

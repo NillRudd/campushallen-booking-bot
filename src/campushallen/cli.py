@@ -16,6 +16,7 @@ from campushallen.schedule import BookingRule as DomainRule
 from campushallen.services.authentication import create_user
 from campushallen.services.backups import backup_database, verify_restore
 from campushallen.services.invitations import create_invite, invite_status, revoke_invite
+from campushallen.services.live_policy import configure_live
 from campushallen.services.rules import RuleInput
 from campushallen.services.secrets import runtime_key
 from campushallen.services.user_security import set_admin
@@ -67,6 +68,16 @@ def main() -> None:
     )
     restore.add_argument("backup", type=Path)
     restore.add_argument("--expect-user")
+    live = commands.add_parser(
+        "live-eligibility", help="Inspect/configure operator-only live scope"
+    )
+    live.add_argument("account_id", type=int)
+    live.add_argument("--user", required=True)
+    switch = live.add_mutually_exclusive_group()
+    switch.add_argument("--enable", action="store_true")
+    switch.add_argument("--disable", action="store_true")
+    live.add_argument("--max-claims", type=int)
+    live.add_argument("--activity-id", type=int)
     create = commands.add_parser(
         "create-user", help="Create an application user; password is prompted"
     )
@@ -128,6 +139,21 @@ def main() -> None:
                     parser.error("Application user not found")
                 set_admin(db, user, enabled=args.command == "promote")
                 print("Admin status updated.")
+            elif args.command == "live-eligibility":
+                import json
+
+                print(
+                    json.dumps(
+                        configure_live(
+                            db,
+                            args.account_id,
+                            args.user,
+                            enabled=True if args.enable else False if args.disable else None,
+                            limit=args.max_claims,
+                            activity_id=args.activity_id,
+                        )
+                    )
+                )
             elif args.command == "invite":
                 if args.invite_action == "create":
                     if not 1 <= args.count <= 100 or not 0 <= args.expires_days <= 365:

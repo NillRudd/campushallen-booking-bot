@@ -119,7 +119,12 @@ def booking(database):
             db.add(owner)
             db.flush()
             account = CampushallenAccount(
-                user_id=owner.id, display_name=name, username=name, auth_status="connected"
+                user_id=owner.id,
+                display_name=name,
+                username=name,
+                auth_status="connected",
+                live_booking_enabled=True,
+                live_booking_claim_limit=100,
             )
             db.add(account)
             db.commit()

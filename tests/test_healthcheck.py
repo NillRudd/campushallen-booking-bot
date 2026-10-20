@@ -30,3 +30,19 @@ def test_container_probe_never_creates_missing_database(tmp_path):
     with pytest.raises(sqlite3.OperationalError):
         healthy_worker(f"sqlite:///{path}", 60)
     assert not path.exists()
+
+
+def test_live_probe_requires_explicit_expected_mode_and_matching_heartbeat(tmp_path):
+    path = tmp_path / "live.db"
+    with sqlite3.connect(path) as db:
+        db.execute(
+            "CREATE TABLE worker_states (heartbeat_at TEXT, dry_run INTEGER, stopped_at TEXT)"
+        )
+        db.execute(
+            "INSERT INTO worker_states VALUES (?, 0, NULL)", (datetime.now(UTC).isoformat(),)
+        )
+    assert not healthy_worker(f"sqlite:///{path}", 60)
+    assert healthy_worker(f"sqlite:///{path}", 60, dry_run=False)
+    with sqlite3.connect(path) as db:
+        db.execute("UPDATE worker_states SET dry_run=1")
+    assert not healthy_worker(f"sqlite:///{path}", 60, dry_run=False)
