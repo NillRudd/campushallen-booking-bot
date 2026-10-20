@@ -2,9 +2,9 @@
 
 ## Current status
 
-**The Pi stack, public HTTPS, login and invitations are working; Campushallen dry-run acceptance continues.**
+**Activity discovery is deployed; automated production checks pass; final private browser acceptance is pending.**
 The source and arm64 image currently deployed are
-`b09e2ce0a06a2b793bc2ce4ae25b5b9d0f95411e`. Source lives in
+`cf4d4d5852a4e1626f9fc4cec9edbf90c44d3cb6`. Source lives in
 `/home/niklas/campushallenbot-releases/<commit>`; `~/campushallenbot` points to that
 release. Documentation commits can advance independently of the deployed image.
 
@@ -12,13 +12,18 @@ Debian 13.7 (trixie), arm64, UID/GID 1000 runs Docker CE 29.9.1 and Compose 5.6.
 installed from Docker's official repository. Web, dry-run worker and the official
 cloudflared connector all passed their health checks on 20 October 2026. Admin
 niklas was created with the operator's private password. Alembic is at
-`d8426c9ef017` with no schema drift. Public HTTPS login/security checks passed,
+`e6b41c9a203d` with no schema drift. Public HTTPS login/security checks passed,
 and Cloudflare redirects HTTP to HTTPS. The operator confirmed the site loads on
 a mobile network, and normal Mac DNS now resolves it too. The browser-origin
 fix is deployed: Referrer-Policy is strict-origin while origin/CSRF checks remain
 unchanged. The operator confirmed login, dashboard, Swedish UI and Admin work.
 Invitation creation, correct public URL and revocation/unavailability also passed.
-Campushallen account/rule setup and dry-run target comparison remain pending.
+Connection 2 is now the sole connection for niklas after an explicitly approved,
+backed-up resolution. Rules 1–3 and their history were preserved. Live read-only
+search found nine Innebandy occurrences over 21 days, and all ten upcoming rule
+matches agreed between preview and scheduler code paths. The nearest occurrence
+for each rule also matched the actual running worker's fresh observations.
+Private acceptance of the new authenticated UI remains pending.
 
 Separate production configuration/data/backup directories and private keys exist.
 The daily backup succeeded automatically, and an isolated restore verified admin

@@ -1,9 +1,12 @@
 # Activity discovery and one Campushallen connection
 
-This feature is developed locally on `feature/activity-discovery`. It has not been
-deployed. Production remains on its existing image with a dry-run worker and
-unchanged legacy live timers. The last production audit found two connections for
-one website user; the new migration deliberately refuses that state.
+This feature was developed on `feature/activity-discovery` and deployed on
+20 October 2026 at `cf4d4d5852a4e1626f9fc4cec9edbf90c44d3cb6`. The operator
+explicitly approved resolving the duplicate connections before migration;
+connection 2 and all three rules/history were retained. Production uses a dry-run
+worker and unchanged legacy live timers. See the
+[production verification record](production-validation.md) for the API-range
+correction, preview/worker parity and pending private browser acceptance.
 
 ## Product flow
 
@@ -111,8 +114,9 @@ Before any separately requested production rollout:
 5. Deploy the reviewed source/image, keep the worker dry-run, and verify the
    browser flow, data persistence, healthy heartbeat and both unchanged live timers.
 
-This document does not authorize deployment or live cutover. No production
-migration or account deletion has been performed for this feature.
+The operator separately authorized deployment and the specific duplicate
+resolution; migration `e6b41c9a203d` is now applied. These steps do not authorize
+live cutover or automatic duplicate resolution for another installation.
 
 ## Verification
 
@@ -145,5 +149,8 @@ Verified locally on 2026-10-20 on branch `feature/activity-discovery`:
   Campushallen account was configured.
 
 The local checks used Python 3.14.4; the production image uses Python 3.12.
-This feature has not been deployed. The known production duplicate connections
-remain an explicit rollout blocker; no production data or legacy timers changed.
+At that initial local verification, deployment was deferred because production
+duplicates remained. They were later resolved with explicit approval. The live
+API range correction passed 183 tests, Ruff, mypy, browser smoke and isolated
+ARM64 production smoke before deployment; the production record documents the
+separate rollout and real read-only checks. Legacy timers remain unchanged.

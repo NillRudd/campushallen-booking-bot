@@ -8,8 +8,10 @@ reports its health and planned actions. The original YAML-based CLI
 continues to work.
 
 The existing production site is <https://campushallenbot.se>; see the
-[Raspberry Pi runbook](docs/production-deployment.md) for its status. This branch’s
-one-connection/activity-discovery redesign has not been deployed.
+[Raspberry Pi runbook](docs/production-deployment.md) for its status. The
+one-connection/activity-discovery redesign is deployed; see the
+[production verification record](docs/production-validation.md) for checked
+behavior and remaining private browser acceptance.
 The new worker remains **dry-run**. Existing systemd bots continue live bookings
 until a later, explicitly approved cutover.
 No real booking is needed to run tests or start the application.

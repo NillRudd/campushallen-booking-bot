@@ -1,6 +1,6 @@
 # Production preparation verification
 
-Updated on 20 October 2026. **Pi stack and public HTTPS running; browser acceptance remains incomplete.**
+Updated on 20 October 2026. **Activity discovery deployed; automated production checks pass; final private browser acceptance pending.**
 
 ## Source and local checks
 
@@ -324,3 +324,66 @@ worker command is exactly `python -m campushallen.worker`. Both legacy timers
 remain active, with next run 20 October 18:30 CEST; neither was triggered or
 modified. No reboot has been performed in this continuation. No real booking,
 cancellation or live cutover was performed.
+
+## Activity-discovery rollout and production results
+
+The operator explicitly approved the proposed resolution and continued deployment.
+The initial reviewed feature tip was
+`05f410648383a7185ed1a5013d2cc44ec20b204e`. Deployment first fast-forwarded normally
+to `4abf762e064aa39a77f8b6c1d1e64996a7308d1b`. Live acceptance then identified
+an API range limitation absent from the mocks: a 21-day schedule request returned
+403 while 7-day and 1-day requests succeeded with the same existing token. This
+was a period rejection, not an expired token. Browsing now fetches up to three
+contiguous weekly periods, keeping the existing short cache and 1,000-row bound.
+A regression fixture rejects long periods, and the new test verifies the complete
+21-day result, contiguous boundaries across Stockholm's clock change and cache
+reuse. No booking/authentication security checks were loosened.
+
+The final application/source/image commit is
+**`cf4d4d5852a4e1626f9fc4cec9edbf90c44d3cb6`**. Both feature and deployment
+branches were fast-forwarded to this code; main was unchanged and no push was
+performed. Before deploying this correction, all **183 tests**, Ruff/format,
+mypy (42 modules), mocked desktop/mobile browser smoke and the exact ARM64 image's
+isolated production smoke passed. The source archive contains only tracked files;
+tracked filename/private-key/token-pattern checks and `git diff --check` passed.
+Previous releases/images and private non-secret configuration backups were kept.
+
+| Required fact | Verified result at approximately 17:25 CEST |
+| --- | --- |
+| Duplicate state before migration | User 1 had disabled connection 1 (0 rules, 3 AUTH_FAILED attempts, no token/credential/claims/snapshots) and connected connection 2 (3 rules, 13 attempts, remembered credential, 0 claims, 10 snapshots). |
+| Retained connection | Connection 2, with the existing email login, encrypted credential and token unchanged. |
+| Explicit resolution | In one guarded transaction, moved attempt IDs 1–3 to connection 2 and deleted only obsolete connection 1. Rules 1–3 were already on connection 2 and retained unchanged. All eight old audit events remain with account_id NULL. Foreign keys passed; no history rows were deleted. |
+| Backup before resolution | Fresh consistent snapshot `campushallen-20261020T150814722006Z-9afe3f.sqlite3`, integrity/foreign-key checks and isolated restore passed. Earlier verified off-Pi pre-resolution snapshot also retained. |
+| Backup before migration | Resolved-state snapshot `campushallen-20261020T150935447023Z-9f8cae.sqlite3`, isolated restore and private off-Pi integrity/ownership checks passed. |
+| Latest recovery set | Post-migration snapshot `campushallen-20261020T151904914521Z-19eae1.sqlite3`, isolated restore and off-Pi integrity/foreign-key checks passed. Mac backups are under `~/Documents/CampushallenBot-Backups/`; matching private recovery key remains separately under `~/Documents/CampushallenBot-Recovery/`. No key value was displayed. Manual snapshots pruned no older backups. |
+| Immediate duplicate guard | With web/worker stopped, no duplicate user_id remained anywhere. The Alembic guard was not bypassed. |
+| Migration | `e6b41c9a203d` head; `alembic check` reports no new upgrade operations. The unique user index is present; integrity/foreign keys, row counts, encrypted credential and token preservation passed. |
+| Web | Running and healthy on final cf4d4d5 image; one non-root process, no published host ports, no OOM or unexpected restart. |
+| Worker | Running and healthy on the same cf4d4d5 image; command exactly `python -m campushallen.worker`; fresh dry_run=1 heartbeat. No real-booking flags. |
+| Cloudflared | Running and healthy on the unchanged pinned 2026.10.1 image. Tunnel route/token/configuration were unchanged. |
+| Public HTTPS | `/health` and Swedish `/login` return 200 with valid TLS, sv-SE language and private/no-store. Desktop and 390px login rendering/authentication redirects passed without horizontal overflow. No user password or session was used in automation. |
+| Hitta pass | Real 21-day discovery found 9 Innebandy occurrences on Tuesday/Thursday/Sunday. Uppercase and lowercase searches returned the same IDs. No new production rule was created. |
+| Preview/worker parity | All 10 upcoming plans agreed between the exact preview service and Scheduler.discover_account path on rule/activity ID, product, start, facility/locations and bookableEarliest. Nearest matches for all three rules also agreed with observations written by the actual worker after its final-image startup. |
+| Legacy live timers | Both enabled and active/waiting; next run 20 October 18:30 CEST. Neither service was started manually, disabled, edited or removed. Legacy directories were untouched. |
+| Persistence / reboot | Both application containers were recreated; connection, rules/history and exact encryption/session key contents persisted. Key files remain 0600. No host reboot was repeated: undervoltage persists and no host/boot configuration changed in this phase. The earlier host reboot remains documented separately. |
+| Logs / warnings | Recent web/worker/cloudflared logs had no ERROR/CRITICAL/Traceback lines; no OOM/restart. Cold web health probes initially exceeded five seconds before recovering automatically. Known current/historical power flags remain 0x50005 under the operator's prior override. One local Starlette TestClient deprecation warning remains. |
+| Final private browser acceptance | Requested from the operator: login, Översikt, single Mitt Campushallen-konto/email label, 21-day Hitta pass search, existing three rules and each Matchande kommande pass. Pending; authenticated UI rendering has not been claimed as automated acceptance. |
+
+Nearest production matches from the final preview/worker check:
+
+| Rule | Activity | Stockholm start | API opening | Available / capacity | Waiting list | Already booked |
+| --- | --- | --- | --- | --- | --- | --- |
+| Tuesday, rule 1 | 4343839 | 20 October 18:45 +02:00 | 13 October 18:45 +02:00 | 0 / 15 | 5 | Yes |
+| Thursday, rule 2 | 4342667 | 22 October 18:45 +02:00 | 15 October 18:45 +02:00 | 0 / 15 | 11 | Yes |
+| Sunday, rule 3 | 4410856 | 25 October 12:00 +01:00 | 18 October 12:00 +02:00 | 0 / 15 | 0 | Yes |
+
+All are product **Innebandy 85 Vallastaden**, product ID 1401, business unit
+Campushallen/LSIF (1), rooms C-salen/C1–C4. Availability/waitlist counts are observed
+values and can change. The final diagnostic made 29 GET requests, no outgoing
+non-GET requests, and recorded only local preview/discovery observations. It did
+not run a booking operation. Durable live-claim count remained zero.
+
+**NO REAL BOOKING WAS PERFORMED. NO CANCELLATION WAS PERFORMED.
+LIVE CUTOVER HAS NOT OCCURRED.** The new worker remains dry-run; legacy bots
+remain the only live booking mechanism. No future live cutover is authorized by
+this deployment approval.
