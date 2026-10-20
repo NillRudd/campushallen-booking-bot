@@ -4,7 +4,7 @@
 
 **The Pi stack and public HTTPS are running; browser acceptance is still in progress.**
 The source and arm64 image currently deployed are
-`bedf9fb5f3b11d32e0a8c6f2757c6b0caeb0da45`. Source lives in
+`b09e2ce0a06a2b793bc2ce4ae25b5b9d0f95411e`. Source lives in
 `/home/niklas/campushallenbot-releases/<commit>`; `~/campushallenbot` points to that
 release. Documentation commits can advance independently of the deployed image.
 
@@ -14,8 +14,9 @@ cloudflared connector all passed their health checks on 20 October 2026. Admin
 niklas was created with the operator's private password. Alembic is at
 `d8426c9ef017` with no schema drift. Public HTTPS login/security checks passed,
 and Cloudflare redirects HTTP to HTTPS. The operator confirmed the site loads on
-a mobile network; home DNS still fails to resolve its IPv4 address. Operator
-admin/invite acceptance remains pending on the working connection.
+a mobile network, and normal Mac DNS now resolves it too. The browser-origin
+fix is deployed: Referrer-Policy is strict-origin while origin/CSRF checks remain
+unchanged. Operator login/admin/invite acceptance remains pending.
 
 Separate production configuration/data/backup directories and private keys exist.
 The daily backup succeeded automatically, and an isolated restore verified admin

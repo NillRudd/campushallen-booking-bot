@@ -44,12 +44,12 @@ scanning is not an OS/container vulnerability assessment or a penetration test.
 ## Pi deployment and acceptance, 20 October 2026
 
 The current source release and arm64 application image on the Pi are
-`bedf9fb5f3b11d32e0a8c6f2757c6b0caeb0da45`. This supersedes the initial
-`5c1b08221b247933feaf1d15984bd03997338e33` release. The current commit passed
-145 local tests, Ruff, formatting, mypy and the isolated production-image smoke
-including migrations, health, backup/restore and restart persistence. The earlier
-140-test production image suite and Swedish browser smoke covered the unchanged
-application behavior. No branch was pushed.
+`b09e2ce0a06a2b793bc2ce4ae25b5b9d0f95411e`, including the committed origin fix
+`7f19a0d` and the additional production security tests. This supersedes
+`bedf9fb5f3b11d32e0a8c6f2757c6b0caeb0da45`. The current source passed 151 tests,
+Ruff, formatting, mypy (40 modules), Swedish browser smoke and isolated
+production-image smoke (migrations, health, backup/restore, restart persistence).
+No branch was pushed.
 
 | Required fact | Actual evidence / current state |
 | --- | --- |
@@ -62,11 +62,12 @@ application behavior. No branch was pushed.
 | Configuration | `~/.config/campushallenbot`, mode 0700; keys and tunnel token mode 0600 |
 | Key recovery | Matching encryption key copied privately to Mac `~/Documents/CampushallenBot-Recovery/encryption_key`, directory 0700 / file 0600; synthetic vault check passed |
 | Admin | Operator created niklas privately; active admin metadata persists after reboot |
-| Containers before reboot | Web, worker and cloudflared all healthy; current memory about 72 / 47 / 39 MiB respectively, below 256 / 256 / 128 MiB limits |
+| Current containers | Web, worker and cloudflared healthy after the login-fix deployment; both app containers use the same b09e2ce image |
+| Memory observed before earlier reboot | Web, worker and cloudflared all healthy; current memory about 72 / 47 / 39 MiB respectively, below 256 / 256 / 128 MiB limits |
 | Tunnel | Official pinned connector image reached healthy readiness; operator confirmed exposed token rotated; replacement supplied through private host file |
 | Public HTTPS | Saved route reaches Swedish login with HTTP 200 and valid TLS; authoritative and 1.1.1.1 DNS resolve Cloudflare addresses; Mac system resolver still has an older negative result |
 | Public browser smoke | Chrome desktop/mobile login rendered without overflow or page errors, TLS verification enabled; ignored screenshots under diagnostics/production-browser/ |
-| Public security | private/no-store, DYNAMIC caching, HSTS, CSP, nosniff, DENY framing, no-referrer; CSRF cookie Secure/HttpOnly/SameSite=strict; cross-origin and missing-CSRF POSTs rejected 403 |
+| Public security | private/no-store, DYNAMIC caching, HSTS, CSP, nosniff, DENY framing, strict-origin; CSRF cookie Secure/HttpOnly/SameSite=strict; cross-origin and missing-CSRF POSTs rejected 403 |
 | Debug endpoints | /docs, /redoc and /openapi.json return 404; /health returns 200; unauthenticated /admin redirects |
 | HTTP redirect | Operator enabled Always Use HTTPS; public HTTP now returns 301 to the same HTTPS path, which returns 200 |
 | Real admin/invite UI | Operator asked to test private login, dashboard/admin, invitation creation, correct public link, revocation/unavailability; pending |
@@ -180,3 +181,45 @@ The operator can ping the Pi at 192.168.1.127 from Terminal, whereas Codex's dir
 SSH process reports no route. The operator was given a private SSH control-socket
 command to authenticate in their own terminal; no password is requested in chat
 or persisted by deployment scripts.
+
+## Login-fix deployment, approximately 15:58 CEST on 20 October
+
+All required local checks and the final image's production smoke passed before
+deployment. Pi preflight confirmed all previous containers healthy, both legacy
+timers enabled/active, and worker command exactly python -m campushallen.worker.
+The known 0x50005 power warning persists under the operator's existing override.
+
+A fresh online backup, campushallen-20261020T135307408097Z-c44197.sqlite3, passed
+isolated restore with expected niklas admin metadata and synthetic encryption.
+It was also copied to the Mac's private CampushallenBot-Backups directory.
+The committed arm64 image was built on the Mac and transferred over the user's
+terminal-authenticated SSH connection. Source is in a new b09e2ce release directory;
+DEPLOYED_COMMIT and the image's revision label match the full commit above.
+
+Only the shared application image reference and source symlink changed. The old
+non-secret configuration is retained as
+~/.config/campushallenbot/production.env.before-origin-fix. Web and worker were
+recreated; cloudflared remained running. No database migration or host reboot was
+needed for this header correction. Both production key fingerprints are unchanged.
+All three containers are healthy. Worker has a fresh dry-run heartbeat and no
+real-booking flags; both legacy live timers remain enabled/active, next observed
+run 18:30 CEST today. No legacy unit, configuration or credential was modified.
+The schema remains d8426c9ef017 and niklas remains an active admin.
+
+Actual settings are APP_ENV=production, PUBLIC_BASE_URL=https://campushallenbot.se,
+SECURE_COOKIES=true. Inspected web/cloudflared log tails show no error/fatal lines;
+no secret-bearing log text was displayed. No app ports are published.
+
+Public checks now work through normal Mac DNS. HTTP HEAD returns 301 to the same
+HTTPS path. HTTPS HEAD /login returns 405 because this existing route supports
+GET; a normal browser GET returns 200 with valid TLS, Swedish UI, private/no-store,
+HSTS and Referrer-Policy=strict-origin. A real Chrome form submission using only a
+random nonexistent website username sent the canonical public Origin and an
+origin-only Referer. It reached the expected invalid-password response (400),
+rather than origin rejection (403); no internal hostname was exposed.
+No real website password was automated, and no Campushallen call was made.
+
+Stopped for the operator's private login/dashboard/Swedish/Admin check. Invitation
+creation/revocation, the operator's Campushallen connection and real UI rules, and
+dry-run comparison with the old CLI remain pending and must not be reported as
+passed. No real booking/cancellation or live cutover was performed.
