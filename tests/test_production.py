@@ -74,6 +74,7 @@ def test_production_host_origin_and_secure_sessions(web):
         assert "Secure" in response.headers["set-cookie"]
         assert "SameSite=lax" in response.headers["set-cookie"]
         assert response.headers["Cache-Control"] == "private, no-store"
+        assert response.headers["Referrer-Policy"] == "strict-origin"
         assert response.headers["Strict-Transport-Security"] == "max-age=31536000"
         assert client.get("/").status_code == 200
 

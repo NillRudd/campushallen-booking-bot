@@ -134,7 +134,12 @@ def main() -> None:
                 page.screenshot(path=str(artifacts / "login.png"), full_page=True)
                 page.get_by_label("Användarnamn").fill(admin_name)
                 page.get_by_label("Lösenord", exact=True).fill(admin_password)
-                page.get_by_role("button", name="Logga in", exact=True).click()
+                with page.expect_request(
+                    lambda request: request.method == "POST" and request.url == base_url + "/login"
+                ) as login_request:
+                    page.get_by_role("button", name="Logga in", exact=True).click()
+                # A browser computes Origin from Referrer-Policy. Raw HTTP clients miss this.
+                assert login_request.value.all_headers().get("origin") == base_url
                 page.get_by_role("link", name="Administration", exact=True).click()
                 page.screenshot(path=str(artifacts / "admin.png"), full_page=True)
                 page.get_by_label("Namn/etikett", exact=True).fill("Browser smoke")

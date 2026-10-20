@@ -116,7 +116,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         response.headers["Content-Language"] = settings.default_locale.replace("_", "-")
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
-        response.headers["Referrer-Policy"] = "no-referrer"
+        # Keep bearer paths private while preserving Origin on browser form navigation.
+        response.headers["Referrer-Policy"] = "strict-origin"
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; style-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'self'"
         )

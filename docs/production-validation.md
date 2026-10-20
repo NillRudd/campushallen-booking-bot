@@ -133,3 +133,18 @@ Cloudflare under Chrome's Secure DNS setting to bypass the failing home resolver
 The operator confirmed the site loads after switching to a mobile network. This
 supports the diagnosis of a home-network resolver issue. Private admin login and
 invitation acceptance remain pending on the working connection.
+
+## Browser form-origin regression
+
+The operator's first real login returned the Swedish form-origin error before
+password verification. A public Chrome reproduction with a random nonexistent
+website username confirmed HTTP 403, Origin=null and no Referer. The deployed
+Referrer-Policy=no-referrer caused this browser navigation behavior; raw HTTP
+origin/CSRF checks and a development-only successful login had missed it.
+
+The prepared correction uses Referrer-Policy=strict-origin: referrer paths remain
+private while same-origin form navigation preserves its Origin. The origin and
+signed-CSRF checks are unchanged. The browser smoke now asserts the browser's
+actual login Origin. All 145 tests, Ruff/format, mypy and the expanded Swedish
+browser smoke pass. Deployment and public browser recheck are pending restoration
+of Mac-to-Pi LAN connectivity. No password reset is needed for this rejection.
