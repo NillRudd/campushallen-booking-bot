@@ -7,10 +7,10 @@ Optional encrypted credentials allow automatic reconnection; a separate worker
 reports its health and planned actions. The original YAML-based CLI
 continues to work.
 
-Production deployment support is prepared in [the Raspberry Pi runbook](docs/production-deployment.md).
-That runbook records the actual deployment status; preparation alone does not
-mean the public site is running. The new worker remains **dry-run**, and the
-legacy live timers are reserved for a later, explicitly approved cutover.
+The application is deployed at <https://campushallenbot.se>; see the
+[Raspberry Pi runbook](docs/production-deployment.md) for current acceptance status.
+The new worker remains **dry-run**. Existing systemd bots continue live bookings
+until a later, explicitly approved cutover.
 No real booking is needed to run tests or start the application.
 
 ## Local development

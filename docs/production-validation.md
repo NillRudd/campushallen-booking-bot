@@ -1,6 +1,6 @@
 # Production preparation verification
 
-Updated on 20 October 2026. **Pi stack installed; public acceptance remains incomplete.**
+Updated on 20 October 2026. **Pi stack and public HTTPS running; browser acceptance remains incomplete.**
 
 ## Source and local checks
 
@@ -64,7 +64,12 @@ application behavior. No branch was pushed.
 | Admin | Operator created niklas privately; active admin metadata persists after reboot |
 | Containers before reboot | Web, worker and cloudflared all healthy; current memory about 72 / 47 / 39 MiB respectively, below 256 / 256 / 128 MiB limits |
 | Tunnel | Official pinned connector image reached healthy readiness; operator confirmed exposed token rotated; replacement supplied through private host file |
-| Public HTTPS/admin/invites | Pending published route; Mac DNS lookup still cannot resolve campushallenbot.se |
+| Public HTTPS | Saved route reaches Swedish login with HTTP 200 and valid TLS; authoritative and 1.1.1.1 DNS resolve Cloudflare addresses; Mac system resolver still has an older negative result |
+| Public browser smoke | Chrome desktop/mobile login rendered without overflow or page errors, TLS verification enabled; ignored screenshots under diagnostics/production-browser/ |
+| Public security | private/no-store, DYNAMIC caching, HSTS, CSP, nosniff, DENY framing, no-referrer; CSRF cookie Secure/HttpOnly/SameSite=strict; cross-origin and missing-CSRF POSTs rejected 403 |
+| Debug endpoints | /docs, /redoc and /openapi.json return 404; /health returns 200; unauthenticated /admin redirects |
+| HTTP redirect | Plain HTTP currently 400; operator asked to enable Always Use HTTPS at the Cloudflare edge |
+| Real admin/invite UI | Operator asked to test private login, dashboard/admin, invitation creation, correct public link, revocation/unavailability; pending |
 | Backup | Automatic daily run succeeded 20 October 03:38 CEST; fresh online snapshot and isolated restore including niklas metadata/synthetic encryption checks passed |
 | Off-Pi database | `~/Documents/CampushallenBot-Backups/campushallen-20261020T131535961565Z-45a79c.sqlite3`, directory 0700 / file 0600; separate from key directory |
 | Reboot | Controlled full-stack reboot issued around 15:19 CEST; SSH/Docker returned, all three containers restarted automatically; all three containers became healthy automatically |
@@ -98,12 +103,18 @@ The corrected worker passed its container health check on the actual Pi.
 
 ## Remaining production acceptance
 
-Save the Cloudflare published application route for the apex hostname to
-`http://web:8000`. Then verify real public TLS, Swedish login, security headers,
-secure authenticated cookie/CSRF, admin dashboard, invitation creation/revocation,
-and public availability of the recovered stack. The operator must enter the
-website password privately; admin metadata alone does not prove browser login.
-Do not claim deployment acceptance or live-booking migration complete yet.
+Public route, certificate, login rendering, security headers and form rejection
+checks passed after the stack reboot. Finish the edge HTTP-to-HTTPS redirect and
+private operator browser checks for authenticated cookie/session behavior, admin
+and invitation creation/revocation. The operator must enter the website password
+privately; admin metadata alone does not prove browser login. Do not claim full
+deployment acceptance or live-booking migration complete yet.
+
+During public checks the Mac lost its LAN route to 192.168.1.127. SSH reported
+“No route to host,” while repeated public HTTPS checks still returned 200.
+The latest successful Pi checks showed all three containers healthy and both
+legacy timers active. A private-network reachability issue does not establish an
+application outage, but further SSH inspection requires LAN connectivity.
 
 Same-card daily snapshots plus a manually copied Mac snapshot are not an
 automated offsite disaster-recovery policy. Current undervoltage, single-host/

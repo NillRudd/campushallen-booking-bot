@@ -2,7 +2,7 @@
 
 ## Current status
 
-**The Pi stack is installed; public production acceptance is still in progress.**
+**The Pi stack and public HTTPS are running; browser acceptance is still in progress.**
 The source and arm64 image currently deployed are
 `bedf9fb5f3b11d32e0a8c6f2757c6b0caeb0da45`. Source lives in
 `/home/niklas/campushallenbot-releases/<commit>`; `~/campushallenbot` points to that
@@ -12,8 +12,8 @@ Debian 13.7 (trixie), arm64, UID/GID 1000 runs Docker CE 29.9.1 and Compose 5.6.
 installed from Docker's official repository. Web, dry-run worker and the official
 cloudflared connector all passed their health checks on 20 October 2026. Admin
 niklas was created with the operator's private password. Alembic is at
-`d8426c9ef017` with no schema drift. The operator is configuring the public route;
-HTTPS/admin/invite acceptance remains pending.
+`d8426c9ef017` with no schema drift. The public route is saved, and HTTPS login/security checks passed. Operator
+admin/invite acceptance and the HTTP-to-HTTPS edge redirect remain pending.
 
 Separate production configuration/data/backup directories and private keys exist.
 The daily backup succeeded automatically, and an isolated restore verified admin
@@ -30,7 +30,7 @@ reboot enabled enforced container limits. The original boot line is retained at
 
 Legacy live timers remain enabled and active; neither service was manually
 triggered. All three containers recovered healthy in a controlled full-stack reboot; public
-HTTPS acceptance remains pending the route. The
+HTTPS login is also reachable through the recovered tunnel. The
 [verification record](production-validation.md) separates completed checks from
 outstanding acceptance. No live cutover has occurred.
 
@@ -177,7 +177,7 @@ static network addresses would collide. Use `exec` for operator commands then.
 
 ## Cloudflare setup
 
-Reviewed official docs on 19 October 2026:
+Reviewed official docs on 19–20 October 2026:
 [get started](https://developers.cloudflare.com/tunnel/get-started/),
 [token-file](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/configure-tunnels/run-parameters/#token-file),
 [client headers](https://developers.cloudflare.com/fundamentals/reference/http-headers/),
@@ -201,7 +201,11 @@ header. Cloudflare supports proxied apex CNAMEs through
 Do not silently choose a subdomain, add home-IP A/AAAA records, configure www,
 expose SSH, open router ports, or use Workers as the application origin.
 
-Keep automatic edge HTTPS/redirect behavior tested. Do not add Access login,
+Enable **Always Use HTTPS** under the domain’s SSL/TLS → Edge Certificates,
+then verify HTTP redirects to the same HTTPS hostname. See the
+[official setting documentation](https://developers.cloudflare.com/ssl/edge-certificates/additional-options/always-use-https/).
+The app deliberately rejects insecure tunneled requests; without the edge
+redirect a plain-HTTP visitor receives 400. Do not add Access login,
 Under Attack Mode, aggressive bot settings or cache-everything rules. App HTML
 is `private, no-store`. No tunnel debug/body logging: cloudflared logs only fatal
 errors to avoid recording invite bearer paths in request-error logs; health is
