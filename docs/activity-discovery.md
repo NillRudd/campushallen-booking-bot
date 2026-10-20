@@ -126,3 +126,21 @@ previews both, verifies duplicate handling and checks mobile overflow. Screensho
 are ignored under `diagnostics/browser-smoke/`, including search-desktop.png,
 search-mobile.png, rule-preview.png and preview-mobile.png. No real Campushallen
 booking or cancellation is performed.
+
+Verified locally on 2026-10-20 on branch `feature/activity-discovery`:
+
+- `make test`: 182 passed; one existing Starlette TestClient deprecation warning.
+- `make lint`: Ruff checks and formatting passed (80 files).
+- `make typecheck`: mypy passed (42 source files).
+- `CAMPUSHALLEN_BROWSER_CHANNEL=chrome make browser-smoke`: desktop and 390px
+  mobile journeys passed with mocked Campushallen calls.
+- `make production-smoke` using ARM64 image
+  `campushallenbot:39a291f4854e597939147121368bde2a23eda01d`: passed migrations,
+  model/schema agreement, Swedish login, health, non-root/private networking,
+  isolated backup/restore, synthetic encryption checks and restart persistence.
+  Temporary containers and network were removed afterward. No tunnel or real
+  Campushallen account was configured.
+
+The local checks used Python 3.14.4; the production image uses Python 3.12.
+This feature has not been deployed. The known production duplicate connections
+remain an explicit rollout blocker; no production data or legacy timers changed.
