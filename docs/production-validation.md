@@ -70,7 +70,7 @@ No branch was pushed.
 | Public security | private/no-store, DYNAMIC caching, HSTS, CSP, nosniff, DENY framing, strict-origin; CSRF cookie Secure/HttpOnly/SameSite=strict; cross-origin and missing-CSRF POSTs rejected 403 |
 | Debug endpoints | /docs, /redoc and /openapi.json return 404; /health returns 200; unauthenticated /admin redirects |
 | HTTP redirect | Operator enabled Always Use HTTPS; public HTTP now returns 301 to the same HTTPS path, which returns 200 |
-| Real admin/invite UI | Operator asked to test private login, dashboard/admin, invitation creation, correct public link, revocation/unavailability; pending |
+| Real admin/invite UI | Operator confirmed private login, dashboard, Swedish UI, Admin, invitation creation, correct public URL and revocation/unavailability all passed |
 | Backup | Automatic daily run succeeded 20 October 03:38 CEST; fresh online snapshot and isolated restore including niklas metadata/synthetic encryption checks passed |
 | Off-Pi database | `~/Documents/CampushallenBot-Backups/campushallen-20261020T131535961565Z-45a79c.sqlite3`, directory 0700 / file 0600; separate from key directory |
 | Reboot | Controlled full-stack reboot issued around 15:19 CEST; SSH/Docker returned, all three containers restarted automatically; all three containers became healthy automatically |
@@ -237,3 +237,12 @@ to encrypted remembered credentials, creating Innebandy 85 rules for Tuesday and
 Thursday 18:45 and Sunday 12:00, previewing, and comparing dry-run targets with
 the old CLI's intended selections. These steps are pending. No legacy credentials
 will be imported; neither live flags nor old timer state will be changed.
+
+## Invitation acceptance confirmed
+
+The operator confirmed temporary invitation creation, canonical HTTPS public URL,
+and revoked-link unavailability all passed through the real website. The invite
+link and website password were never supplied to the agent. The operator is now
+configuring their own Campushallen connection and three Innebandy 85 rules in the
+UI, explicitly enabling encrypted remembered credentials for reauthentication.
+The new worker remains dry-run; target comparison is pending account/rule setup.

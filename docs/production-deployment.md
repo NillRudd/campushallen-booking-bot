@@ -2,7 +2,7 @@
 
 ## Current status
 
-**The Pi stack, public HTTPS and operator login are working; invitation/account acceptance continues.**
+**The Pi stack, public HTTPS, login and invitations are working; Campushallen dry-run acceptance continues.**
 The source and arm64 image currently deployed are
 `b09e2ce0a06a2b793bc2ce4ae25b5b9d0f95411e`. Source lives in
 `/home/niklas/campushallenbot-releases/<commit>`; `~/campushallenbot` points to that
@@ -17,7 +17,8 @@ and Cloudflare redirects HTTP to HTTPS. The operator confirmed the site loads on
 a mobile network, and normal Mac DNS now resolves it too. The browser-origin
 fix is deployed: Referrer-Policy is strict-origin while origin/CSRF checks remain
 unchanged. The operator confirmed login, dashboard, Swedish UI and Admin work.
-Invitation acceptance and Campushallen account/rule comparison remain pending.
+Invitation creation, correct public URL and revocation/unavailability also passed.
+Campushallen account/rule setup and dry-run target comparison remain pending.
 
 Separate production configuration/data/backup directories and private keys exist.
 The daily backup succeeded automatically, and an isolated restore verified admin
