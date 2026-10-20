@@ -223,3 +223,17 @@ Stopped for the operator's private login/dashboard/Swedish/Admin check. Invitati
 creation/revocation, the operator's Campushallen connection and real UI rules, and
 dry-run comparison with the old CLI remain pending and must not be reported as
 passed. No real booking/cancellation or live cutover was performed.
+
+## Operator login confirmation
+
+The operator confirmed all four private browser checks passed after deployment:
+website login, dashboard, Swedish UI and Admin. No password was supplied to the
+agent or used in automated real-user login. The temporary invitation's creation,
+public URL and revocation/unavailability check is requested next.
+
+Under the continuation request, subsequent acceptance also includes the operator
+connecting their own Campushallen account through the UI, explicitly opting in
+to encrypted remembered credentials, creating Innebandy 85 rules for Tuesday and
+Thursday 18:45 and Sunday 12:00, previewing, and comparing dry-run targets with
+the old CLI's intended selections. These steps are pending. No legacy credentials
+will be imported; neither live flags nor old timer state will be changed.
