@@ -69,7 +69,11 @@ class AccountAuthentication:
             except httpx.HTTPStatusError as exc:
                 if exc.response.status_code not in (401, 403):
                     self._network_failure(db, account)
-                    raise ReconnectRequired("Campushallen is temporarily unavailable.") from None
+                    raise ReconnectRequired(
+                        "Campushallen is temporarily unavailable.",
+                        http_status=exc.response.status_code,
+                        endpoint_category="customer",
+                    ) from None
             except httpx.HTTPError:
                 self._network_failure(db, account)
                 raise ReconnectRequired("Campushallen is temporarily unavailable.") from None

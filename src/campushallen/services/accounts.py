@@ -40,6 +40,7 @@ class AccountGateway:
 
     def connect(self, account: CampushallenAccount, password: str) -> None:
         client = CampushallenHttpClient(api_config(self.settings), load_saved_auth=False)
+        endpoint = "login"
         try:
             data = client.login(account.username, password)
             if not data.get("access_token"):
@@ -49,6 +50,7 @@ class AccountGateway:
             except (AttributeError, ValueError, TypeError, KeyError):
                 raise ReconnectRequired("Login returned no customer identifier.") from None
             # Verify the identity before keeping any state. Never store password.
+            endpoint = "customer"
             client.get_customer(customer_id)
             state = {
                 "access_token": data["access_token"],
@@ -72,12 +74,14 @@ class AccountGateway:
 
             if exc.response.status_code == 429 or exc.response.status_code >= 500:
                 raise TemporaryAuthenticationError(
-                    "Campushallen is temporarily unavailable."
+                    "Campushallen is temporarily unavailable.",
+                    http_status=exc.response.status_code,
+                    endpoint_category=endpoint,
                 ) from None
             raise ReconnectRequired(
                 "Campushallen login failed. Reconnect to update credentials.",
                 http_status=exc.response.status_code,
-                endpoint_category="login",
+                endpoint_category=endpoint,
             ) from None
         except httpx.HTTPError:
             from .account_auth import TemporaryAuthenticationError

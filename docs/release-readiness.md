@@ -120,7 +120,7 @@ Do not distribute invitations until all release blockers are resolved.
 
 ## Validation record
 
-Local Python 3.14.4: 227 tests passed, including migration preservation of the
+Local Python 3.14.4: 228 tests passed, including migration preservation of the
 spent incident claim; Ruff and formatting pass, mypy passes for 43 modules. Swedish catalog
 contains 489/489 translated messages. Chrome browser smoke passes pending approval,
 admin activation and stop as well as the full desktop/mobile user journey. Exact ARM64 image/deployment evidence is recorded below once its checks finish. Automated fixtures prohibit external networking; all

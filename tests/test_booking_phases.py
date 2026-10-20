@@ -53,6 +53,7 @@ def incident(booking, tmp_path, monkeypatch):
         verify_always401=False,
         verified=True,
         login_status=200,
+        malformed_post=False,
         methods=[],
     )
     customer = b.accounts[0] * 100
@@ -74,6 +75,8 @@ def incident(booking, tmp_path, monkeypatch):
                 server.posts += 1
                 if server.timeout:
                     raise httpx.ReadTimeout("private-provider-body", request=request)
+                if server.malformed_post:
+                    return httpx.Response(200, text="private-provider-body")
                 return httpx.Response(
                     server.post_status, json={"sensitive": "private-provider-body"}
                 )
@@ -214,3 +217,16 @@ def test_discovery_preview_dry_and_early_run_do_not_claim(incident):
     with b.sessions() as db:
         assert db.get(BookingClaim, (b.accounts[0], 4343840)) is None
     assert b.server.posts == 0
+
+
+def test_success_response_with_unreadable_body_retains_status_and_never_reposts(incident):
+    b = incident
+    b.server.malformed_post = True
+    result = b.engine.run(b.plan, dry_run=False, now=b.opening)
+    assert result.result == "BOOKED"
+    with b.sessions() as db:
+        event = db.scalar(
+            select(BookingAttempt).where(BookingAttempt.phase == "BOOK_POST_TIMEOUT_OR_UNCERTAIN")
+        )
+        assert event.http_status == 200
+    assert b.server.posts == 1

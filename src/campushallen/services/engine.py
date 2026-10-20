@@ -423,7 +423,10 @@ class BookingEngine:
                             else "BOOK_POST_REJECTED"
                         )
                     except (httpx.HTTPError, ValueError, KeyError, TypeError):
-                        post_phase, post_status = "BOOK_POST_TIMEOUT_OR_UNCERTAIN", None
+                        post_phase, post_status = (
+                            "BOOK_POST_TIMEOUT_OR_UNCERTAIN",
+                            getattr(client, "booking_http_status", None),
+                        )
                     self.record(
                         plan,
                         Outcome.CLAIMED,
@@ -477,6 +480,8 @@ class BookingEngine:
                         status = (
                             exc.response.status_code
                             if isinstance(exc, httpx.HTTPStatusError)
+                            else exc.http_status
+                            if isinstance(exc, ReconnectRequired)
                             else None
                         )
                         return self.record(
@@ -487,7 +492,9 @@ class BookingEngine:
                             if isinstance(exc, ReconnectRequired) or status in (401, 403)
                             else "VERIFY_FAILED",
                             http_status=status,
-                            endpoint_category="bookings",
+                            endpoint_category=exc.endpoint_category
+                            if isinstance(exc, ReconnectRequired)
+                            else "bookings",
                             verification_outcome="UNKNOWN",
                         )
             except ReconnectRequired as exc:
