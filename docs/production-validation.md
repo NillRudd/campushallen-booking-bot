@@ -1,6 +1,6 @@
 # Production preparation verification
 
-Recorded on 19 October 2026. **Pi installation is in progress; public acceptance remains incomplete.**
+Updated on 20 October 2026. **Pi stack installed; public acceptance remains incomplete.**
 
 ## Source and local checks
 
@@ -41,53 +41,71 @@ were consulted before upgrading. Existing Fernet/HKDF purpose separation, previo
 ciphertext compatibility and reauthentication tests pass. Runtime dependency
 scanning is not an OS/container vulnerability assessment or a penetration test.
 
-## Pi deployment progress and remaining acceptance
+## Pi deployment and acceptance, 20 October 2026
 
-The source release and arm64 image installed on the Pi are both
-`5c1b08221b247933feaf1d15984bd03997338e33`. Before transfer, the complete local
-140-test suite, Ruff, formatting, mypy, Swedish browser smoke and isolated
-production-image smoke passed again for this exact commit. No branch was pushed.
+The current source release and arm64 application image on the Pi are
+`bedf9fb5f3b11d32e0a8c6f2757c6b0caeb0da45`. This supersedes the initial
+`5c1b08221b247933feaf1d15984bd03997338e33` release. The current commit passed
+145 local tests, Ruff, formatting, mypy and the isolated production-image smoke
+including migrations, health, backup/restore and restart persistence. The earlier
+140-test production image suite and Swedish browser smoke covered the unchanged
+application behavior. No branch was pushed.
 
 | Required fact | Actual evidence / current state |
 | --- | --- |
 | Host | Debian 13.7 trixie, kernel 6.18.50+rpt-rpi-v8, arm64, UID/GID 1000 |
-| Docker | Official repository; CE 29.9.1, Compose 5.6.0; daemon enabled at boot |
-| Memory control | Boot flags enabled memory cgroup; a harmless 64 MiB container reported memory.max=67108864 |
-| Resources after installation | 9.3 GiB disk free; 905 MiB RAM total, 603 MiB available at observation; not a load test |
-| Migration | `d8426c9ef017` head; Alembic check reports no new upgrade operations |
-| Data | `~/campushallenbot-data`; independent of both old checkouts |
-| Configuration | `~/.config/campushallenbot` mode 0700; secret_key and encryption_key mode 0600 |
+| Docker | Official repository; CE 29.9.1, Compose 5.6.0; daemon enabled and active after reboot |
+| Memory control | Boot flags enabled memory cgroup; harmless 64 MiB container reported memory.max=67108864 |
+| Disk | 9.1 GiB free after loading both images; not a load/capacity test |
+| Migration | `d8426c9ef017` head; Alembic check reports no new upgrade operations on the current Pi image |
+| Data | `~/campushallenbot-data`, mode 0700; independent of both old checkouts |
+| Configuration | `~/.config/campushallenbot`, mode 0700; keys and tunnel token mode 0600 |
 | Key recovery | Matching encryption key copied privately to Mac `~/Documents/CampushallenBot-Recovery/encryption_key`, directory 0700 / file 0600; synthetic vault check passed |
-| Admin | Operator created niklas privately; database confirms active admin |
-| Containers | Web healthy; worker running with a persisted dry-run heartbeat; no host ports published |
-| Tunnel | Official pinned image downloaded; replacement token and connector startup pending |
-| Public HTTPS/admin/invites | Pending; no public acceptance claimed |
-| Backup | Online snapshots created; isolated restore of `campushallen-20261019T200238906746Z-628576.sqlite3` confirms niklas admin metadata and synthetic encryption checks; daily website timer enabled, next 20 October 03:38 CEST |
-| Reboot | Prerequisite memory-cgroup reboot passed; final full-stack acceptance reboot pending |
-| Legacy timers | Both enabled and active/waiting after reboot; next observed run 20 October 18:30 CEST; associated services inactive |
-| Host ports | Privileged pre-install inspection found SSH plus existing mDNS; no application ports published by Compose |
-| New bookings | Worker configuration has neither real-booking flag; no Campushallen accounts imported or connected |
-| Hardware | Current and historic undervoltage/throttling `0x50005`; operator explicitly authorized continuing |
+| Admin | Operator created niklas privately; active admin metadata persists after reboot |
+| Containers before reboot | Web, worker and cloudflared all healthy; current memory about 72 / 47 / 39 MiB respectively, below 256 / 256 / 128 MiB limits |
+| Tunnel | Official pinned connector image reached healthy readiness; operator confirmed exposed token rotated; replacement supplied through private host file |
+| Public HTTPS/admin/invites | Pending published route; Mac DNS lookup still cannot resolve campushallenbot.se |
+| Backup | Automatic daily run succeeded 20 October 03:38 CEST; fresh online snapshot and isolated restore including niklas metadata/synthetic encryption checks passed |
+| Off-Pi database | `~/Documents/CampushallenBot-Backups/campushallen-20261020T131535961565Z-45a79c.sqlite3`, directory 0700 / file 0600; separate from key directory |
+| Reboot | Controlled full-stack reboot issued around 15:19 CEST; SSH/Docker returned, all three containers restarted automatically; all three containers became healthy automatically |
+| Key persistence | Both production key fingerprints unchanged across full-stack reboot; values never displayed |
+| Legacy timers | Both enabled and active after reboot; next run 20 October 18:30 CEST; neither associated service manually triggered |
+| Backup timer | Enabled/active after reboot; existing user lingering retained |
+| Host ports | Privileged inspection found SSH plus existing mDNS; no host application ports published; tunnel metrics remain private |
+| New bookings | Worker command exactly `python -m campushallen.worker`, no live flags; fresh dry-run heartbeat after reboot; no Campushallen accounts imported or connected |
+| Hardware | Current/historic undervoltage and throttling remain `0x50005`; operator explicitly authorized continuing |
 
 The [official Raspberry Pi flag table](https://www.raspberrypi.com/documentation/computers/os.html#get_throttled)
 identifies bits 0 and 2 as current undervoltage and throttling, with historical
-bits 16 and 18 also set. Power remains a production reliability risk after the
-operator's override. NTP and Stockholm timezone were checked. Existing user
-lingering is enabled. No legacy credentials, auth files or environment files were
-read, copied or modified. No old booking service was manually triggered.
+bits 16 and 18 also set. Power remains a production reliability risk despite the
+operator's override. NTP and Stockholm timezone were checked. No legacy
+credentials, auth files or environment files were read, copied or modified.
 
-The tunnel token was accidentally supplied in chat. It was not installed or
-repeated; the operator was instructed to rotate it in Cloudflare and enter the
-replacement through the host-side hidden prompt. Replacement confirmation remains
-pending. No token value belongs in this record.
+The tunnel token was accidentally supplied in chat. That value was not installed
+or repeated. The operator confirmed rotation in Cloudflare; the replacement file
+is private, and the connector subsequently reached healthy readiness. No token
+value belongs in this record.
 
 ## Pi health-probe correction
 
-The initial worker process persisted healthy dry-run heartbeats, but its container
-probe exceeded ten seconds while importing the full application on the throttled
-Pi. The probe now uses Python's standard-library SQLite reader with a read-only
-connection, checks the latest non-stopped heartbeat against the same freshness
-threshold and requires dry_run=1. It needs no keys or application initialization.
-Regression tests cover fresh/stale, live/stopped workers and missing databases.
-The replacement image must pass local checks and Pi health acceptance before the
-stack is considered healthy; initial heartbeat alone is not that acceptance.
+The initial worker process persisted dry-run heartbeats, but its container probe
+exceeded ten seconds while importing the full application on the throttled Pi.
+The current probe uses Python's standard-library SQLite reader with a read-only
+connection. It checks the latest non-stopped heartbeat against the same freshness
+threshold and requires dry_run=1, without loading keys or initializing the app.
+Five regression cases cover fresh/stale, live/stopped workers and a missing DB.
+The corrected worker passed its container health check on the actual Pi.
+
+## Remaining production acceptance
+
+Save the Cloudflare published application route for the apex hostname to
+`http://web:8000`. Then verify real public TLS, Swedish login, security headers,
+secure authenticated cookie/CSRF, admin dashboard, invitation creation/revocation,
+and public availability of the recovered stack. The operator must enter the
+website password privately; admin metadata alone does not prove browser login.
+Do not claim deployment acceptance or live-booking migration complete yet.
+
+Same-card daily snapshots plus a manually copied Mac snapshot are not an
+automated offsite disaster-recovery policy. Current undervoltage, single-host/
+microSD failure, and untested concurrent legacy-booking peak memory remain risks.
+Real booking remains disabled and the separate future cutover plan is unexecuted.

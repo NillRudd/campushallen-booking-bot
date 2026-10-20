@@ -2,31 +2,37 @@
 
 ## Current status
 
-**Pi installation is in progress; public production acceptance is incomplete.**
-The deployed source and arm64 application image are pinned to
-`5c1b08221b247933feaf1d15984bd03997338e33` under
-`/home/niklas/campushallenbot-releases/`; `~/campushallenbot` points to that release.
-Local deployment documentation may advance independently of the deployed image.
+**The Pi stack is installed; public production acceptance is still in progress.**
+The source and arm64 image currently deployed are
+`bedf9fb5f3b11d32e0a8c6f2757c6b0caeb0da45`. Source lives in
+`/home/niklas/campushallenbot-releases/<commit>`; `~/campushallenbot` points to that
+release. Documentation commits can advance independently of the deployed image.
 
-The host is Debian 13.7 (trixie), arm64, UID/GID 1000. Docker CE 29.9.1 and
-Compose 5.6.0 were installed from Docker's official repository. Separate production
-configuration/data/backup directories and private session/encryption keys exist.
-The encryption key has a private off-Pi recovery copy on the Mac. Database
-migrations reached `d8426c9ef017`, with no schema drift.
+Debian 13.7 (trixie), arm64, UID/GID 1000 runs Docker CE 29.9.1 and Compose 5.6.0,
+installed from Docker's official repository. Web, dry-run worker and the official
+cloudflared connector all passed their health checks on 20 October 2026. Admin
+niklas was created with the operator's private password. Alembic is at
+`d8426c9ef017` with no schema drift. The operator is configuring the public route;
+HTTPS/admin/invite acceptance remains pending.
+
+Separate production configuration/data/backup directories and private keys exist.
+The daily backup succeeded automatically, and an isolated restore verified admin
+metadata and synthetic encryption checks. A database snapshot is also copied to
+`~/Documents/CampushallenBot-Backups/` on the Mac; the encryption key is stored
+separately in `~/Documents/CampushallenBot-Recovery/`.
 
 Current undervoltage/throttling (`0x50005`) persists. The operator explicitly
-instructed continuing despite this condition; this is an accepted deployment
-risk, not evidence of reliable power. Docker initially lacked memory-controller
-support. Appending `cgroup_memory=1 cgroup_enable=memory` to the existing boot
-command line and a controlled prerequisite reboot enabled enforced container
-memory limits. The original boot line is retained in
+instructed continuing despite this condition. Reliability remains unproven.
+Docker initially lacked memory-controller support. Appending
+`cgroup_memory=1 cgroup_enable=memory` to the boot command line and a prerequisite
+reboot enabled enforced container limits. The original boot line is retained at
 `~/.cache/campushallen-provision/cmdline.txt.before-memory`.
 
-Both legacy live timers remain enabled and active after that reboot; neither
-booking service was triggered. Production admin setup, private replacement tunnel
-token entry, public HTTPS/invite acceptance, production backup/restore and final
-whole-stack reboot acceptance remain pending. The prerequisite reboot is not a
-completed whole-stack reboot test. See the [verification record](production-validation.md).
+Legacy live timers remain enabled and active; neither service was manually
+triggered. All three containers recovered healthy in a controlled full-stack reboot; public
+HTTPS acceptance remains pending the route. The
+[verification record](production-validation.md) separates completed checks from
+outstanding acceptance. No live cutover has occurred.
 
 ## Architecture and boundaries
 

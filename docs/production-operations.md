@@ -1,7 +1,8 @@
 # Production operations (dry-run web worker)
 
-These commands apply after the deployment runbook is completed. They do not mean
-production is currently running. SSH as niklas and `cd ~/campushallenbot`.
+Use these commands on the installed Pi stack. Public acceptance status is recorded
+in [the verification record](production-validation.md). SSH as niklas and
+`cd ~/campushallenbot`.
 `scripts/production` always selects `compose.prod.yaml` and the non-secret
 `~/.config/campushallenbot/production.env`. Do not use development Compose here.
 
@@ -143,5 +144,9 @@ Do not prune the previous image until recovery has been tested.
 A controlled Pi reboot is permitted only after backups, timer checks and resource
 preflight, at a time that avoids imminent old booking services. After SSH returns,
 repeat every status/HTTPS check, confirm the known admin persists and ask the user
-to test login. Reboot itself and real public checks remain outstanding until the
-Pi is reachable and the production stack is configured.
+to test login. Record the actual result in the verification record.
+
+For automation that supplies shell code over SSH standard input, pass
+`--interactive=false` to Compose `run`/`exec` (and `-T` to `exec`). Otherwise the
+container can consume subsequent shell commands. Keep interactive stdin enabled
+when entering passwords privately in an operator terminal.
