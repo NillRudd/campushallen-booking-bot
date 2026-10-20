@@ -211,3 +211,18 @@ def test_disconnect_and_identity_replacement_revoke_scope_without_resetting_clai
         assert not row.live_booking_enabled
         assert row.live_booking_claim_limit == 0 and row.live_booking_activity_id is None
         assert db.get(BookingClaim, (b.accounts[0], 101)) is not None
+
+
+def test_explicit_ongoing_approval_still_requires_durable_claim_and_global_live(booking):
+    b = booking
+    with b.sessions() as db:
+        a = db.get(CampushallenAccount, b.accounts[0])
+        a.live_booking_ongoing = True
+        a.live_booking_claim_limit = 0
+        db.commit()
+    assert b.engine.run(b.plan).result == "DRY_RUN"
+    assert not b.gateway.posts
+    assert b.engine.run(b.plan, dry_run=False).result == "BOOKED"
+    b.gateway.booked.clear()
+    assert BookingEngine(b.sessions, b.gateway).run(b.plan, dry_run=False).result == "CLAIMED"
+    assert len(b.gateway.posts) == 1

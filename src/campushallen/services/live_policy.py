@@ -1,8 +1,10 @@
-"""Trusted local operator controls; never exposed through website forms."""
+"""Controlled operator grants and explicit administrator approval."""
 
 from sqlalchemy import func, select
 
 from campushallen.database.models import BookingClaim, CampushallenAccount, User
+
+from .audit import Event, audit
 
 
 def configure_live(
@@ -26,12 +28,19 @@ def configure_live(
             raise ValueError("Enabling live eligibility requires the reviewed --activity-id")
         if not account.enabled or account.requires_reconnect or not account.auth_state:
             raise ValueError("Connect and enable the account before enabling live eligibility")
+        account.live_booking_ongoing = False
         account.live_booking_enabled = True
         account.live_booking_claim_limit = limit
         account.live_booking_activity_id = activity_id
     elif enabled is False:
         account.live_booking_enabled = False
     if enabled is not None:
+        audit(
+            db,
+            Event.LIVE_BOOKING_ENABLED if enabled else Event.LIVE_BOOKING_DISABLED,
+            user_id=account.user_id,
+            account_id=account.id,
+        )
         db.commit()
     used = (
         db.scalar(

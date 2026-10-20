@@ -83,9 +83,7 @@ def test_account_presentation_and_notices(web):
     assert "worker" not in visible(page).lower()
     assert "DISCONNECT" not in visible(page)  # Checkbox value stays machine-readable.
     assert (
-        not BeautifulSoup(page.text, "html.parser")
-        .select_one('[name="remember"]')
-        .has_attr("checked")
+        BeautifulSoup(page.text, "html.parser").select_one('[name="remember"]').has_attr("checked")
     )
 
 

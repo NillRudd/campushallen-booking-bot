@@ -64,6 +64,7 @@ def connect_account(
 def disconnect(db: Session, account: CampushallenAccount) -> None:
     forget(db, account)
     # Approval belongs to the reviewed identity, never a replacement email/login.
+    account.live_booking_ongoing = False
     account.live_booking_enabled = False
     account.live_booking_claim_limit = 0
     account.live_booking_activity_id = None

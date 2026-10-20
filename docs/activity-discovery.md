@@ -1,5 +1,8 @@
 # Activity discovery and one Campushallen connection
 
+Current release status is maintained in [the release gate and operator guide](release-readiness.md).
+Earlier incident-freeze and rollout descriptions below are historical snapshots.
+
 This feature was developed on `feature/activity-discovery` and deployed on
 20 October 2026 at `cf4d4d5852a4e1626f9fc4cec9edbf90c44d3cb6`. The operator
 explicitly approved resolving the duplicate connections before migration;

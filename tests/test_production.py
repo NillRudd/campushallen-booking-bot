@@ -219,7 +219,7 @@ def test_backup_does_not_create_missing_database_or_accept_public_directory(tmp_
 def test_production_compose_never_enables_live_booking_or_publishes_host_ports():
     compose = yaml.safe_load(Path("compose.prod.yaml").read_text())
     services = compose["services"]
-    assert set(services) == {"web", "worker", "cloudflared"}
+    assert set(services) == {"web", "worker", "cloudflared", "backup"}
     assert services["web"]["image"] == services["worker"]["image"]
     assert services["worker"]["command"] == ["python", "-m", "campushallen.worker"]
     assert all("ports" not in service for service in services.values())
@@ -228,3 +228,14 @@ def test_production_compose_never_enables_live_booking_or_publishes_host_ports()
     assert "--token-file" in services["cloudflared"]["command"]
     assert "--live" not in str(services["worker"])
     assert "--confirm-real-bookings" not in str(services["worker"])
+
+
+def test_backup_service_is_independent_of_stopped_worker():
+    services = yaml.safe_load(Path("compose.prod.yaml").read_text())["services"]
+    backup = services["backup"]
+    assert backup["network_mode"] == "none"
+    assert "depends_on" not in backup and "secrets" not in backup
+    assert backup["profiles"] == ["maintenance"]
+    assert backup["command"] == ["backup", "--directory", "/backups", "--keep", "14"]
+    helper = Path("scripts/backup-production").read_text()
+    assert "python3 deployment/backup_status.py" in helper

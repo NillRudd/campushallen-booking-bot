@@ -1,5 +1,6 @@
 {% extends 'base.html' %}{% block title %}{{ _('Admin') }} · Campushallen Booker{% endblock %}{% block content %}
 <p class="eyebrow">{{ _("OPERATOR") }}</p><h1>{{ _("Application management.") }}</h1><p>{{ worker|worker_label }}</p>
+<p role="status">{{ backup }}</p>
 <section class="card narrow"><h2>{{ _("Create invitations") }}</h2><form method="post" action="/admin/invites">
 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 <label>{{ _("Label") }}<input name="label" maxlength="120" placeholder="{{ _('Optional reminder') }}"></label>
@@ -8,6 +9,10 @@
 <button>{{ _("Generate one-time links") }}</button></form></section>
 <section><h2>{{ _("Invitations") }}</h2><div class="table-wrap"><table><thead><tr><th>{{ _("ID / label") }}</th><th>{{ _("Status") }}</th><th>{{ _("Expires") }}</th><th>{{ _("Action") }}</th></tr></thead><tbody>
 {% for invitation in invitations %}<tr><td>{{ invitation.id }} · {{ invitation.label }}</td><td>{{ invitation|invite_status }}</td><td>{{ invitation.expires_at|localtime if invitation.expires_at else _('Never') }}</td><td>{% if not invitation.used_at and not invitation.revoked_at %}<form method="post" action="/admin/invites/{{ invitation.id }}/revoke"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="quiet">{{ _("Revoke") }}</button></form>{% endif %}</td></tr>{% else %}<tr><td colspan="4">{{ _("No invitations yet.") }}</td></tr>{% endfor %}</tbody></table></div></section>
+<section><h2>{{ _('Users and live booking') }}</h2>
+{% for account, owner, rule_count in connections %}<article class="card"><h3>{{ owner }}</h3><p>{{ account|connection_status }} · {{ _('Rules:') }} {{ rule_count }}</p>{% include 'live_status.html' %}
+<a class="button" href="/admin/connections/{{ account.id }}/live">{{ _('Review live activation') }}</a>
+<form method="post" action="/admin/connections/{{ account.id }}/live"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="disable"><button class="quiet">{{ _('Stop live booking') }}</button></form></article>{% else %}<p>{{ _('No connections yet.') }}</p>{% endfor %}</section>
 <section><h2>{{ _("Account health") }}</h2><p class="muted">{{ _("Only operational status is shown here. Account contents remain private to their owners.") }}</p><div class="table-wrap"><table><thead><tr><th>{{ _("Account ID") }}</th><th>{{ _("Authentication") }}</th><th>{{ _("Enabled") }}</th><th>{{ _("Last discovery") }}</th></tr></thead><tbody>{% for id, status, enabled, discovered in statuses %}<tr><td>{{ id }}</td><td>{{ status|status_label }}</td><td>{{ _('Enabled') if enabled else _('Disabled') }}</td><td>{{ discovered|localtime }}</td></tr>{% else %}<tr><td colspan="4">{{ _("No connections yet.") }}</td></tr>{% endfor %}</tbody></table></div></section>
 <section><h2>{{ _("Security events") }}</h2>{% include 'events.html' %}</section>
 {% endblock %}

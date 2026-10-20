@@ -82,6 +82,8 @@ class CampushallenAccount(Timestamps, Base):
     live_booking_enabled: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
     live_booking_claim_limit: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     live_booking_activity_id: Mapped[int | None] = mapped_column(Integer)
+    # Explicit ongoing admin approval; controlled grants retain their finite allowance.
+    live_booking_ongoing: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
     requires_reconnect: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
     last_auth_success_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
     last_auth_failure_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
@@ -168,6 +170,10 @@ class BookingAttempt(Base):
     # Legacy attempts have unknown provenance; new records always set this explicitly.
     is_preview: Mapped[bool | None] = mapped_column(Boolean, default=False)
     result: Mapped[str] = mapped_column(String(40))
+    phase: Mapped[str | None] = mapped_column(String(40))
+    http_status: Mapped[int | None] = mapped_column(Integer)
+    endpoint_category: Mapped[str | None] = mapped_column(String(30))
+    verification_outcome: Mapped[str | None] = mapped_column(String(20))
     message: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
 

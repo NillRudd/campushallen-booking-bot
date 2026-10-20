@@ -1,4 +1,4 @@
 #!/bin/sh
 set -eu
 cd "$(dirname "$0")/.."
-exec ./scripts/production exec -T worker python -m campushallen.cli backup --directory /backups --keep 14
+exec python3 deployment/backup_status.py

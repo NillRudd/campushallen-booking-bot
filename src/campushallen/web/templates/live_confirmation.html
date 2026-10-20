@@ -1,0 +1,5 @@
+{% extends 'base.html' %}{% block content %}
+<h1>{{ _('Activate real booking') }}</h1><p>{{ owner }}</p>
+<p>{{ _('Activation permits real bookings for this connection and its enabled rules whenever the worker runs in live mode. Review the rules and preview first. An in-flight request cannot be recalled.') }}</p>
+<form method="post" action="/admin/connections/{{ account.id }}/live"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="enable"><label class="check"><input type="checkbox" name="confirmation" value="ENABLE" required>{{ _('I confirm that real bookings will be submitted') }}</label><button>{{ _('Activate real booking') }}</button><a href="/admin">{{ _('Cancel') }}</a></form>
+{% endblock %}

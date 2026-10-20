@@ -215,6 +215,7 @@ class CampushallenHttpClient:
         if recaptcha_token:
             body["recaptchaToken"] = recaptcha_token
         response = self.client.post(f"/customers/{customer_id}/bookings/groupactivities", json=body)
+        self.booking_http_status = response.status_code
         response.raise_for_status()
         return response.json()
 

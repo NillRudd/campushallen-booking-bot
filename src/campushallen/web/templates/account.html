@@ -1,6 +1,7 @@
 {% extends 'base.html' %}{% block title %}{{ _('My Campushallen account') }} · Campushallen Booker{% endblock %}{% block content %}
 <p class="eyebrow">{{ _("CAMPUSHALLEN CONNECTION") }}</p><h1>{{ account.display_name }}</h1>
 <p>{{ _("Campushallen email address") }}: {{ account.username }} <span class="badge">{{ account|connection_status }}</span></p>
+{% include 'live_status.html' %}
 <p>{{ _("Automatic reconnection:") }} <strong>{{ _('ON') if remembered else _('OFF') }}</strong> · {{ _('Enabled') if account.enabled else _('Disabled') }}</p>
 {% if account.requires_reconnect %}<div class="error" role="status">{{ _("Reconnect using the form below. Automatic retries are paused until you reconnect successfully.") }}</div>{% endif %}
 {% if account.auth_retry_at %}<p role="status">{{ _("Temporary authentication error. Next retry after") }} {{ account.auth_retry_at|localtime }}.</p>{% endif %}
@@ -9,7 +10,7 @@
 <form action="/accounts/{{ account.id }}/connect" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 <label>{{ _("Campushallen email address") }}<input type="email" name="username" value="{{ account.username }}" maxlength="254" autocomplete="username" required></label>
 <label>{{ _("Campushallen password") }}<input name="password" type="password" autocomplete="off" maxlength="1024" required></label>
-<label class="check"><input type="checkbox" name="remember" {% if remembered %}checked{% endif %}>{{ _("Remember Campushallen credentials for automatic reconnection") }}</label>
+<label class="check"><input type="checkbox" name="remember" checked>{{ _("Remember Campushallen credentials for automatic reconnection") }}</label>
 <p class="muted">{{ _("Unchecked: use the password for this connection, then discard it and forget any previously saved password. Expired tokens need manual reconnection.") }}</p>
 <p class="muted">{{ _("Checked: store an encrypted, recoverable password on the server. The worker may use it to reconnect. It is never displayed again. Anyone with both the application data and its encryption key may recover it.") }}</p>
 <button>{{ _('Replace saved password and reconnect') if remembered else _('Connect account') }}</button></form>

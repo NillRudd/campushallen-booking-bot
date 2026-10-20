@@ -11,7 +11,12 @@ from campushallen.settings import Settings
 
 
 class ReconnectRequired(Exception):
-    pass
+    def __init__(
+        self, message: str, *, http_status: int | None = None, endpoint_category: str = "customer"
+    ):
+        super().__init__(message)
+        self.http_status = http_status
+        self.endpoint_category = endpoint_category
 
 
 def runtime_key(settings: Settings, name: str) -> str:

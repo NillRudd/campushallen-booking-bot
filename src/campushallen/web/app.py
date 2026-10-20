@@ -104,6 +104,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         value, settings.campushallen_timezone, settings.default_locale
     )
     env.filters["clock"] = lambda value: i18n.clock(value, settings.default_locale)
+    env.filters["phase_label"] = presentation.phase_label
     env.filters["connection_status"] = lambda account: connection_status(account, tokens)
     for name in (
         "friendly_result",

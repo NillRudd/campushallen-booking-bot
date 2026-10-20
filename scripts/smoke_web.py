@@ -199,13 +199,10 @@ def main() -> None:
                 page.get_by_role(
                     "button", name="Anslut ditt Campushallen-konto", exact=True
                 ).click()
-                assert not page.get_by_label(
+                assert page.get_by_label(
                     "Spara inloggningsuppgifter för automatisk återanslutning", exact=True
                 ).is_checked()
                 page.get_by_label("Lösenord för Campushallen", exact=True).fill(campu_password)
-                page.get_by_label(
-                    "Spara inloggningsuppgifter för automatisk återanslutning", exact=True
-                ).check()
                 page.get_by_role("button", name="Anslut konto", exact=True).click()
                 page.screenshot(path=str(artifacts / "account.png"), full_page=True)
                 assert (
@@ -236,6 +233,23 @@ def main() -> None:
                 page.screenshot(path=str(artifacts / "rule-preview.png"), full_page=True)
                 page.get_by_role("link", name="Översikt", exact=True).click()
                 assert page.get_by_text("Innebandy 85 Vallastaden", exact=True).count() >= 1
+                assert page.get_by_text("Testläge / väntar på aktivering", exact=True).is_visible()
+                operator_page = admin.new_page()
+                operator_page.goto(base_url + "/admin")
+                operator_page.get_by_role("link", name="Granska aktivering av livebokning").click()
+                operator_page.get_by_label(
+                    "Jag bekräftar att riktiga bokningar kommer att skickas"
+                ).check()
+                operator_page.get_by_role(
+                    "button", name="Aktivera riktig bokning", exact=True
+                ).click()
+                page.reload()
+                assert page.get_by_text(
+                    "Aktiv — bokningstjänsten måste köras i liveläge", exact=True
+                ).is_visible()
+                operator_page.get_by_role("button", name="Stoppa livebokning", exact=True).click()
+                page.reload()
+                assert page.get_by_text("Testläge / väntar på aktivering", exact=True).is_visible()
                 page.screenshot(path=str(artifacts / "desktop.png"), full_page=True)
                 mobile = browser.new_context(
                     locale="sv-SE",
@@ -299,7 +313,7 @@ def main() -> None:
                 method == "GET" or path.endswith("/auth/login") for method, path in api_calls
             )
             print(
-                "Browser smoke passed: admin invitation, registration, onboarding, mocked connection with remember opt-in, activity search, select/create, duplicate protection, shared rule preview, dashboard, history filters, forget credential, logout-all, desktop/mobile; no real API mutations or JavaScript errors."
+                "Browser smoke passed: admin invitation, registration, onboarding, mocked connection with default encrypted storage, pending live status, explicit admin activation and stop, activity search, select/create, duplicate protection, shared rule preview, dashboard, history filters, forget credential, logout-all, desktop/mobile; no real API mutations or JavaScript errors."
             )
         finally:
             server.should_exit = True

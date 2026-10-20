@@ -1,8 +1,10 @@
 """Durable discovery snapshots and heartbeat, independent of HTTP routes."""
 
+import json
 import secrets
-from datetime import timedelta
+from datetime import datetime, timedelta
 from importlib.metadata import version
+from pathlib import Path
 
 from sqlalchemy import delete, select
 from sqlalchemy.orm import sessionmaker
@@ -105,3 +107,18 @@ def account_cards(db, user_id: int):
         )
         cards.append((account, next_slot))
     return cards
+
+
+def backup_health(state_dir: Path) -> str:
+    try:
+        value = json.loads((state_dir / "backup-status.json").read_text())
+        checked = datetime.fromisoformat(value["checked_at"])
+        if checked.tzinfo is None or checked > utcnow() + timedelta(minutes=5):
+            return "Backup status unavailable"
+        if value["ok"] is not True:
+            return "Backup failed"
+        if checked < utcnow() - timedelta(hours=26):
+            return "Backup overdue"
+        return "Backup successful"
+    except (OSError, ValueError, KeyError, TypeError):
+        return "Backup status unavailable"

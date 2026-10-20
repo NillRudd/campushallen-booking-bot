@@ -3,7 +3,7 @@
 A development-stage, multi-user web application built around the existing
 Campushallen / Go Active booking bot. Join by invitation, connect one private Campushallen account,
 browse activities, manage booking rules and inspect booking history.
-Optional encrypted credentials allow automatic reconnection; a separate worker
+Encrypted credentials saved by default allow automatic reconnection; a separate worker
 reports its health and planned actions. The original YAML-based CLI
 continues to work.
 
@@ -12,10 +12,10 @@ The existing production site is <https://campushallenbot.se>; see the
 one-connection/activity-discovery redesign is deployed; see the
 [production verification record](docs/production-validation.md) for checked
 behavior and remaining private browser acceptance.
-**Niklas's new worker is currently stopped for investigation after its first
-controlled live attempt failed.** His old timer remains disabled; the friend's
-legacy timer remains enabled. No automatic booking currently runs for Niklas.
-See the [incident evidence and current limits](docs/incident-2026-10-20-first-live-booking.md).
+**Not ready to share with other users.** Corrected live validation and active Pi
+undervoltage remain release blockers. See the [release gate and operator guide](docs/release-readiness.md)
+for current checks, safe phase recovery, per-user admin activation and deployment status.
+The old activity's durable claim remains preserved; it must never be retried.
 No real booking is needed to run tests or start the application.
 
 ## Local development
@@ -41,8 +41,8 @@ After logging in:
 
 1. Open **Mitt Campushallen-konto** and enter your **E-postadress hos Campushallen**.
    Each website user has zero or one Campushallen connection.
-2. Connect with your Campushallen password. Explicitly choose whether to save it
-   encrypted for automatic reconnection; storage is off for a new connection.
+2. Connect with your Campushallen password. It is saved encrypted for automatic
+   reconnection by default; uncheck the visible choice to opt out, or forget it later.
 3. Open **Hitta pass**, search a partial name such as `innebandy`, and filter dates
    or facility. Searching needs no existing rule or knowledge of a product name.
 4. Select the desired occurrences and confirm **Skapa bokningsregler för valda pass**.
@@ -145,8 +145,7 @@ lock the submitted name for 30 minutes; source IPs allow twenty submissions per
 a bounded in-process limiter. Use one web process; see the
 [operational policy](docs/production-operations.md) before changing this topology.
 
-Campushallen passwords are discarded after connection unless you explicitly opt
-in per account. Remembered passwords live only as authenticated ciphertext in a
+Campushallen passwords are discarded after connection unless the connect form storage choice is checked (the default). Passwords selected for storage live only as authenticated ciphertext in a
 dedicated credential table. Tokens and credentials use separate HKDF-SHA256
 purpose keys derived from `ENCRYPTION_KEY`. Previous-phase token state remains
 readable; new token state is versioned. Neither keys nor plaintext passwords live
@@ -407,7 +406,7 @@ Every step can be skipped and revisited.
 On an account page:
 
 - **Connect/reconnect** verifies a Campushallen login. The remember checkbox is
-  unchecked for a new account. Unchecking it also forgets an earlier password.
+  checked by default with an explicit opt-out. Unchecking it also forgets an earlier password.
 - **Remember credentials** saves an encrypted password only after successful
   login. Submit a new password with remember checked to replace an existing one.
 - **Forget saved password** removes that credential, keeping a current valid

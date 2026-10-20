@@ -1,12 +1,21 @@
 from datetime import timedelta
 
 from fastapi import APIRouter, HTTPException, Request
-from sqlalchemy import select
+from sqlalchemy import func, select
 from starlette.responses import RedirectResponse
 
-from campushallen.database.models import AuditEvent, CampushallenAccount, Invitation, utcnow
+from campushallen.database.models import (
+    AuditEvent,
+    BookingAttempt,
+    BookingRule,
+    CampushallenAccount,
+    Invitation,
+    User,
+    utcnow,
+)
+from campushallen.services.audit import Event, audit
 from campushallen.services.invitations import create_invite, revoke_invite
-from campushallen.services.operations import worker_health
+from campushallen.services.operations import backup_health, worker_health
 from campushallen.web.dependencies import DB, AdminUser, Form, render
 from campushallen.web.i18n import gettext as _
 
@@ -33,6 +42,19 @@ def admin_page(request: Request, db: DB, user: AdminUser):
         invitations=invitations,
         statuses=accounts,
         events=events,
+        connections=db.execute(
+            select(
+                CampushallenAccount,
+                User.username,
+                select(func.count(BookingRule.id))
+                .where(BookingRule.campushallen_account_id == CampushallenAccount.id)
+                .correlate(CampushallenAccount)
+                .scalar_subquery(),
+            )
+            .join(User)
+            .order_by(User.username)
+        ).all(),
+        backup=_(backup_health(request.app.state.settings.state_dir)),
         worker=worker_health(db, request.app.state.settings.worker_poll_seconds)[0],
     )
 
@@ -71,4 +93,70 @@ def new_invites(request: Request, db: DB, user: AdminUser, form: Form):
 @router.post("/admin/invites/{invite_id}/revoke")
 def revoke(invite_id: int, request: Request, db: DB, user: AdminUser, form: Form):
     revoke_invite(db, invite_id, actor_id=user.id)
+    return RedirectResponse("/admin", status_code=303)
+
+
+@router.get("/admin/connections/{account_id}/live")
+def confirm_live(account_id: int, request: Request, db: DB, user: AdminUser):
+    account = db.get(CampushallenAccount, account_id)
+    owner = db.get(User, account.user_id) if account else None
+    if account is None or owner is None:
+        raise HTTPException(404, _("Account not found"))
+    return render(
+        request,
+        "live_confirmation.html",
+        user=user,
+        account=account,
+        owner=owner.username,
+    )
+
+
+@router.post("/admin/connections/{account_id}/live")
+def change_live(account_id: int, request: Request, db: DB, user: AdminUser, form: Form):
+    account = db.get(CampushallenAccount, account_id)
+    owner = db.get(User, account.user_id) if account else None
+    if account is None or owner is None:
+        raise HTTPException(404, _("Account not found"))
+    action = form.get("action")
+    if action == "enable":
+        if form.get("confirmation") != "ENABLE":
+            raise HTTPException(422, _("Confirm that real bookings will be submitted."))
+        if (
+            not account.enabled
+            or account.requires_reconnect
+            or not account.auth_state
+            or not owner.is_active
+        ):
+            raise HTTPException(409, _("Connect and enable the account before activation."))
+        # A spent controlled grant cannot silently become ongoing during validation.
+        controlled_verified = db.scalar(
+            select(BookingAttempt.id)
+            .where(
+                BookingAttempt.campushallen_account_id == account.id,
+                BookingAttempt.activity_id == account.live_booking_activity_id,
+                BookingAttempt.phase == "VERIFIED_BOOKED",
+                BookingAttempt.result == "BOOKED",
+                BookingAttempt.is_preview.is_(False),
+            )
+            .limit(1)
+        )
+        if (
+            account.live_booking_activity_id is not None
+            and not account.live_booking_ongoing
+            and not controlled_verified
+        ):
+            raise HTTPException(
+                409, _("Controlled validation requires operator review before ongoing activation.")
+            )
+        account.live_booking_enabled = True
+        account.live_booking_ongoing = True
+        event = Event.LIVE_BOOKING_ENABLED
+    elif action == "disable":
+        account.live_booking_enabled = False
+        account.live_booking_ongoing = False
+        event = Event.LIVE_BOOKING_DISABLED
+    else:
+        raise HTTPException(422, _("Choose activation or stop."))
+    audit(db, event, actor_id=user.id, user_id=account.user_id, account_id=account.id)
+    db.commit()
     return RedirectResponse("/admin", status_code=303)

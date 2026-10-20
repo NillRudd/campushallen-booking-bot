@@ -43,7 +43,9 @@ class AccountAuthentication:
         )
         self.notifier = notifier or NoopNotifier()
 
-    def ensure(self, account_id: int, client: CampushallenHttpClient) -> dict[str, Any]:
+    def ensure(
+        self, account_id: int, client: CampushallenHttpClient, *, force: bool = False
+    ) -> dict[str, Any]:
         now = utcnow()
         with self.sessions() as db:
             account = db.get(CampushallenAccount, account_id)
@@ -60,7 +62,7 @@ class AccountAuthentication:
                 expired = bool(
                     state.get("expires_at") and float(state["expires_at"]) <= now.timestamp()
                 )
-                if not expired:
+                if not expired and not force:
                     client.client.headers["Authorization"] = f"Bearer {state['access_token']}"
                     client.get_customer(int(state["customer_id"]))
                     return state
@@ -73,6 +75,13 @@ class AccountAuthentication:
                 raise ReconnectRequired("Campushallen is temporarily unavailable.") from None
             except (ReconnectRequired, ValueError, KeyError, TypeError):
                 pass
+            # A client represents one operation. Its login budget includes preflight
+            # refreshes and recovery after the mutation; never try a password twice.
+            if getattr(client, "_operation_reauth_used", False):
+                raise ReconnectRequired(
+                    "Automatic reconnection already attempted for this operation."
+                )
+            setattr(client, "_operation_reauth_used", True)
             credential = credential_for(db, account_id)
             if not credential:
                 account.requires_reconnect = True
@@ -127,7 +136,9 @@ class AccountAuthentication:
                 account_id, lease_until, permanent=not isinstance(exc, TemporaryAuthenticationError)
             )
             raise ReconnectRequired(
-                "Automatic reconnection failed. Check account status and reconnect if needed."
+                "Automatic reconnection failed. Check account status and reconnect if needed.",
+                http_status=exc.http_status,
+                endpoint_category=exc.endpoint_category,
             ) from None
         with self.sessions() as db:
             credential_unchanged = (

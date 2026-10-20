@@ -252,3 +252,25 @@ def test_processed_targets_do_not_display_a_phantom_next_action(booking):
             )
 
     asyncio.run(run())
+
+
+def test_backup_status_reports_failure_missing_and_staleness(tmp_path):
+    import json
+    from datetime import timedelta
+
+    from campushallen.database.models import utcnow
+    from campushallen.services.operations import backup_health
+
+    assert backup_health(tmp_path) == "Backup status unavailable"
+    path = tmp_path / "backup-status.json"
+    for ok, age, expected in [
+        (True, 0, "Backup successful"),
+        (False, 0, "Backup failed"),
+        (True, 27, "Backup overdue"),
+    ]:
+        path.write_text(
+            json.dumps({"ok": ok, "checked_at": (utcnow() - timedelta(hours=age)).isoformat()})
+        )
+        assert backup_health(tmp_path) == expected
+    path.write_text('{"checked_at":"bad"}')
+    assert backup_health(tmp_path) == "Backup status unavailable"

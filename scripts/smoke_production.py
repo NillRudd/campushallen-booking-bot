@@ -91,18 +91,10 @@ with session_factory(engine)() as db:
 engine.dispose()
 """,
             )
-            run(
-                "exec",
-                "-T",
-                "worker",
-                "python",
-                "-m",
-                "campushallen.cli",
-                "backup",
-                "--directory",
-                "/backups",
-            )
+            run("stop", "worker")
+            run("run", "--rm", "--no-deps", "--interactive=false", "backup")
             snapshot = next(backups.glob("campushallen-*.sqlite3"))
+            run("start", "worker")
             run(
                 "exec",
                 "-T",

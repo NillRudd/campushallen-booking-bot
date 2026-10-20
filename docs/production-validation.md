@@ -1,5 +1,8 @@
 # Production preparation verification
 
+Current release status is maintained in [the release gate and operator guide](release-readiness.md).
+Earlier incident-freeze and rollout descriptions below are historical snapshots.
+
 Updated on 20 October 2026. **First controlled live attempt failed; worker stopped,
 claim preserved, investigation blocked on missing API error evidence.** The
 operator confirmed private feature acceptance before cutover. Current source is

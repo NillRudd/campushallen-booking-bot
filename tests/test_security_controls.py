@@ -72,7 +72,9 @@ def test_new_account_actions_are_owned_and_csrf_protected(web):
     assert client.get("/openapi.json").status_code == 404
 
 
-def test_remember_opt_in_and_forget_ui_never_exposes_saved_secrets(web, monkeypatch, caplog):
+def test_default_remember_opt_out_and_forget_ui_never_exposes_saved_secrets(
+    web, monkeypatch, caplog
+):
     client, app = web
     login(client)
     account_id = own_account(client, app)
@@ -86,7 +88,7 @@ def test_remember_opt_in_and_forget_ui_never_exposes_saved_secrets(web, monkeypa
 
     monkeypatch.setattr(app.state.gateway, "connect", connect)
     path = f"/accounts/{account_id}"
-    assert 'name="remember" checked' not in client.get(path).text
+    assert 'name="remember" checked' in client.get(path).text
     assert post(client, path + "/connect", {"password": "one-use-password"}).status_code == 303
     with app.state.sessions() as db:
         assert db.scalar(select(CampushallenCredential)) is None

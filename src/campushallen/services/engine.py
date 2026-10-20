@@ -203,6 +203,10 @@ class BookingEngine:
         message: str | None = None,
         *,
         update_schedule: bool = True,
+        phase: str | None = None,
+        http_status: int | None = None,
+        endpoint_category: str | None = None,
+        verification_outcome: str | None = None,
     ) -> BookingAttempt:
         with self.sessions() as db:
             slot = plan.slot
@@ -215,7 +219,16 @@ class BookingEngine:
                 bookable_earliest=slot.bookable_earliest if slot else None,
                 result=(result or plan.outcome).value,
                 is_preview=not update_schedule,
-                message=message or plan.message,
+                message=message
+                or (
+                    "Live operation phase recorded; inspect verification outcome."
+                    if phase
+                    else plan.message
+                ),
+                phase=phase,
+                http_status=http_status,
+                endpoint_category=endpoint_category,
+                verification_outcome=verification_outcome,
             )
             account = db.get(CampushallenAccount, plan.account_id)
             if not account:
@@ -277,6 +290,7 @@ class BookingEngine:
         now = now or utcnow()
         result, message = Outcome.BOOKING_FAILED, "Booking could not be completed."
         request_started = False
+        phase, status, endpoint = "PREBOOK_AUTH_FAILED", None, "customer"
         with self.sessions() as db:
             account = db.get(CampushallenAccount, plan.account_id)
             rule = db.get(BookingRule, plan.rule_id)
@@ -343,7 +357,12 @@ class BookingEngine:
                     bookings = client.customer_group_activity_bookings(customer_id)
                     if slot.id in _booked_group_activity_ids(bookings):
                         return self.record(
-                            plan, Outcome.ALREADY_BOOKED, "Activity is already booked."
+                            plan,
+                            Outcome.ALREADY_BOOKED,
+                            "Activity is already booked.",
+                            phase="VERIFIED_ALREADY_BOOKED",
+                            endpoint_category="bookings",
+                            verification_outcome="BOOKED",
                         )
                     if slot.left_to_book <= 0 and not (
                         slot.has_waiting_list and rule.allow_waitlist
@@ -377,34 +396,121 @@ class BookingEngine:
                         "Live request reserved; an interrupted request requires manual verification.",
                     )
                     request_started = True
-                    client.book_group_activity(
-                        customer_id, slot.id, allow_waiting_list=rule.allow_waitlist
+                    # Commit intent before transport. A crash from here leaves a durable
+                    # claim and UNKNOWN evidence, never permission for a second POST.
+                    self.record(
+                        plan,
+                        Outcome.CLAIMED,
+                        phase="BOOK_POST_STARTED",
+                        endpoint_category="booking",
+                        verification_outcome="UNKNOWN",
                     )
-                    # An independent GET is mandatory, regardless of POST response.
-                    verified = _verified_booking_for_activity(
-                        client.customer_group_activity_bookings(customer_id), slot.id
+                    try:
+                        client.book_group_activity(
+                            customer_id, slot.id, allow_waiting_list=rule.allow_waitlist
+                        )
+                        post_phase, post_status = (
+                            "BOOK_POST_ACCEPTED",
+                            getattr(client, "booking_http_status", None),
+                        )
+                    except httpx.HTTPStatusError as exc:
+                        post_status = exc.response.status_code
+                        post_phase = (
+                            "BOOK_POST_AUTH_REJECTED"
+                            if post_status in (401, 403)
+                            else "BOOK_POST_TIMEOUT_OR_UNCERTAIN"
+                            if post_status >= 500
+                            else "BOOK_POST_REJECTED"
+                        )
+                    except (httpx.HTTPError, ValueError, KeyError, TypeError):
+                        post_phase, post_status = "BOOK_POST_TIMEOUT_OR_UNCERTAIN", None
+                    self.record(
+                        plan,
+                        Outcome.CLAIMED,
+                        phase=post_phase,
+                        http_status=post_status,
+                        endpoint_category="booking",
+                        verification_outcome="UNKNOWN",
                     )
-                    result = Outcome.BOOKED if verified else Outcome.VERIFICATION_FAILED
-                    message = (
-                        "Booking independently verified."
-                        if verified
-                        else "Request sent but booking could not be verified. Check Campushallen before retrying."
-                    )
-            except ReconnectRequired:
+                    # Every path after transport is GET-only. In particular 401/403
+                    # semantics do not prove nonacceptance, so we never replay a POST.
+                    if post_status in (401, 403):
+                        try:
+                            customer_id = self.gateway.reauthenticate(account.id, client)
+                        except ReconnectRequired:
+                            pass  # Still try the independent read with the available token.
+                    try:
+                        try:
+                            bookings = client.customer_group_activity_bookings(customer_id)
+                        except httpx.HTTPStatusError as exc:
+                            if exc.response.status_code not in (401, 403):
+                                raise
+                            self.record(
+                                plan,
+                                Outcome.CLAIMED,
+                                phase="VERIFY_AUTH_FAILED",
+                                http_status=exc.response.status_code,
+                                endpoint_category="bookings",
+                                verification_outcome="UNKNOWN",
+                            )
+                            customer_id = self.gateway.reauthenticate(account.id, client)
+                            bookings = client.customer_group_activity_bookings(customer_id)
+                        verified = _verified_booking_for_activity(bookings, slot.id)
+                        return self.record(
+                            plan,
+                            Outcome.BOOKED if verified else Outcome.VERIFICATION_FAILED,
+                            "Booking independently verified."
+                            if verified
+                            else "Request sent but booking could not be verified. Check Campushallen before retrying.",
+                            phase="VERIFIED_BOOKED" if verified else "VERIFY_FAILED",
+                            endpoint_category="bookings",
+                            http_status=200,
+                            verification_outcome="BOOKED" if verified else "NOT_BOOKED",
+                        )
+                    except (
+                        ReconnectRequired,
+                        httpx.HTTPError,
+                        ValueError,
+                        KeyError,
+                        TypeError,
+                    ) as exc:
+                        status = (
+                            exc.response.status_code
+                            if isinstance(exc, httpx.HTTPStatusError)
+                            else None
+                        )
+                        return self.record(
+                            plan,
+                            Outcome.VERIFICATION_FAILED,
+                            "Request outcome is uncertain; check Campushallen before retrying.",
+                            phase="VERIFY_AUTH_FAILED"
+                            if isinstance(exc, ReconnectRequired) or status in (401, 403)
+                            else "VERIFY_FAILED",
+                            http_status=status,
+                            endpoint_category="bookings",
+                            verification_outcome="UNKNOWN",
+                        )
+            except ReconnectRequired as exc:
+                status, endpoint = exc.http_status, exc.endpoint_category
                 if not getattr(self.gateway, "auth_service", None):
                     account.auth_status = "reconnect_required"
                     db.commit()
                 else:
                     db.rollback()
                 result, message = Outcome.AUTH_FAILED, "Reconnect this Campushallen account."
-            except (httpx.HTTPError, ValueError, KeyError, TypeError):
+            except (httpx.HTTPError, ValueError, KeyError, TypeError) as exc:
+                status = (
+                    exc.response.status_code if isinstance(exc, httpx.HTTPStatusError) else None
+                )
                 result = Outcome.VERIFICATION_FAILED if request_started else Outcome.BOOKING_FAILED
                 message = (
                     "Request outcome is uncertain; check Campushallen before retrying."
                     if request_started
                     else "Campushallen request failed; no booking confirmed."
                 )
-        return self.record(plan, result, message)
+        return self.record(
+            plan, result, message, phase=phase, http_status=status, endpoint_category=endpoint
+        )
 
     def claim_live(self, plan: Plan) -> Outcome | None:
         """Serialize account eligibility, finite allowance and durable claim.
@@ -434,8 +540,12 @@ class BookingEngine:
                     CampushallenAccount.id == plan.account_id,
                     CampushallenAccount.enabled.is_(True),
                     CampushallenAccount.live_booking_enabled.is_(True),
-                    CampushallenAccount.live_booking_claim_limit > 0,
                     or_(
+                        CampushallenAccount.live_booking_ongoing.is_(True),
+                        CampushallenAccount.live_booking_claim_limit > 0,
+                    ),
+                    or_(
+                        CampushallenAccount.live_booking_ongoing.is_(True),
                         CampushallenAccount.live_booking_activity_id.is_(None),
                         CampushallenAccount.live_booking_activity_id == plan.slot.id,
                     ),
@@ -460,7 +570,12 @@ class BookingEngine:
                 .select_from(BookingClaim)
                 .where(BookingClaim.campushallen_account_id == plan.account_id)
             )
-            if used >= limit:
+            ongoing = db.scalar(
+                select(CampushallenAccount.live_booking_ongoing).where(
+                    CampushallenAccount.id == plan.account_id
+                )
+            )
+            if not ongoing and used >= limit:
                 db.rollback()
                 return Outcome.DISABLED
             db.add(BookingClaim(campushallen_account_id=plan.account_id, activity_id=plan.slot.id))

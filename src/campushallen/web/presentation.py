@@ -90,6 +90,14 @@ def invite_status(invitation) -> str:
     return _(INVITE_LABELS[domain_invite_status(invitation)])
 
 
+BACKUP_LABELS = {
+    N_("Backup successful"),
+    N_("Backup failed"),
+    N_("Backup overdue"),
+    N_("Backup status unavailable"),
+}
+
+
 WORKER_LABELS = {
     "Worker healthy": N_("Worker healthy"),
     "Worker hasn't reported recently": N_("Worker hasn't reported recently"),
@@ -135,6 +143,7 @@ def safe_error(message: str) -> str:
 
 
 REASONS = {
+    N_("Live operation phase recorded; inspect verification outcome."),
     N_("A previous live attempt exists; inspect booking history before any manual retry."),
     N_("API booking opening time has not arrived."),
     N_("API did not supply bookableEarliest; no booking sent."),
@@ -172,6 +181,8 @@ def reason(message: str) -> str:
 
 
 EVENT_LABELS = {
+    "LIVE_BOOKING_ENABLED": N_("Real booking activated"),
+    "LIVE_BOOKING_DISABLED": N_("Real booking stopped"),
     "WEBSITE_LOGIN_FAILED": N_("Website sign-in failed"),
     "WEBSITE_LOGIN_LOCKED": N_("Website sign-in temporarily locked"),
     "WEBSITE_LOGIN_SUCCESS": N_("Website sign-in successful"),
@@ -237,3 +248,21 @@ def rule_errors(exc: ValidationError) -> str:
         else:
             messages.append(_("Enter valid local times, for example 18:45, without a timezone."))
     return " ".join(dict.fromkeys(messages))
+
+
+PHASE_LABELS = {
+    "PREBOOK_AUTH_FAILED": N_("Authentication failed before booking"),
+    "BOOK_POST_STARTED": N_("Booking request started; result unknown"),
+    "BOOK_POST_AUTH_REJECTED": N_("Booking request rejected authentication"),
+    "BOOK_POST_REJECTED": N_("Booking request rejected"),
+    "BOOK_POST_TIMEOUT_OR_UNCERTAIN": N_("Booking request outcome uncertain"),
+    "BOOK_POST_ACCEPTED": N_("Booking response received; verification required"),
+    "VERIFY_AUTH_FAILED": N_("Verification authentication failed"),
+    "VERIFY_FAILED": N_("Independent verification did not confirm booking"),
+    "VERIFIED_BOOKED": N_("Booking independently confirmed"),
+    "VERIFIED_ALREADY_BOOKED": N_("Existing booking independently confirmed"),
+}
+
+
+def phase_label(code: str | None) -> str:
+    return _(PHASE_LABELS[code]) if code in PHASE_LABELS else _("Unknown result")

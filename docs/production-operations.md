@@ -1,5 +1,8 @@
 # Production operations (dry-run web worker)
 
+Current release status is maintained in [the release gate and operator guide](release-readiness.md).
+Earlier incident-freeze and rollout descriptions below are historical snapshots.
+
 **Current incident freeze:** the worker is deliberately stopped after the first
 Niklas-only live attempt failed. Niklas's old timer remains disabled; the friend's
 remains enabled. Do not use the worker restart commands below to resume the old

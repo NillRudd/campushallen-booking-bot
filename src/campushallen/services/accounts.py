@@ -75,7 +75,9 @@ class AccountGateway:
                     "Campushallen is temporarily unavailable."
                 ) from None
             raise ReconnectRequired(
-                "Campushallen login failed. Reconnect to update credentials."
+                "Campushallen login failed. Reconnect to update credentials.",
+                http_status=exc.response.status_code,
+                endpoint_category="login",
             ) from None
         except httpx.HTTPError:
             from .account_auth import TemporaryAuthenticationError
@@ -96,13 +98,6 @@ class AccountGateway:
                 state = self.auth_service.ensure(account.id, client)
                 client.client.headers["Authorization"] = f"Bearer {state['access_token']}"
                 yield client, int(state["customer_id"])
-            except httpx.HTTPStatusError as exc:
-                if exc.response.status_code in (401, 403):
-                    # No replay of the operation: in particular, never replay a booking POST.
-                    raise ReconnectRequired(
-                        "Authentication changed during the operation; reconnect or retry discovery."
-                    ) from None
-                raise
             finally:
                 client.close()
             return
@@ -116,11 +111,12 @@ class AccountGateway:
         try:
             client.client.headers["Authorization"] = f"Bearer {state['access_token']}"
             yield client, int(state["customer_id"])
-        except httpx.HTTPStatusError as exc:
-            if exc.response.status_code in (401, 403):
-                raise ReconnectRequired(
-                    "Campushallen authentication expired; reconnect this account."
-                ) from None
-            raise
         finally:
             client.close()
+
+    def reauthenticate(self, account_id: int, client: CampushallenHttpClient) -> int:
+        if self.auth_service is None:
+            raise ReconnectRequired("Automatic reconnection is unavailable.")
+        state = self.auth_service.ensure(account_id, client, force=True)
+        client.client.headers["Authorization"] = f"Bearer {state['access_token']}"
+        return int(state["customer_id"])

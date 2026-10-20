@@ -1,5 +1,8 @@
 # Raspberry Pi production deployment
 
+Current release status is maintained in [the release gate and operator guide](release-readiness.md).
+Earlier incident-freeze and rollout descriptions below are historical snapshots.
+
 ## Current status
 
 **Incident freeze: web/tunnel healthy; new worker stopped after failed first live attempt.**
