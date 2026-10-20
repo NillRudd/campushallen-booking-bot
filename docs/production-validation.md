@@ -148,3 +148,35 @@ signed-CSRF checks are unchanged. The browser smoke now asserts the browser's
 actual login Origin. All 145 tests, Ruff/format, mypy and the expanded Swedish
 browser smoke pass. Deployment and public browser recheck are pending restoration
 of Mac-to-Pi LAN connectivity. No password reset is needed for this rejection.
+
+## Continuation review of the origin fix
+
+Resumed on deployment/raspberry-pi with a clean tree at committed fix `7f19a0d`.
+The production settings remain canonical public HTTPS, secure cookies, one
+allowed hostname and the exact trusted tunnel peer. Origin comparison still
+rejects null/arbitrary origins; no proxy trust or CSRF validation was changed.
+
+A controlled Chrome A/B using intercepted synthetic pages confirmed:
+no-referrer produced Origin=null with no Referer; strict-origin produced
+Origin=https://campushallenbot.se and Referer=https://campushallenbot.se/.
+No production POST was sent by this A/B. The
+[Fetch Origin algorithm](https://fetch.spec.whatwg.org/#append-a-request-origin-header)
+explicitly applies referrer policy to non-CORS form navigation, including this
+null-origin behavior. The prior diagnosis is confirmed, not assumed.
+Strict-origin retains only the origin in referrers, including same-origin
+requests, so invitation paths stay private. It also suppresses referrers on an
+HTTPS-to-HTTP downgrade.
+
+Six additional production cases verify valid-password/valid-CSRF rejection for
+null and malicious origins (even with a canonical Referer), missing provenance,
+malicious fallback Referer, canonical Referer fallback, and authenticated password
+change/session invalidation. The spoofed-forwarding test now checks scheme as
+well as client identity. Existing canonical HTTPS login, secure-cookie, Swedish
+error and invitation tests remain. All 151 tests, Ruff/format, mypy (40 modules)
+and the Swedish browser smoke passed again before deployment. Docker verification
+of the final source image and Pi/public acceptance are still pending.
+
+The operator can ping the Pi at 192.168.1.127 from Terminal, whereas Codex's direct
+SSH process reports no route. The operator was given a private SSH control-socket
+command to authenticate in their own terminal; no password is requested in chat
+or persisted by deployment scripts.

@@ -79,6 +79,76 @@ def test_production_host_origin_and_secure_sessions(web):
         assert client.get("/").status_code == 200
 
 
+@pytest.mark.parametrize(
+    ("origin", "referer", "expected"),
+    [
+        ("null", "https://campushallenbot.se/login", 403),
+        ("https://attacker.example", "https://campushallenbot.se/login", 403),
+        (None, None, 403),
+        (None, "https://attacker.example/login", 403),
+        (None, "https://campushallenbot.se/login", 303),
+    ],
+)
+def test_production_origin_checks_with_valid_password_and_csrf(web, origin, referer, expected):
+    _, app = web
+    with production(app) as client:
+        client.headers.pop("Origin")
+        if origin is not None:
+            client.headers["Origin"] = origin
+        if referer is not None:
+            client.headers["Referer"] = referer
+        response = post(
+            client, "/login", {"username": "alice", "password": "correct-horse-battery"}, "/login"
+        )
+        assert response.status_code == expected
+        if expected == 403:
+            assert "ursprung" in response.text
+            assert "session" not in client.cookies
+        else:
+            assert "Secure" in response.headers["set-cookie"]
+            assert client.get("/").status_code == 200
+
+
+def test_production_password_and_session_forms_keep_origin_and_csrf_checks(web):
+    _, app = web
+    with production(app) as client:
+        assert (
+            post(
+                client,
+                "/login",
+                {"username": "alice", "password": "correct-horse-battery"},
+                "/login",
+            ).status_code
+            == 303
+        )
+        assert client.post("/settings/password", data={}).status_code == 403
+        changed = post(
+            client,
+            "/settings/password",
+            {
+                "current_password": "correct-horse-battery",
+                "new_password": "replacement-website-password",
+                "confirmation": "replacement-website-password",
+            },
+            "/settings",
+        )
+        assert changed.status_code == 303
+        assert client.get("/", follow_redirects=False).status_code == 303
+        assert (
+            post(
+                client,
+                "/login",
+                {"username": "alice", "password": "replacement-website-password"},
+                "/login",
+            ).status_code
+            == 303
+        )
+        assert (
+            post(client, "/settings/sessions/logout-all", token_path="/settings").status_code == 303
+        )
+        assert client.get("/", follow_redirects=False).status_code == 303
+
+
 def test_forwarded_headers_are_ignored_from_untrusted_peers(web):
     _, app = web
     from fastapi import Request
@@ -89,8 +159,15 @@ def test_forwarded_headers_are_ignored_from_untrusted_peers(web):
         def probe(request: Request):
             return {"ip": request.client.host, "scheme": request.url.scheme}
 
-        response = client.get("/test-peer", headers={"X-Forwarded-For": "203.0.113.99"})
-        assert response.json()["ip"] == "192.0.2.200"
+        response = client.get(
+            "/test-peer",
+            headers={
+                "X-Forwarded-For": "203.0.113.99",
+                "X-Forwarded-Proto": "http",
+                "X-Forwarded-Host": "attacker.example",
+            },
+        )
+        assert response.json() == {"ip": "192.0.2.200", "scheme": "https"}
 
 
 def test_trusted_tunnel_requires_valid_cloudflare_identity_and_https(web):
