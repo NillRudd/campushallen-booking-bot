@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo
 
 import httpx
 from fastapi import APIRouter, HTTPException, Query, Request
+from itsdangerous import BadSignature
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
@@ -13,6 +14,7 @@ from campushallen.services.audit import Event, audit
 from campushallen.services.discovery import (
     ActivityOccurrence,
     DiscoveryUnavailable,
+    occurrence_fingerprint,
     same_occurrence_rule,
     search_occurrences,
     selection_key,
@@ -67,6 +69,19 @@ def browse(
     groups: dict[tuple, list] = {}
     for occurrence in search_occurrences(occurrences, q, facility):
         groups.setdefault((occurrence.product_name, occurrence.location), []).append(occurrence)
+    ticket = request.app.state.selection_signer.dumps(
+        {
+            "user": user.id,
+            "account": account.id if account else None,
+            "start": first.isoformat(),
+            "days": days,
+            "choices": {
+                str(item.activity_id): occurrence_fingerprint(item)
+                for values in groups.values()
+                for item in values
+            },
+        }
+    )
     return render(
         request,
         "activities.html",
@@ -79,6 +94,7 @@ def browse(
         start=first.isoformat(),
         days=days,
         error=error,
+        selection_token=ticket,
     )
 
 
@@ -96,6 +112,23 @@ def select_activities(request: Request, db: DB, user: CurrentUser, form: Form):
         raise HTTPException(422, _("Choose between one and 21 sessions."))
     start = search_date(request, str(form.get("start", "")))
     try:
+        ticket = request.app.state.selection_signer.loads(
+            str(form.get("selection_token", "")), max_age=1800
+        )
+        if not isinstance(ticket, dict) or not (
+            ticket.get("user") == user.id
+            and ticket.get("account") == account.id
+            and ticket.get("start") == start.isoformat()
+            and ticket.get("days") == days
+            and isinstance(ticket.get("choices"), dict)
+            and all(str(identifier) in ticket["choices"] for identifier in selected)
+        ):
+            raise BadSignature("Selection context changed")
+    except BadSignature:
+        raise HTTPException(
+            409, _("The selected session is no longer available. Search again.")
+        ) from None
+    try:
         occurrences = request.app.state.discovery.upcoming(account, start, days)
     except ReconnectRequired:
         raise HTTPException(409, _("Reconnect your Campushallen account and try again.")) from None
@@ -105,6 +138,11 @@ def select_activities(request: Request, db: DB, user: CurrentUser, form: Form):
         raise HTTPException(422, _("Choose a date and range within the next 21 days.")) from None
     choices = [item for item in occurrences if item.activity_id in selected]
     if {item.activity_id for item in choices} != selected:
+        raise HTTPException(409, _("The selected session is no longer available. Search again."))
+    if any(
+        ticket["choices"].get(str(item.activity_id)) != occurrence_fingerprint(item)
+        for item in choices
+    ):
         raise HTTPException(409, _("The selected session is no longer available. Search again."))
     existing = list(
         db.scalars(select(BookingRule).where(BookingRule.campushallen_account_id == account.id))

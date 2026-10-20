@@ -26,6 +26,12 @@ Confirmation creates ordinary independent BookingRule rows. Stable product ID/na
 business unit, location, weekday and exact start time come from normalized API
 metadata. The default waitlist policy remains off unless explicitly selected.
 Occurrence IDs are only transient selection handles, never rule identities.
+Confirmation includes a purpose-separated signed ticket bound to the user,
+connection, date range and displayed selector metadata, valid for 30 minutes.
+If a session changes product, time or facility after search, confirmation rejects
+it and asks for a new search. Availability/opening changes do not silently change
+the recurring selectors. Signed selection context supplements existing CSRF and
+ownership checks; it never replaces them.
 Repeated future weeks collapse to one rule for that weekday/time. Existing manual
 rules are recognized through the engine's product/facility filters and linked for
 editing. A stable selector fingerprint and unique database index also reject

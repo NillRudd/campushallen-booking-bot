@@ -1,4 +1,5 @@
 import copy
+import re
 from dataclasses import replace
 from datetime import datetime, timedelta
 from types import SimpleNamespace
@@ -115,11 +116,23 @@ def schedule(web, monkeypatch):
     return state
 
 
+def selection_form(s, identifiers):
+    page = s.client.get("/activities", params={"start": s.first.isoformat(), "days": 14})
+    match = re.search(r'name="selection_token" value="([^"]+)"', page.text)
+    assert match
+    return {
+        "activity_ids": [str(i) for i in identifiers],
+        "start": s.first.isoformat(),
+        "days": "14",
+        "selection_token": match.group(1),
+    }
+
+
 def select_sessions(s, identifiers):
     return post(
         s.client,
         "/activities/select",
-        {"activity_ids": [str(i) for i in identifiers], "start": s.first.isoformat(), "days": "14"},
+        selection_form(s, identifiers),
         "/activities?start=" + s.first.isoformat(),
     )
 
@@ -613,3 +626,25 @@ def test_email_correction_validates_form_before_discarding_current_state(schedul
     assert success.status_code == 303
     with s.app.state.sessions() as db:
         assert db.get(CampushallenAccount, s.account_id).username == "new+alias@example.com"
+
+
+@pytest.mark.parametrize("change", ["time", "facility", "product", "tamper"])
+def test_changed_session_or_tampered_selection_cannot_create_unintended_rule(schedule, change):
+    s = schedule
+    form = selection_form(s, [1001])
+    if change == "time":
+        value = datetime.fromisoformat(s.data[0]["duration"]["start"]) + timedelta(hours=1)
+        s.data[0]["duration"]["start"] = value.isoformat()
+    elif change == "facility":
+        s.data[0]["locations"] = [{"name": "Other facility"}]
+    elif change == "product":
+        s.data[0]["groupActivityProduct"] = {"id": 99, "name": "Yoga"}
+    else:
+        form["selection_token"] += "invalid"
+    s.app.state.discovery.ttl = 0
+    response = post(s.client, "/activities/select", form, "/activities")
+    assert response.status_code == 409
+    with s.app.state.sessions() as db:
+        assert not db.scalar(
+            select(BookingRule).where(BookingRule.campushallen_account_id == s.account_id)
+        )

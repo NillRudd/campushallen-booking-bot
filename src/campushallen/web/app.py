@@ -79,6 +79,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.sessions = session_factory(engine)
     app.state.secret = runtime_key(settings, "secret_key")
     app.state.csrf_signer = URLSafeTimedSerializer(app.state.secret, salt="browser-csrf")
+    app.state.selection_signer = URLSafeTimedSerializer(app.state.secret, salt="activity-selection")
     app.state.limiter = LoginLimiter()
     app.state.login_limiter = LoginLimiter(limit=20, window=900)
     master_key = runtime_key(settings, "encryption_key")

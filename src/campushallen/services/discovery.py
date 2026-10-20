@@ -68,6 +68,20 @@ class ActivityOccurrence:
         )
 
 
+def occurrence_fingerprint(item: ActivityOccurrence) -> str:
+    identity = (
+        item.product_id,
+        item.product_name,
+        item.business_unit_id,
+        item.facility,
+        item.locations,
+        item.start.isoformat(),
+        item.end.isoformat(),
+        item.category,
+    )
+    return hashlib.sha256(json.dumps(identity, ensure_ascii=True).encode()).hexdigest()
+
+
 def selection_key(rule) -> str:
     def normalized(values):
         return sorted(str(value).strip().casefold() for value in values)

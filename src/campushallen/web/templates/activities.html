@@ -8,7 +8,7 @@
 <label>{{ _('Upcoming days') }}<select name="days" aria-label="{{ _('Upcoming days') }}">{% for value in [1,7,14,21] %}<option value="{{ value }}" {% if days == value %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></label>
 <label>{{ _('Facility') }}<select name="facility" aria-label="{{ _('Facility') }}"><option value="">{{ _('All facilities') }}</option>{% for value in facilities %}<option {% if facility == value %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></label></div>
 <button>{{ _('Search') }}</button></form>
-{% if groups %}<form method="post" action="/activities/select"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="start" value="{{ start }}"><input type="hidden" name="days" value="{{ days }}">
+{% if groups %}<form method="post" action="/activities/select"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="selection_token" value="{{ selection_token }}"><input type="hidden" name="start" value="{{ start }}"><input type="hidden" name="days" value="{{ days }}">
 <p>{{ _('Choose the weekdays and times you want. Repeated occurrences become one rule per weekday and time.') }}</p>
 <div class="grid">{% for key, occurrences in groups.items() %}<section class="card"><h2>{{ key[0] }}</h2><p>{{ key[1] }}</p>
 {% for occurrence in occurrences %}<div class="occurrence"><label class="check"><input type="checkbox" name="activity_ids" value="{{ occurrence.activity_id }}">{{ occurrence.start|localtime }}</label>
