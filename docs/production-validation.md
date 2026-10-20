@@ -246,3 +246,20 @@ link and website password were never supplied to the agent. The operator is now
 configuring their own Campushallen connection and three Innebandy 85 rules in the
 UI, explicitly enabling encrypted remembered credentials for reauthentication.
 The new worker remains dry-run; target comparison is pending account/rule setup.
+
+## First real-account configuration check
+
+The operator reported connection, three rules and preview completed. Read-only
+production metadata revealed two owned connections with identical display names
+niklas: account 1 is disabled/reconnection-required and owns all three rules;
+account 2 is enabled/connected, has a remembered credential row, and owns no
+rules. No credential value or ciphertext was read or displayed. No activity
+snapshots exist, so target equivalence cannot yet be claimed.
+
+The rule weekdays and preferred times match the request, but fixed start_time is
+blank on all three. Waitlist is enabled by the operator and the facility filter
+is Campushallen. The comparison is paused before any new API discovery. The
+operator was instructed to move the rules through the UI to connected account 2,
+set fixed times 18:45 / 18:45 / 12:00 and preview from that account. Identical
+account labels in the selector are a confirmed usability limitation. Legacy
+timers remain active and all three containers were healthy at this check.
