@@ -50,4 +50,36 @@ per-account identity collisions and the existing three-user concurrency/failure
 suite. The browser smoke verifies automatic live after connection and owner
 pause/resume without any real booking traffic.
 
-Production deployment and final verification are recorded below after completion.
+## Deployed, 21 October 2026
+
+Application/image `ad8e3fbdfc1e7d8b0403ffe98175d7e2e4031844` is deployed;
+schema remains c8b31d94a207 with no drift. Web, live worker (concurrency 3) and
+tunnel are healthy. Niklas connection 2 is now ongoing live for all four enabled
+rules. The original finite metadata, historic claim and consumed manual approval
+are unchanged; no old activity is retried. Linus99 has not yet established a
+working Campushallen connection, so needs to connect once; that successful
+connection will enable live automatically without admin action.
+
+The worker is queued for **4343863, Badminton 70 Vallastaden**, starting
+**28 October 19:15 CET**, opening **21 October 19:15 CEST**. It is also queued for
+the existing Thursday floorball opening on 22 October. A separate read-only
+monitor on the Pi watches the normal worker and independently verifies the
+badminton result afterward; it cannot POST a booking or cancellation.
+
+Validation: **278 tests**, Ruff/format (99 files), mypy (45 modules), 519/519
+Swedish translations, full Chrome browser smoke including automatic activation
+and owner pause/resume, and exact ARM64 production image smoke all pass. Public
+HTTPS login also passes at desktop and 390px. After deployment, 21 guarded
+provider GETs returned 200; verification sent no booking or cancellation request.
+One Tuesday occurrence has a SUSPICIOUS_TARGET selection warning; it remains
+safely skipped without blocking the other rules or the badminton opening.
+
+Pre-deploy backup `campushallen-20261021T164545952477Z-82b6b8.sqlite3` and
+post-deploy `campushallen-20261021T165221580733Z-b324aa.sqlite3` passed isolated
+restore, off-Pi integrity and matching separate recovery-key checks. Original
+claims, consumed approvals, tokens, credentials, rules and history were preserved.
+Niklas's old timer remains disabled; the friend's remains enabled and untouched.
+No host reboot or Pi-side build/test was performed. Active undervoltage/throttling
+still reports 0x50005; router forwarding remains unverified.
+
+The scheduled badminton result will be recorded after the actual opening.
