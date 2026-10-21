@@ -3,6 +3,16 @@
 Current release status is maintained in [the release gate and operator guide](release-readiness.md).
 Earlier incident-freeze and rollout descriptions below are historical snapshots.
 
+**21 October, 21:28 CEST:** diagnostic release **a95efd7** is deployed, schema
+c8b31d94a207. It preserves known provider errorCode values and pre-POST counts
+without adding a retry/buffer or changing live policy. The badminton 403 remains
+unexplained. **317 tests**, lint/format, mypy (46 modules), Chrome browser smoke
+and exact ARM64 production smoke pass. Services and public desktop/mobile HTTPS
+login are healthy. Original claims/history, credentials/tokens, rules, keys and
+legacy timers are preserved; pre/post backups passed isolated restore, off-Pi
+integrity and separate matching-key checks. See the
+[behavior/count investigation and release evidence](booking-403-investigation.md).
+
 Updated on 20 October 2026. **First controlled live attempt failed; worker stopped,
 claim preserved, investigation blocked on missing API error evidence.** The
 operator confirmed private feature acceptance before cutover. Current source is

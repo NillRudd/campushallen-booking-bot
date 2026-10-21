@@ -38,6 +38,7 @@ were previously checked in [the production client audit](booking-client-audit.md
 | Other headers | Swedish Accept-Language, Go Active Referer, mobilityweb request source, bot User-Agent, no Origin | Identical | Host, encoding, connection and length also equal in intercepted requests. |
 | Redirects/timeout | Follow redirects; 30 seconds | Identical | No demonstrated difference. |
 | Selection | Dynamic selector, refresh same ID | Shared selector plus fixed-time and queued-ID/start checks | More checks; exact rejected target remained 4343863. No configuration cause demonstrated. |
+| Product exercised | Retained successful legacy floorball runs | Verified new floorball waitlist; rejected badminton regular request | Different product/booking state: floorball success does not establish badminton entitlement or quota eligibility. |
 | Opening | API time, estimated fallback if absent | API time mandatory | Same API opening here; fallback irrelevant. |
 | Waiting/buffer | Blocking sleep; last intervals at most 50 ms; final_precision_seconds=2 changes granularity | Async sleep ending at API opening | Neither intentionally waits extra after opening. |
 | Work after opening | Refresh target, full bookings GET, capacity/waitlist checks | Auth GET, target refresh, full bookings GET, capacity/waitlist checks, identity/claim transaction and intent records | Explains extra local latency; not evidence of provider rejection cause. |
@@ -174,3 +175,47 @@ redaction. Ruff/format passes (104 files), mypy passes (46 modules), 521/521
 Swedish messages compile, and the full Chrome desktop/mobile browser smoke
 passes against mocked provider calls. One existing Starlette/httpx deprecation
 warning remains. ARM64 image and production checks are recorded after release.
+
+## Deployed diagnostic release
+
+At **21:28 CEST on 21 October**, application/source/image
+`a95efd7b5cbb8f6d1f100bedb2275137b089b394` is deployed, image ID
+`sha256:2c5491c8c90b498c9c1bdb6e95f3f1327015b69755955b22750103c1f56b239c`.
+The exact locally built ARM64 image passed production Compose smoke, migrations,
+schema agreement, health, isolated backup/restore and restart checks. No build or
+test suite was run on the Pi. Explicit production Alembic upgrade/check was a
+no-op at schema c8b31d94a207.
+
+Web/worker/cloudflared are healthy, with zero container restarts/OOM, concurrency
+3 and both worker live flags. Niklas remains ongoing live. Thursday 4342668 is
+unbooked, unclaimed and waiting at the API opening, with 15 places at the fresh
+read. Rules, credentials, tokens, original claims/timestamps, consumed approval,
+historical attempts, live flags and keys were compared and preserved. Niklas's
+legacy timer remains disabled; the friend's timer remains enabled/waiting.
+
+A post-restart check still finds exactly one BOOK_POST_STARTED for 4343863,
+with its original 17:15:00.878992 UTC claim. No booking or cancellation was sent
+by this investigation; its guarded provider calls were GET-only. A further read
+at 21:28 CEST confirms three default upcoming entries, four with the historical
+startTimePoint, and the same safe rule matches. The 404 policy probe is retained
+as such, not represented as a successful policy read.
+
+Public HTTPS Swedish login passed at 1280px and 390px without overflow, with
+Secure/HttpOnly/Strict CSRF cookie and private/no-store response. Targeted retained
+log scanning found no known secret-file values or scanned bearer/cookie/invite/
+private-key/credential-body patterns; this is not an exhaustive security audit.
+Power remains 0x50005, with current undervoltage/throttling; no reboot or router
+change occurred.
+
+Private online snapshots before and after deployment:
+
+- campushallen-20261021T192147905083Z-db2594.sqlite3
+- campushallen-20261021T192843054106Z-c39a41.sqlite3
+
+Both passed off-Pi integrity/FK checks, matching separate recovery-key verification
+and isolated restore on the Mac, preserving both claims and consumed approval.
+Private sanitized evidence is outside Git under
+`~/Documents/CampushallenBot-Incidents/403-investigation-a95efd7/`.
+
+**The regular booking failure is still unexplained. This release improves
+diagnosis; it does not claim to fix a proven provider timing or booking-limit bug.**

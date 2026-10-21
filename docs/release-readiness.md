@@ -5,6 +5,11 @@ live booking after successful connection, with owner pause/resume and no separat
 admin activation. See [automatic live booking](automatic-live.md). Earlier
 controlled-scope and per-user admin-approval instructions below are historical.
 
+**Latest diagnostic release, 21 October 21:28 CEST: a95efd7.** Safe provider reason
+and count capture is deployed; no retry/buffer was introduced. The regular-place
+badminton 403 remains unexplained. See the
+[full behavior/count investigation and Thursday recommendation](booking-403-investigation.md).
+
 
 **NOT READY FOR BROAD PUBLIC LAUNCH.** Two private beta invitations are explicitly
 authorized for Thursday 22 October; see [the current beta preparation record](multi-user-beta.md).
@@ -14,7 +19,8 @@ Niklas remains controlled live; the existing friend stays legacy live. The corre
 is independently production-validated. Active Pi undervoltage remains a release blocker.
 Router forwarding cannot be verified from the application host alone.
 
-The [21 October beta record](multi-user-beta.md) is the latest deployed status.
+The [21 October beta record](multi-user-beta.md) records the earlier beta snapshot;
+the automatic-live policy and diagnostic update above supersede its live gates.
 The 20 October deployment details below remain a historical validation snapshot.
 This record supersedes earlier pre-incident deployment summaries. Historical evidence
 remains in [the incident report](incident-2026-10-20-first-live-booking.md).
