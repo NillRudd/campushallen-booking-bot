@@ -5,6 +5,10 @@ HTTP 403. Two independent bookings reads confirmed NOT_BOOKED.** One POST phase
 was recorded, the claim is retained, and there was no second booking request or
 cancellation. The provider-specific rejection reason is not established.
 
+See [the follow-up investigation](booking-403-investigation.md) for installed
+legacy timing, reconstructed booking counts, the unproved booking-limit
+hypothesis and safe provider-error capture. No retry or opening buffer is justified.
+
 ## Intended activity and actual sequence
 
 Niklas connection 2, rule 4: **4343863, Badminton 70 Vallastaden**, product 3678,

@@ -1,7 +1,10 @@
+import re
+
 from pydantic import ValidationError
 
 from campushallen.database.models import CampushallenAccount, utcnow
 from campushallen.services.invitations import invite_status as domain_invite_status
+from campushallen.services.provider_errors import SAFE_REJECTION_MESSAGES
 from campushallen.services.secrets import ReconnectRequired, TokenVault
 from campushallen.web.i18n import gettext as _
 from campushallen.web.i18n import gettext_noop as N_
@@ -184,6 +187,23 @@ REASONS = {
 
 
 def reason(message: str) -> str:
+    if rejection := SAFE_REJECTION_MESSAGES.get(message):
+        return _(
+            "Provider rejection: %(category)s (errorCode: %(code)s).",
+            category=rejection.category,
+            code=rejection.code,
+        )
+    counts = re.fullmatch(
+        r"Authenticated bookings read: total=(\d{1,8}); regular=(\d{1,8}); waitlist=(\d{1,8})\.",
+        message,
+    )
+    if counts:
+        return _(
+            "Bookings read before request: %(total)s total, %(regular)s regular, %(waitlist)s waiting-list entries. This is not an eligibility decision.",
+            total=counts[1],
+            regular=counts[2],
+            waitlist=counts[3],
+        )
     return (
         _(message)
         if message in REASONS
@@ -267,7 +287,9 @@ PHASE_LABELS = {
     "VERIFIED_WAITLISTED": N_("Waiting-list place independently confirmed"),
     "PREBOOK_AUTH_FAILED": N_("Authentication failed before booking"),
     "BOOK_POST_STARTED": N_("Booking request started; result unknown"),
-    "BOOK_POST_AUTH_REJECTED": N_("Booking request rejected authentication"),
+    "BOOK_POST_AUTH_REJECTED": N_(
+        "Booking request rejected (HTTP 401/403); inspect provider reason"
+    ),
     "BOOK_POST_REJECTED": N_("Booking request rejected"),
     "BOOK_POST_TIMEOUT_OR_UNCERTAIN": N_("Booking request outcome uncertain"),
     "BOOK_POST_ACCEPTED": N_("Booking response received; verification required"),

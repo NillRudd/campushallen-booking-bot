@@ -39,6 +39,7 @@ from .notifications import (
     deliver,
 )
 from .operations import snapshot
+from .provider_errors import provider_rejection
 from .rules import domain_rule
 from .secrets import ReconnectRequired
 
@@ -432,7 +433,10 @@ class BookingEngine:
                     self.record(
                         plan,
                         Outcome.CLAIMED,
-                        "Live request reserved; an interrupted request requires manual verification.",
+                        # Counts describe the actual pre-POST read, not provider eligibility.
+                        f"Authenticated bookings read: total={len(bookings)}; "
+                        f"regular={sum(b.get('type') == 'groupActivityBooking' for b in bookings)}; "
+                        f"waitlist={sum(b.get('type') == 'waitingListBooking' for b in bookings)}.",
                         phase="AUTH_VALIDATED",
                         http_status=200,
                         endpoint_category="bookings",
@@ -447,6 +451,7 @@ class BookingEngine:
                         endpoint_category="booking",
                         verification_outcome="UNKNOWN",
                     )
+                    rejection_message = None
                     try:
                         client.book_group_activity(
                             customer_id, slot.id, allow_waiting_list=rule.allow_waitlist
@@ -457,9 +462,25 @@ class BookingEngine:
                         )
                     except httpx.HTTPStatusError as exc:
                         post_status = exc.response.status_code
+                        if 400 <= post_status < 500:
+                            rejection = provider_rejection(exc.response)
+                            rejection_message = rejection.message
+                            # This string consists exclusively of local allowlisted constants.
+                            LOGGER.warning(
+                                rejection_message,
+                                extra={
+                                    "account_id": plan.account_id,
+                                    "rule_id": plan.rule_id,
+                                    "activity_id": slot.id,
+                                    "http_status": post_status,
+                                },
+                            )
                         post_phase = (
                             "BOOK_POST_AUTH_REJECTED"
                             if post_status in (401, 403)
+                            and rejection_message
+                            and rejection.category
+                            in ("UNKNOWN_PROVIDER_REJECTION", "AUTH_REJECTED")
                             else "BOOK_POST_TIMEOUT_OR_UNCERTAIN"
                             if post_status >= 500
                             else "BOOK_POST_REJECTED"
@@ -472,6 +493,7 @@ class BookingEngine:
                     self.record(
                         plan,
                         Outcome.CLAIMED,
+                        rejection_message,
                         phase=post_phase,
                         http_status=post_status,
                         endpoint_category="booking",

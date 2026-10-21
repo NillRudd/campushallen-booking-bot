@@ -702,10 +702,6 @@ msgstr ""
 msgid "Booking request started; result unknown"
 msgstr ""
 
-#: src/campushallen/web/presentation.py:270
-msgid "Booking request rejected authentication"
-msgstr ""
-
 #: src/campushallen/web/presentation.py:271
 msgid "Booking request rejected"
 msgstr ""
@@ -2287,3 +2283,16 @@ msgstr ""
 msgid "Delete website account and local data"
 msgstr ""
 
+#: src/campushallen/web/presentation.py
+#, python-format
+msgid "Provider rejection: %(category)s (errorCode: %(code)s)."
+msgstr ""
+
+#: src/campushallen/web/presentation.py
+#, python-format
+msgid "Bookings read before request: %(total)s total, %(regular)s regular, %(waitlist)s waiting-list entries. This is not an eligibility decision."
+msgstr ""
+
+#: src/campushallen/web/presentation.py
+msgid "Booking request rejected (HTTP 401/403); inspect provider reason"
+msgstr ""

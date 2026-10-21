@@ -60,6 +60,10 @@ def incident(booking, tmp_path, monkeypatch):
         login_status=200,
         malformed_post=False,
         methods=[],
+        post_error=None,
+        before_bookings=[],
+        after_bookings=[],
+        verified_type="groupActivityBooking",
     )
     customer = b.accounts[0] * 100
 
@@ -83,7 +87,8 @@ def incident(booking, tmp_path, monkeypatch):
                 if server.malformed_post:
                     return httpx.Response(200, text="private-provider-body")
                 return httpx.Response(
-                    server.post_status, json={"sensitive": "private-provider-body"}
+                    server.post_status,
+                    json=server.post_error or {"sensitive": "private-provider-body"},
                 )
             assert request.method == "GET"
             if server.posts and (
@@ -96,9 +101,11 @@ def incident(booking, tmp_path, monkeypatch):
                 return httpx.Response(401, json={"sensitive": "private-provider-body"})
             return httpx.Response(
                 200,
-                json=[{"groupActivity": {"id": 4343840}}]
+                json=[{"groupActivity": {"id": 4343840}, "type": server.verified_type}]
                 if server.posts and server.verified
-                else [],
+                else server.after_bookings
+                if server.posts
+                else server.before_bookings,
             )
         assert request.method == "GET", "No other mutations allowed"
         if "/apps/" in request.url.path:
@@ -241,4 +248,90 @@ def test_success_response_with_unreadable_body_retains_status_and_never_reposts(
             select(BookingAttempt).where(BookingAttempt.phase == "BOOK_POST_TIMEOUT_OR_UNCERTAIN")
         )
         assert event.http_status == 200
+    assert b.server.posts == 1
+
+
+@pytest.mark.parametrize("kind", ["groupActivityBooking", "waitingListBooking"])
+def test_201_is_independently_verified_for_regular_and_waitlist(incident, kind):
+    b = incident
+    if kind == "waitingListBooking":
+        from campushallen.database.models import BookingRule
+
+        with b.sessions() as db:
+            db.get(BookingRule, b.rules[0]).allow_waitlist = True
+            db.commit()
+    b.server.post_status = 201
+    b.server.verified_type = kind
+    result = b.engine.run(b.plan, dry_run=False, now=b.opening)
+    assert result.result == "BOOKED"
+    assert result.verification_outcome == (
+        "WAITLISTED" if kind == "waitingListBooking" else "BOOKED"
+    )
+    with b.sessions() as db:
+        assert (
+            db.scalar(
+                select(BookingAttempt).where(BookingAttempt.phase == "BOOK_POST_ACCEPTED")
+            ).http_status
+            == 201
+        )
+    assert b.server.posts == 1 and b.server.logins == 0
+
+
+def test_explicit_limit_at_opening_with_four_then_three_never_blindly_retries(
+    incident, caplog, monkeypatch
+):
+    """A simulated rule code/count change is evidence for diagnostics, not retry permission."""
+    b = incident
+    b.opening = b.opening.replace(hour=19, minute=15)
+    b.plan = replace(b.plan, slot=replace(b.plan.slot, bookable_earliest=b.opening))
+    b.gateway.slots = [b.plan.slot]
+    monkeypatch.setattr("campushallen.services.engine.utcnow", lambda: b.opening)
+    b.server.post_status = 403
+    b.server.post_error = {
+        "errorCode": "TOO_MANY_CONCURRENT_BOOKINGS",
+        "rule": "private-provider-body",
+        "message": "private-provider-body",
+        "customerId": "private-provider-body",
+    }
+    b.server.verified = False
+    b.server.before_bookings = [
+        {
+            "groupActivity": {"id": i},
+            "type": "waitingListBooking" if i == 204 else "groupActivityBooking",
+        }
+        for i in range(201, 205)
+    ]
+    b.server.after_bookings = b.server.before_bookings[1:]
+    result = b.engine.run(b.plan, dry_run=False, now=b.opening)
+    assert result.verification_outcome == "NOT_BOOKED"
+    with b.sessions() as db:
+        events = list(db.scalars(select(BookingAttempt)))
+        assert next(e for e in events if e.phase == "AUTH_VALIDATED").message == (
+            "Authenticated bookings read: total=4; regular=3; waitlist=1."
+        )
+        rejection = next(e for e in events if e.phase == "BOOK_POST_REJECTED")
+        assert rejection.http_status == 403
+        assert "BOOKING_LIMIT_REACHED" in rejection.message
+        assert "TOO_MANY_CONCURRENT_BOOKINGS" in rejection.message
+        assert "private-provider-body" not in str([e.message for e in events])
+    # A later read reports three; neither elapsed time nor that count removes the claim.
+    later = b.opening + timedelta(seconds=2)
+    assert len(b.server.after_bookings) == 3
+    restarted = BookingEngine(b.sessions, b.engine.gateway)
+    restarted.run(b.plan, dry_run=False, now=later)
+    assert b.server.posts == 1
+    assert "private-provider-body" not in caplog.text
+    assert "TOO_MANY_CONCURRENT_BOOKINGS" in caplog.text
+
+
+def test_provider_rejection_code_never_overrides_independent_mutation_evidence(incident):
+    b = incident
+    b.server.post_status = 403
+    b.server.post_error = {"errorCode": "TOO_MANY_CONCURRENT_BOOKINGS"}
+    # Even a recognized rejection string is not sufficient evidence to replay.
+    b.server.verified = True
+    result = b.engine.run(b.plan, dry_run=False, now=b.opening)
+    assert result.result == "BOOKED"
+    assert result.verification_outcome == "BOOKED"
+    b.engine.run(b.plan, dry_run=False, now=b.opening + timedelta(seconds=2))
     assert b.server.posts == 1

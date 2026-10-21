@@ -735,10 +735,6 @@ msgstr "Inloggningen misslyckades före bokningen"
 msgid "Booking request started; result unknown"
 msgstr "Bokningsförfrågan påbörjad; resultatet är okänt"
 
-#: src/campushallen/web/presentation.py:270
-msgid "Booking request rejected authentication"
-msgstr "Bokningsförfrågan nekades vid inloggningskontroll"
-
 #: src/campushallen/web/presentation.py:271
 msgid "Booking request rejected"
 msgstr "Bokningsförfrågan nekades"
@@ -2511,3 +2507,16 @@ msgstr "Ta bort konto och lokala uppgifter"
 #~ msgid "Test mode / waiting for activation"
 #~ msgstr "Testläge / väntar på aktivering"
 
+#: src/campushallen/web/presentation.py
+#, python-format
+msgid "Provider rejection: %(category)s (errorCode: %(code)s)."
+msgstr "Campushallen nekade bokningen: %(category)s (felkod: %(code)s)."
+
+#: src/campushallen/web/presentation.py
+#, python-format
+msgid "Bookings read before request: %(total)s total, %(regular)s regular, %(waitlist)s waiting-list entries. This is not an eligibility decision."
+msgstr "Bokningar lästa före försöket: %(total)s totalt, %(regular)s vanliga, %(waitlist)s reservplatser. Antalet visar inte om Campushallen tillåter en ny bokning."
+
+#: src/campushallen/web/presentation.py
+msgid "Booking request rejected (HTTP 401/403); inspect provider reason"
+msgstr "Bokningsanropet nekades (HTTP 401/403); se Campushallens felorsak"
