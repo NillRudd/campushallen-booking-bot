@@ -23,6 +23,18 @@ from .operations import Heartbeat
 LOGGER = logging.getLogger(__name__)
 
 
+def job_key(plan: Plan) -> tuple:
+    assert plan.slot is not None
+    return (
+        plan.account_id,
+        plan.rule_id,
+        plan.slot.id,
+        plan.slot.starts_at,
+        plan.slot.bookable_earliest,
+        plan.target_date,
+    )
+
+
 class Scheduler:
     def __init__(
         self,
@@ -35,6 +47,9 @@ class Scheduler:
         self.engine, self.dry_run, self.sleep = engine, dry_run, sleep
         self.semaphore = asyncio.Semaphore(concurrency)
         self.tasks: dict[tuple, asyncio.Task] = {}
+        # Only jobs stopped before a mutation are eligible to resume. Durable
+        # claimed/uncertain outcomes still pass the normal persisted dedup gate.
+        self.resumable: set[tuple] = set()
         self.account_locks: dict[int, asyncio.Lock] = {}
         self.reported: set[tuple] = set()
         self.heartbeat = Heartbeat(engine.sessions, dry_run=dry_run)
@@ -158,6 +173,7 @@ class Scheduler:
                 while (remaining := (plan.slot.bookable_earliest - utcnow()).total_seconds()) > 0:
                     await self.sleep(min(remaining, 30))
                     if not await asyncio.to_thread(self.still_enabled, plan):
+                        self.resumable.add(job_key(plan))
                         return
             lock = self.account_locks.setdefault(plan.account_id, asyncio.Lock())
             async with lock, self.semaphore:
@@ -169,6 +185,11 @@ class Scheduler:
                 except asyncio.CancelledError:
                     await operation
                     raise
+                if attempt.result == Outcome.AUTH_FAILED or (
+                    attempt.result == Outcome.DISABLED
+                    and not await asyncio.to_thread(self.still_enabled, plan)
+                ):
+                    self.resumable.add(job_key(plan))
                 LOGGER.info(
                     "Booking attempt completed",
                     extra={
@@ -189,6 +210,7 @@ class Scheduler:
         # Forget expired jobs and discovery errors; keep memory bounded over long runs.
         today = utcnow().date()
         self.reported = {key for key in self.reported if key[-1] >= today}
+        self.resumable = {key for key in self.resumable if key[-1] >= today}
         self.tasks = {
             key: task for key, task in self.tasks.items() if not task.done() or key[-1] >= today
         }
@@ -220,14 +242,10 @@ class Scheduler:
                                 extra={"account_id": plan.account_id},
                             )
                     continue
-                key = (
-                    plan.account_id,
-                    plan.rule_id,
-                    plan.slot.id,
-                    plan.slot.starts_at,
-                    plan.slot.bookable_earliest,
-                    plan.target_date,
-                )
+                key = job_key(plan)
+                if key in self.resumable and key in self.tasks and self.tasks[key].done():
+                    del self.tasks[key]
+                    self.resumable.discard(key)
                 if key in self.tasks:
                     if self.tasks[key].done():
                         await asyncio.to_thread(self.mark_processed, plan)

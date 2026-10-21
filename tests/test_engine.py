@@ -386,3 +386,70 @@ def test_legacy_attempt_provenance_cannot_suppress_preview_or_weaken_live_dedup(
         db.commit()
     assert Scheduler(b.engine, dry_run=False).already_processed(b.plan)
     assert not b.gateway.posts
+
+
+@pytest.mark.parametrize("pause_kind", ["account", "rule"])
+def test_waiting_job_resumes_after_owner_unpauses_account_or_rule(booking, monkeypatch, pause_kind):
+    b = booking
+    clock = [utcnow()]
+    opening = clock[0] + timedelta(seconds=120)
+    b.gateway.slots = [replace(b.slot, bookable_earliest=opening)]
+    plan = replace(b.plan, slot=b.gateway.slots[0])
+    monkeypatch.setattr("campushallen.services.scheduler.utcnow", lambda: clock[0])
+    monkeypatch.setattr("campushallen.services.engine.utcnow", lambda: clock[0])
+    monkeypatch.setattr(b.engine, "discover", lambda aid: [plan] if aid == plan.account_id else [])
+
+    async def pause_during_wait(seconds):
+        with b.sessions() as db:
+            row = (
+                db.get(CampushallenAccount, b.accounts[0])
+                if pause_kind == "account"
+                else db.get(BookingRule, b.rules[0])
+            )
+            row.enabled = False
+            db.commit()
+
+    async def exercise():
+        scheduler = Scheduler(b.engine, dry_run=False, sleep=pause_during_wait)
+        await scheduler.refresh()
+        await asyncio.gather(*scheduler.tasks.values())
+        assert not b.gateway.posts
+        with b.sessions() as db:
+            row = (
+                db.get(CampushallenAccount, b.accounts[0])
+                if pause_kind == "account"
+                else db.get(BookingRule, b.rules[0])
+            )
+            row.enabled = True
+            db.commit()
+        clock[0] = opening
+        await scheduler.refresh()
+        await asyncio.gather(*scheduler.tasks.values())
+        # Another refresh must not replay the now-claimed operation.
+        await scheduler.refresh()
+        await asyncio.gather(*scheduler.tasks.values())
+
+    asyncio.run(exercise())
+    assert len(b.gateway.posts) == 1
+
+
+def test_prebook_auth_failure_resumes_after_successful_reconnection_without_reposting(
+    booking, monkeypatch
+):
+    b = booking
+    monkeypatch.setattr(b.engine, "discover", lambda aid: [b.plan] if aid == b.accounts[0] else [])
+    b.gateway.failed.add(b.accounts[0])
+
+    async def exercise():
+        scheduler = Scheduler(b.engine, dry_run=False)
+        await scheduler.refresh(wait=False)
+        await asyncio.gather(*scheduler.tasks.values())
+        assert not b.gateway.posts
+        b.gateway.failed.clear()
+        await scheduler.refresh(wait=False)
+        await asyncio.gather(*scheduler.tasks.values())
+        await scheduler.refresh(wait=False)
+        await asyncio.gather(*scheduler.tasks.values())
+
+    asyncio.run(exercise())
+    assert len(b.gateway.posts) == 1
