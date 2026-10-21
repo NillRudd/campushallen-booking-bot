@@ -69,6 +69,21 @@ class TokenVault:
     def __init__(self, key: str):
         self.legacy_cipher = Fernet(key.encode())
         self.cipher = purpose_cipher(key, b"campushallen-booker/tokens/v1")
+        # Stable, keyed identity comparison without storing a plaintext customer ID.
+        import base64
+        import hashlib
+        import hmac
+
+        self.identity_key = hmac.digest(
+            base64.urlsafe_b64decode(key), b"campushallen-booker/identity/v1", hashlib.sha256
+        )
+
+    def identity_digest(self, customer_id: int) -> str:
+        import hmac
+
+        if isinstance(customer_id, bool) or int(customer_id) <= 0:
+            raise ValueError("A verified customer identity is required")
+        return hmac.digest(self.identity_key, str(int(customer_id)).encode(), "sha256").hex()
 
     def seal(self, state: dict[str, Any]) -> str:
         return "v1:" + self.cipher.encrypt(json.dumps(state).encode()).decode()

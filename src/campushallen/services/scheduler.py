@@ -66,6 +66,7 @@ class Scheduler:
                 and rule.enabled
                 and account
                 and account.enabled
+                and (self.dry_run or account.live_booking_enabled)
                 and rule.campushallen_account_id == account.id
                 and db.get(User, account.user_id).is_active
             )
@@ -142,6 +143,16 @@ class Scheduler:
     async def execute(self, plan: Plan, *, wait: bool) -> None:
         try:
             if wait and plan.slot and plan.slot.bookable_earliest:
+                LOGGER.info(
+                    "Waiting for API opening",
+                    extra={
+                        "account_id": plan.account_id,
+                        "rule_id": plan.rule_id,
+                        "activity_id": plan.slot.id,
+                        "phase": "waiting_for_open",
+                        "next_action_at": plan.slot.bookable_earliest.isoformat(),
+                    },
+                )
                 # Sleeping does not hold a thread, DB transaction, or concurrency permit.
                 # Short intervals make clock corrections and shutdown responsive.
                 while (remaining := (plan.slot.bookable_earliest - utcnow()).total_seconds()) > 0:
@@ -181,11 +192,21 @@ class Scheduler:
         self.tasks = {
             key: task for key, task in self.tasks.items() if not task.done() or key[-1] >= today
         }
-        batches = await asyncio.gather(
-            *(self.discover_account(a) for a in await asyncio.to_thread(self.accounts))
-        )
-        for plans in batches:
+        # Queue each completed account immediately. A slow discovery must not
+        # hold back another user's already-known opening.
+        batches = [self.discover_account(a) for a in await asyncio.to_thread(self.accounts)]
+        for completed in asyncio.as_completed(batches):
+            plans = await completed
             for plan in plans:
+                LOGGER.info(
+                    "Activity discovered",
+                    extra={
+                        "account_id": plan.account_id,
+                        "rule_id": plan.rule_id,
+                        "activity_id": plan.slot.id if plan.slot else None,
+                        "phase": "discovered",
+                    },
+                )
                 key: tuple
                 if not plan.slot:
                     key = (plan.account_id, plan.rule_id, plan.outcome, today)

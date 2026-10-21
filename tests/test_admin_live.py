@@ -1,11 +1,21 @@
 """Admin approval is explicit, tenant-independent, audited, and defaults off."""
 
+from datetime import timedelta
+from types import SimpleNamespace
+
 import pytest
 from sqlalchemy import select
 from test_web import login, own_account, post
 from test_web import web as web
 
-from campushallen.database.models import AuditEvent, CampushallenAccount, User
+from campushallen.database.models import (
+    AuditEvent,
+    BookingRule,
+    CampushallenAccount,
+    Outcome,
+    User,
+    utcnow,
+)
 
 
 def prepare(client, app, *, admin=True):
@@ -15,7 +25,26 @@ def prepare(client, app, *, admin=True):
         db.get(User, app.state.alice_id).is_admin = admin
         a = db.get(CampushallenAccount, account_id)
         assert not a.live_booking_enabled and not a.live_booking_ongoing
-        a.auth_state = "opaque-test-ciphertext"
+        a.auth_state = app.state.gateway.vault.seal(
+            {"customer_id": account_id * 100, "access_token": "synthetic"}
+        )
+        from campushallen.services.credentials import remember
+
+        remember(db, app.state.credential_vault, a, "synthetic-private-password")
+        rule = BookingRule(
+            campushallen_account_id=a.id, name="Beta rule", activity="Ball", weekday=1
+        )
+        db.add(rule)
+        db.flush()
+        slot = SimpleNamespace(
+            id=4342668,
+            name="Ball",
+            starts_at=utcnow() + timedelta(days=7),
+            bookable_earliest=utcnow() + timedelta(days=1),
+        )
+        app.state.engine.discover = lambda account_id: [
+            SimpleNamespace(rule_id=rule.id, slot=slot, outcome=Outcome.DRY_RUN)
+        ]
         db.commit()
     return account_id
 
@@ -27,9 +56,20 @@ def test_admin_requires_confirmation_and_can_stop_without_deleting_claims(web):
     assert client.get(route).status_code == 200
     assert post(client, route, {"action": "enable"}).status_code == 422
     assert (
-        client.post(route, data={"action": "enable", "confirmation": "ENABLE"}).status_code == 403
+        client.post(
+            route,
+            data={"action": "enable", "confirmation": "ENABLE", "identity_confirmation": "CLEAR"},
+        ).status_code
+        == 403
     )
-    assert post(client, route, {"action": "enable", "confirmation": "ENABLE"}).status_code == 303
+    assert (
+        post(
+            client,
+            route,
+            {"action": "enable", "confirmation": "ENABLE", "identity_confirmation": "CLEAR"},
+        ).status_code
+        == 303
+    )
     for path in ("/", f"/accounts/{account_id}", "/rules"):
         assert "Aktiv — bokningstjänsten måste köras i liveläge" in client.get(path).text
     with app.state.sessions() as db:
@@ -51,7 +91,12 @@ def test_user_cannot_approve_own_or_other_connection(web):
         route = f"/admin/connections/{identifier}/live"
         assert client.get(route).status_code == 403
         assert (
-            post(client, route, {"action": "enable", "confirmation": "ENABLE"}).status_code == 403
+            post(
+                client,
+                route,
+                {"action": "enable", "confirmation": "ENABLE", "identity_confirmation": "CLEAR"},
+            ).status_code
+            == 403
         )
     for path in ("/", f"/accounts/{account_id}", "/rules"):
         assert "Testläge / väntar på aktivering" in client.get(path).text
@@ -72,7 +117,7 @@ def test_admin_cannot_bypass_disabled_auth_or_unverified_controlled_grant(
         post(
             client,
             f"/admin/connections/{account_id}/live",
-            {"action": "enable", "confirmation": "ENABLE"},
+            {"action": "enable", "confirmation": "ENABLE", "identity_confirmation": "CLEAR"},
         ).status_code
         == 409
     )
@@ -101,7 +146,55 @@ def test_controlled_grant_can_only_become_ongoing_after_corrected_verified_booki
         post(
             client,
             f"/admin/connections/{account_id}/live",
-            {"action": "enable", "confirmation": "ENABLE"},
+            {"action": "enable", "confirmation": "ENABLE", "identity_confirmation": "CLEAR"},
         ).status_code
         == 303
     )
+
+
+def test_live_activation_requires_external_identity_and_preference_review(web):
+    client, app = web
+    account_id = prepare(client, app)
+    route = f"/admin/connections/{account_id}/live"
+    assert post(client, route, {"action": "enable", "confirmation": "ENABLE"}).status_code == 422
+    assert "identity_confirmation" in client.get(route).text
+
+
+@pytest.mark.parametrize("problem", ["credential", "ambiguous", "legacy", "unresolved_claim"])
+def test_beta_review_blocks_incomplete_or_conflicting_configuration(web, problem):
+    from sqlalchemy import delete
+
+    from campushallen.database.models import BookingClaim, CampushallenCredential
+    from campushallen.services.identities import register_external
+
+    client, app = web
+    account_id = prepare(client, app)
+    with app.state.sessions() as db:
+        if problem == "credential":
+            db.execute(
+                delete(CampushallenCredential).where(
+                    CampushallenCredential.campushallen_account_id == account_id
+                )
+            )
+        elif problem == "legacy":
+            register_external(
+                db, app.state.gateway.vault, account_id * 100, "friend_legacy", active=True
+            )
+        elif problem == "ambiguous":
+            app.state.engine.discover = lambda account_id: []
+        elif problem == "unresolved_claim":
+            db.add(BookingClaim(campushallen_account_id=account_id, activity_id=4342668))
+        db.commit()
+    route = f"/admin/connections/{account_id}/live"
+    page = client.get(route)
+    assert 'role="alert"' in page.text and "disabled" in page.text
+    assert (
+        post(
+            client,
+            route,
+            {"action": "enable", "confirmation": "ENABLE", "identity_confirmation": "CLEAR"},
+        ).status_code
+        == 409
+    )
+    with app.state.sessions() as db:
+        assert not db.get(CampushallenAccount, account_id).live_booking_enabled

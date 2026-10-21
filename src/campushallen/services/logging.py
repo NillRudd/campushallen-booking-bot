@@ -13,7 +13,16 @@ class WorkerLogFormatter(logging.Formatter):
             "logger": record.name,
             "message": record.getMessage(),
         }
-        for name in ("account_id", "rule_id", "result"):
+        for name in (
+            "account_id",
+            "rule_id",
+            "activity_id",
+            "phase",
+            "result",
+            "http_status",
+            "verification_outcome",
+            "next_action_at",
+        ):
             if hasattr(record, name):
                 data[name] = getattr(record, name)
         return json.dumps(data)

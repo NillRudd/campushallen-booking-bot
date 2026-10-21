@@ -12,7 +12,10 @@ The existing production site is <https://campushallenbot.se>; see the
 one-connection/activity-discovery redesign is deployed; see the
 [production verification record](docs/production-validation.md) for checked
 behavior and remaining private browser acceptance.
-**Not ready to share with other users.** The corrected live waitlist path is
+A private two-user live beta is explicitly authorized for **Thursday 22 October**;
+see [the beta plan and verification status](docs/multi-user-beta.md). New accounts
+remain live off until reviewed; the existing legacy friend must remain new-app off.
+**Broad public launch remains blocked.** The corrected live waitlist path is
 production-validated: the explicitly approved 27 October session was independently
 confirmed at position 9 after one POST. Active Pi undervoltage and unchecked
 router forwarding remain public-launch blockers. See the

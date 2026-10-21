@@ -7,12 +7,14 @@ from types import SimpleNamespace
 from zoneinfo import ZoneInfo
 
 import pytest
+from cryptography.fernet import Fernet
 from sqlalchemy import select
 
 from campushallen.api import GroupActivitySlot
 from campushallen.database.models import (
     BookingAttempt,
     BookingClaim,
+    BookingIdentity,
     BookingRule,
     CampushallenAccount,
     Outcome,
@@ -22,7 +24,7 @@ from campushallen.database.models import (
 from campushallen.database.session import session_factory
 from campushallen.services.engine import BookingEngine, Plan
 from campushallen.services.scheduler import Scheduler
-from campushallen.services.secrets import ReconnectRequired
+from campushallen.services.secrets import ReconnectRequired, TokenVault
 
 TZ = ZoneInfo("Europe/Stockholm")
 
@@ -68,6 +70,7 @@ class FakeGateway:
     settings = SimpleNamespace(campushallen_timezone="Europe/Stockholm")
 
     def __init__(self, slots):
+        self.vault = TokenVault(Fernet.generate_key().decode())
         self.slots = slots
         self.posts = []
         self.booked = {}
@@ -143,6 +146,14 @@ def booking(database):
             accounts.append(account.id)
             rules.append(rule.id)
     gateway = FakeGateway([slot])
+    with sessions() as db:
+        for account_id in accounts:
+            db.add(
+                BookingIdentity(
+                    digest=gateway.vault.identity_digest(account_id * 100), account_id=account_id
+                )
+            )
+        db.commit()
     engine = BookingEngine(sessions, gateway)
     plan = Plan(accounts[0], rules[0], start.date(), Outcome.DRY_RUN, "Matched", slot)
     return SimpleNamespace(

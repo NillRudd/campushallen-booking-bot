@@ -240,6 +240,7 @@ def main() -> None:
                 operator_page.get_by_label(
                     "Jag bekräftar att riktiga bokningar kommer att skickas"
                 ).check()
+                operator_page.locator('input[name="identity_confirmation"]').check()
                 operator_page.get_by_role(
                     "button", name="Aktivera riktig bokning", exact=True
                 ).click()

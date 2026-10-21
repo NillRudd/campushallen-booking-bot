@@ -3,6 +3,7 @@
 No web dependency; external operations are injectable through AccountGateway.
 """
 
+import logging
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
@@ -28,6 +29,7 @@ from campushallen.database.models import (
 from campushallen.schedule import BookingState
 
 from .accounts import AccountGateway
+from .identities import claim_identity_allowed
 from .live_policy import used_claims
 from .notifications import (
     NoopNotifier,
@@ -39,6 +41,8 @@ from .notifications import (
 from .operations import snapshot
 from .rules import domain_rule
 from .secrets import ReconnectRequired
+
+LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -270,6 +274,19 @@ class BookingEngine:
             )
             if kind and update_schedule:
                 deliver(self.notifier, Notification(kind, account.user_id, account.id, attempt.id))
+            if update_schedule:
+                LOGGER.info(
+                    "Booking phase recorded",
+                    extra={
+                        "account_id": plan.account_id,
+                        "rule_id": plan.rule_id,
+                        "activity_id": slot.id if slot else None,
+                        "phase": phase,
+                        "http_status": http_status,
+                        "result": attempt.result,
+                        "verification_outcome": verification_outcome,
+                    },
+                )
             return attempt
 
     def preview_account(self, account_id: int) -> list[BookingAttempt]:
@@ -324,6 +341,15 @@ class BookingEngine:
                     Outcome.DISABLED,
                     "Operator has not enabled live booking for this account.",
                 )
+            LOGGER.info(
+                "Pre-book authentication",
+                extra={
+                    "account_id": plan.account_id,
+                    "rule_id": plan.rule_id,
+                    "activity_id": plan.slot.id if plan.slot else None,
+                    "phase": "pre_auth",
+                },
+            )
             try:
                 with self.gateway.client(account) as (client, customer_id):
                     selection = select_group_activity_for_date(
@@ -392,7 +418,11 @@ class BookingEngine:
                         )
                     # End the read transaction before attempting to acquire the write claim.
                     db.rollback()
-                    claim_result = self.claim_live(plan, manual_approval_id=manual_approval_id)
+                    claim_result = self.claim_live(
+                        plan,
+                        manual_approval_id=manual_approval_id,
+                        identity_digest=self.gateway.vault.identity_digest(customer_id),
+                    )
                     if claim_result is not None:
                         return self.record(
                             plan,
@@ -542,7 +572,13 @@ class BookingEngine:
             plan, result, message, phase=phase, http_status=status, endpoint_category=endpoint
         )
 
-    def claim_live(self, plan: Plan, *, manual_approval_id: int | None = None) -> Outcome | None:
+    def claim_live(
+        self,
+        plan: Plan,
+        *,
+        manual_approval_id: int | None = None,
+        identity_digest: str | None = None,
+    ) -> Outcome | None:
         """Serialize account eligibility, finite allowance and durable claim.
 
         A no-op UPDATE acquires SQLite's writer lock before counting claims.
@@ -585,6 +621,9 @@ class BookingEngine:
                 .values(live_booking_claim_limit=CampushallenAccount.live_booking_claim_limit)
             )
             if changed.rowcount != 1:
+                db.rollback()
+                return Outcome.DISABLED
+            if not claim_identity_allowed(db, plan.account_id, identity_digest):
                 db.rollback()
                 return Outcome.DISABLED
             original_claim = db.get(BookingClaim, (plan.account_id, plan.slot.id))

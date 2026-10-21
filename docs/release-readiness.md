@@ -1,6 +1,9 @@
 # Release readiness after the 20 October incident
 
-**NOT READY TO SHARE LINK WITH USERS.** The corrected live waitlist mutation path
+**NOT READY FOR BROAD PUBLIC LAUNCH.** Two private beta invitations are explicitly
+authorized for Thursday 22 October; see [the current beta preparation record](multi-user-beta.md).
+The beta identity/concurrency changes must be deployed and each new connection
+reviewed before activation. The corrected live waitlist mutation path
 is independently production-validated. Active Pi undervoltage remains a release blocker.
 Router forwarding cannot be verified from the application host alone.
 
@@ -80,7 +83,9 @@ allows recovery; a compromised running host can read credentials during login.
 
 ## Operator workflow
 
-Do not distribute invitations until all release blockers are resolved.
+Broad distribution remains blocked. The two explicitly approved private beta
+invitations follow [the beta preparation process](multi-user-beta.md); activation
+still requires individual configuration and identity review.
 
 1. In **Admin**, create one invitation and send its link privately.
 2. The recipient registers, connects Campushallen, uses **Hitta pass**, selects

@@ -13,7 +13,12 @@ from test_engine import FakeClient
 from test_engine import booking as booking
 
 from campushallen.api import CampushallenHttpClient
-from campushallen.database.models import BookingAttempt, BookingClaim, CampushallenAccount
+from campushallen.database.models import (
+    BookingAttempt,
+    BookingClaim,
+    BookingIdentity,
+    CampushallenAccount,
+)
 from campushallen.services.account_auth import AccountAuthentication
 from campushallen.services.accounts import AccountGateway
 from campushallen.services.credentials import remember
@@ -119,6 +124,9 @@ def incident(booking, tmp_path, monkeypatch):
     monkeypatch.setattr(CampushallenHttpClient, "__init__", init)
     monkeypatch.setattr("campushallen.services.account_auth.utcnow", lambda: opening)
     with b.sessions() as db:
+        from campushallen.database.models import BookingRule
+
+        db.get(BookingRule, b.rules[0]).weekday = start.weekday()
         account = db.get(CampushallenAccount, b.accounts[0])
         account.auth_state = tokens.seal(
             {
@@ -127,6 +135,9 @@ def incident(booking, tmp_path, monkeypatch):
                 "expires_at": (start + timedelta(days=1)).timestamp(),
             }
         )
+        db.get(BookingIdentity, b.gateway.vault.identity_digest(customer)).account_id = None
+        db.flush()
+        db.add(BookingIdentity(digest=tokens.identity_digest(customer), account_id=account.id))
         remember(db, credentials, account, "private-test-password")
         db.commit()
     b.engine = BookingEngine(b.sessions, gateway)

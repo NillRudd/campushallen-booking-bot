@@ -7,6 +7,7 @@ from starlette.responses import RedirectResponse
 from campushallen.database.models import (
     AuditEvent,
     BookingAttempt,
+    BookingOpportunity,
     BookingRule,
     CampushallenAccount,
     Invitation,
@@ -14,10 +15,14 @@ from campushallen.database.models import (
     utcnow,
 )
 from campushallen.services.audit import Event, audit
+from campushallen.services.beta_review import review_connection
+from campushallen.services.identities import identity_for, identity_status, reserve_identity
 from campushallen.services.invitations import create_invite, revoke_invite
 from campushallen.services.operations import backup_health, worker_health
+from campushallen.services.secrets import ReconnectRequired
 from campushallen.web.dependencies import DB, AdminUser, Form, render
 from campushallen.web.i18n import gettext as _
+from campushallen.web.presentation import safe_error
 
 router = APIRouter()
 
@@ -56,6 +61,29 @@ def admin_page(request: Request, db: DB, user: AdminUser):
         ).all(),
         backup=_(backup_health(request.app.state.settings.state_dir)),
         worker=worker_health(db, request.app.state.settings.worker_poll_seconds)[0],
+        identity_warning=lambda a: identity_status(db, a, request.app.state.gateway.vault),
+        recent_live=db.execute(
+            select(User.username, BookingAttempt)
+            .join(
+                CampushallenAccount,
+                BookingAttempt.campushallen_account_id == CampushallenAccount.id,
+            )
+            .join(User, CampushallenAccount.user_id == User.id)
+            .where(BookingAttempt.is_preview.is_(False))
+            .order_by(BookingAttempt.id.desc())
+            .limit(100)
+        ).all(),
+        opportunities=db.execute(
+            select(User.username, BookingOpportunity)
+            .join(
+                CampushallenAccount,
+                BookingOpportunity.campushallen_account_id == CampushallenAccount.id,
+            )
+            .join(User, CampushallenAccount.user_id == User.id)
+            .where(BookingOpportunity.activity_start > utcnow())
+            .order_by(BookingOpportunity.next_action_at)
+            .limit(100)
+        ).all(),
     )
 
 
@@ -102,12 +130,18 @@ def confirm_live(account_id: int, request: Request, db: DB, user: AdminUser):
     owner = db.get(User, account.user_id) if account else None
     if account is None or owner is None:
         raise HTTPException(404, _("Account not found"))
+    rules, plans, errors = review_connection(
+        db, account, request.app.state.engine, request.app.state.credential_vault
+    )
     return render(
         request,
         "live_confirmation.html",
         user=user,
         account=account,
         owner=owner.username,
+        rules=rules,
+        plans=plans,
+        review_errors=errors,
     )
 
 
@@ -119,7 +153,7 @@ def change_live(account_id: int, request: Request, db: DB, user: AdminUser, form
         raise HTTPException(404, _("Account not found"))
     action = form.get("action")
     if action == "enable":
-        if form.get("confirmation") != "ENABLE":
+        if form.get("confirmation") != "ENABLE" or form.get("identity_confirmation") != "CLEAR":
             raise HTTPException(422, _("Confirm that real bookings will be submitted."))
         if (
             not account.enabled
@@ -148,6 +182,37 @@ def change_live(account_id: int, request: Request, db: DB, user: AdminUser, form
             raise HTTPException(
                 409, _("Controlled validation requires operator review before ongoing activation.")
             )
+        try:
+            expected_digest = identity_for(account, request.app.state.gateway.vault)
+        except (ValueError, KeyError, TypeError, ReconnectRequired):
+            raise HTTPException(409, _("Reconnect before identity review.")) from None
+        reviewed_rules, reviewed_plans, errors = review_connection(
+            db, account, request.app.state.engine, request.app.state.credential_vault
+        )
+        if errors:
+            raise HTTPException(409, _(errors[0]))
+        try:
+            reserve_identity(
+                db,
+                account,
+                request.app.state.gateway.vault,
+                user.id,
+                expected_digest=expected_digest,
+            )
+        except (ValueError, ReconnectRequired) as exc:
+            db.rollback()
+            raise HTTPException(409, safe_error(str(exc))) from None
+        # reserve_identity refreshes the row under the writer lock. Recheck
+        # flags after network discovery so a concurrent stop cannot be lost.
+        current_owner = db.get(User, account.user_id)
+        if (
+            not account.enabled
+            or account.requires_reconnect
+            or not current_owner
+            or not current_owner.is_active
+        ):
+            db.rollback()
+            raise HTTPException(409, _("Connect and enable the account before activation."))
         account.live_booking_enabled = True
         account.live_booking_ongoing = True
         event = Event.LIVE_BOOKING_ENABLED

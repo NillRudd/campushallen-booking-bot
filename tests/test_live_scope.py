@@ -143,6 +143,15 @@ def test_migration_does_not_opt_existing_accounts_in(booking):
     b = booking
     with b.sessions() as db:
         url = str(db.bind.url)
+    # Remove only synthetic identity reservations before exercising the older
+    # opt-in migration; production registry downgrade has its own guard test.
+    from sqlalchemy import delete
+
+    from campushallen.database.models import BookingIdentity
+
+    with b.sessions() as db:
+        db.execute(delete(BookingIdentity))
+        db.commit()
     config = Config("alembic.ini")
     config.attributes["database_url"] = url
     command.downgrade(config, "e6b41c9a203d")

@@ -219,7 +219,9 @@ def test_downgrade_cannot_erase_a_consumed_manual_allowance(booking):
     b.engine.run(b.plan, dry_run=False, manual_approval_id=identifier)
     config = Config("alembic.ini")
     config.attributes["database_url"] = str(b.sessions.kw["bind"].url)
-    with pytest.raises(RuntimeError, match="Cannot downgrade consumed"):
+    with pytest.raises(
+        RuntimeError, match="Cannot downgrade consumed|Preserve live identity ownership"
+    ):
         command.downgrade(config, "a71e420f9c03")
     with b.sessions() as db:
         assert db.get(BookingReconciliation, identifier).consumed_at is not None

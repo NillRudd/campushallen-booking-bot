@@ -112,6 +112,15 @@ def worker_label(status: str) -> str:
 
 
 SAFE_ERRORS = {
+    N_("Reconnect before identity review."),
+    N_("Legacy booking system active — new live booking not enabled."),
+    N_("This Campushallen identity already has another live connection."),
+    N_("Campushallen identity changed during review; review again."),
+    N_("Active admin identity review required."),
+    N_("Save an encrypted credential for automatic reconnection before beta activation."),
+    N_("Create and enable at least one booking rule before activation."),
+    N_("Every enabled rule needs unambiguous fresh matches and API opening times."),
+    N_("An unresolved live claim needs operator reconciliation before activation."),
     N_("At least one active admin must remain."),
     N_("Choose a different username."),
     N_("Earliest time must be before latest time"),

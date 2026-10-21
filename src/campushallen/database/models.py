@@ -303,3 +303,17 @@ class WebsiteLoginBucket(Base):
     window_started_at: Mapped[datetime] = mapped_column(UTCDateTime())
     locked_until: Mapped[datetime | None] = mapped_column(UTCDateTime())
     updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), index=True)
+
+
+class BookingIdentity(Base):
+    """Pseudonymous identity ownership; legacy rows survive website deletion."""
+
+    __tablename__ = "booking_identities"
+    digest: Mapped[str] = mapped_column(String(64), primary_key=True)
+    account_id: Mapped[int | None] = mapped_column(
+        ForeignKey("campushallen_accounts.id", ondelete="SET NULL"), unique=True
+    )
+    external_label: Mapped[str | None] = mapped_column(String(64))
+    external_active: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
+    reviewed_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    reviewed_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
