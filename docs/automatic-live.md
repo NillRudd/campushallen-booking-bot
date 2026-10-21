@@ -82,4 +82,25 @@ Niklas's old timer remains disabled; the friend's remains enabled and untouched.
 No host reboot or Pi-side build/test was performed. Active undervoltage/throttling
 still reports 0x50005; router forwarding remains unverified.
 
-The scheduled badminton result will be recorded after the actual opening.
+## Scheduled result and final release
+
+The worker executed at **19:15:00.95 CEST**, but the booking POST received **403**.
+Its verification and a separate fresh-client GET confirmed **NOT_BOOKED**.
+The claim is retained, with one recorded POST start and no automatic retry or
+cancellation. Basic read-only membership/terms/validity/attestation/clock checks
+did not establish the provider's exact rejection reason. See
+[the scheduled-attempt report](incident-2026-10-21-badminton.md). This test must
+not be described as a successful regular booking.
+
+After preserving the attempt, final application/image
+`b29e631c5111259fecd4f055984ed6493eaf59c3` was deployed. It also fixes a waiting-job
+pause/resume edge case: account/rule reactivation or successful pre-book
+reconnection can reschedule a job that stopped before mutation. Claimed or
+uncertain outcomes remain protected by persisted deduplication; the failed
+badminton activity is not replayed. **281 tests**, Ruff/format (100 files), mypy
+(45 modules) and exact-image production smoke pass; the prior full automatic
+live/owner pause-resume browser smoke remains applicable to the unchanged UI.
+Web, live worker and tunnel are healthy with zero restarts/OOM. Schema c8b31d94a207,
+concurrency 3 and all existing ongoing flags/data are preserved. Floorball
+4342668 remains waiting for 22 October 18:45 CEST. Linus99 still needs a successful
+Campushallen connection, after which live will start automatically.
