@@ -1,5 +1,11 @@
 # Controlled live beta: Thursday 22 October 2026
 
+**Current policy update, 21 October:** the operator now requests automatic ongoing
+live booking after successful connection, with owner pause/resume and no separate
+admin activation. See [automatic live booking](automatic-live.md). Earlier
+controlled-scope and per-user admin-approval instructions below are historical.
+
+
 The operator explicitly approved two new beta participants. This is a private,
 invite-only beta, not broad public launch. The existing waitlist mutation proof
 is recorded in [the client audit](booking-client-audit.md). Power and router

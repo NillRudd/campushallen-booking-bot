@@ -144,3 +144,41 @@ def approve_reconciliation(
     )
     db.commit()
     return approval.id
+
+
+def activate_connected(db, account, tokens, *, actor_id: int) -> None:
+    """Ongoing live is the connected-account default; no discovery/POST here.
+
+    Explicit connect, resume or admin activation calls this. Background token
+    refresh never calls it, so a stop is not undone by automatic reauthentication.
+    A paused account stays paused; users retain per-rule and account controls.
+    """
+    from .identities import identity_for, reserve_identity
+
+    if not account.enabled or account.requires_reconnect or not account.auth_state:
+        raise ValueError("Connect and enable the account before activation.")
+    expected = identity_for(account, tokens)
+    db.flush()
+    reserve_identity(db, account, tokens, actor_id, expected_digest=expected)
+    owner = db.get(User, account.user_id)
+    if (
+        not account.enabled
+        or account.requires_reconnect
+        or not account.auth_state
+        or not owner
+        or not owner.is_active
+    ):
+        raise ValueError("Connect and enable the account before activation.")
+    changed = not account.live_booking_enabled or not account.live_booking_ongoing
+    account.live_booking_enabled = True
+    account.live_booking_ongoing = True
+    # Historical finite scope/quota and all durable claims are retained. Ongoing
+    # explicitly bypasses their scope/limit; existing claims still prevent replay.
+    if changed:
+        audit(
+            db,
+            Event.LIVE_BOOKING_ENABLED,
+            actor_id=actor_id,
+            user_id=account.user_id,
+            account_id=account.id,
+        )

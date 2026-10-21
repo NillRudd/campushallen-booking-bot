@@ -1,5 +1,11 @@
 # Release readiness after the 20 October incident
 
+**Current policy update, 21 October:** the operator now requests automatic ongoing
+live booking after successful connection, with owner pause/resume and no separate
+admin activation. See [automatic live booking](automatic-live.md). Earlier
+controlled-scope and per-user admin-approval instructions below are historical.
+
+
 **NOT READY FOR BROAD PUBLIC LAUNCH.** Two private beta invitations are explicitly
 authorized for Thursday 22 October; see [the current beta preparation record](multi-user-beta.md).
 The beta identity guard and concurrency 3 are deployed as a9e7321; both beta

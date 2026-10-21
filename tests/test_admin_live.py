@@ -71,7 +71,7 @@ def test_admin_requires_confirmation_and_can_stop_without_deleting_claims(web):
         == 303
     )
     for path in ("/", f"/accounts/{account_id}", "/rules"):
-        assert "Aktiv — bokningstjänsten måste köras i liveläge" in client.get(path).text
+        assert "Aktiv" in client.get(path).text
     with app.state.sessions() as db:
         a = db.get(CampushallenAccount, account_id)
         assert a.live_booking_enabled and a.live_booking_ongoing
@@ -99,11 +99,11 @@ def test_user_cannot_approve_own_or_other_connection(web):
             == 403
         )
     for path in ("/", f"/accounts/{account_id}", "/rules"):
-        assert "Testläge / väntar på aktivering" in client.get(path).text
+        assert "Pausad" in client.get(path).text
 
 
 @pytest.mark.parametrize("disabled,controlled", [(True, False), (False, True)])
-def test_admin_cannot_bypass_disabled_auth_or_unverified_controlled_grant(
+def test_admin_blocks_disabled_auth_but_can_enable_ongoing_without_a_test_booking(
     web, disabled, controlled
 ):
     client, app = web
@@ -113,14 +113,11 @@ def test_admin_cannot_bypass_disabled_auth_or_unverified_controlled_grant(
         a.enabled = not disabled
         a.live_booking_activity_id = 4342668 if controlled else None
         db.commit()
-    assert (
-        post(
-            client,
-            f"/admin/connections/{account_id}/live",
-            {"action": "enable", "confirmation": "ENABLE", "identity_confirmation": "CLEAR"},
-        ).status_code
-        == 409
-    )
+    assert post(
+        client,
+        f"/admin/connections/{account_id}/live",
+        {"action": "enable", "confirmation": "ENABLE", "identity_confirmation": "CLEAR"},
+    ).status_code == (409 if disabled else 303)
 
 
 def test_controlled_grant_can_only_become_ongoing_after_corrected_verified_booking(web):
@@ -161,7 +158,7 @@ def test_live_activation_requires_external_identity_and_preference_review(web):
 
 
 @pytest.mark.parametrize("problem", ["credential", "ambiguous", "legacy", "unresolved_claim"])
-def test_beta_review_blocks_incomplete_or_conflicting_configuration(web, problem):
+def test_matching_warnings_do_not_block_live_but_duplicate_identity_does(web, problem):
     from sqlalchemy import delete
 
     from campushallen.database.models import BookingClaim, CampushallenCredential
@@ -187,14 +184,12 @@ def test_beta_review_blocks_incomplete_or_conflicting_configuration(web, problem
         db.commit()
     route = f"/admin/connections/{account_id}/live"
     page = client.get(route)
-    assert 'role="alert"' in page.text and "disabled" in page.text
-    assert (
-        post(
-            client,
-            route,
-            {"action": "enable", "confirmation": "ENABLE", "identity_confirmation": "CLEAR"},
-        ).status_code
-        == 409
-    )
+    assert 'role="status"' in page.text
+    assert "<button disabled" not in page.text
+    assert post(
+        client,
+        route,
+        {"action": "enable", "confirmation": "ENABLE", "identity_confirmation": "CLEAR"},
+    ).status_code == (409 if problem == "legacy" else 303)
     with app.state.sessions() as db:
-        assert not db.get(CampushallenAccount, account_id).live_booking_enabled
+        assert db.get(CampushallenAccount, account_id).live_booking_enabled == (problem != "legacy")

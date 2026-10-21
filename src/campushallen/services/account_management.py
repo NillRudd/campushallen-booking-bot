@@ -11,6 +11,7 @@ from .account_auth import TemporaryAuthenticationError
 from .accounts import AccountGateway
 from .audit import Event, audit
 from .credentials import credential_for, forget, remember
+from .live_policy import activate_connected
 from .secrets import CredentialVault, ReconnectRequired
 
 
@@ -52,6 +53,16 @@ def connect_account(
         remember(db, vault, account, password)
     elif credential_for(db, account.id):
         forget(db, account)
+    # Commit verified credentials first, then reserve the actual provider identity.
+    # A duplicate identity may stay connected for previews, but never mutates.
+    db.commit()
+    if account.enabled:
+        try:
+            activate_connected(db, account, gateway.vault, actor_id=account.user_id)
+        except (ValueError, ReconnectRequired, KeyError, TypeError):
+            db.rollback()
+            account.live_booking_enabled = False
+            account.live_booking_ongoing = False
     audit(
         db,
         Event.CAMPUSHALLEN_RECONNECTED if previous else Event.CAMPUSHALLEN_CONNECTED,

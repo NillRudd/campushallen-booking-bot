@@ -7,6 +7,8 @@ from campushallen.database.models import BookingRule, CampushallenAccount
 from campushallen.services.account_management import connect_account, disconnect
 from campushallen.services.audit import Event, audit
 from campushallen.services.credentials import credential_for, forget
+from campushallen.services.identities import identity_status
+from campushallen.services.live_policy import activate_connected
 from campushallen.services.notifications import Notification, NotificationKind, deliver
 from campushallen.services.secrets import ReconnectRequired
 from campushallen.services.user_security import check_password
@@ -61,6 +63,7 @@ def account_detail(account_id: int, request: Request, db: DB, user: CurrentUser)
         user=user,
         account=account,
         remembered=credential_for(db, account.id) is not None,
+        identity_error=identity_status(db, account, request.app.state.gateway.vault),
         account_rules=db.scalars(
             select(BookingRule).where(BookingRule.campushallen_account_id == account.id)
         ).all(),
@@ -111,8 +114,17 @@ def connect(account_id: int, request: Request, db: DB, user: CurrentUser, form: 
 @router.post("/accounts/{account_id}/toggle")
 def toggle(account_id: int, request: Request, db: DB, user: CurrentUser, form: Form):
     account = owned_account(db, user.id, account_id)
-    account.enabled = not account.enabled
+    action = form.get("action")
+    account.enabled = (
+        True if action == "resume" else False if action == "pause" else not account.enabled
+    )
     account.auth_lease_until = None
+    if account.enabled and account.auth_state and not account.requires_reconnect:
+        try:
+            activate_connected(db, account, request.app.state.gateway.vault, actor_id=user.id)
+        except (ValueError, ReconnectRequired, KeyError, TypeError) as exc:
+            db.rollback()
+            raise HTTPException(409, safe_error(str(exc))) from None
     audit(
         db,
         Event.ACCOUNT_ENABLED if account.enabled else Event.ACCOUNT_DISABLED,

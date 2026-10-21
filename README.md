@@ -12,20 +12,15 @@ The existing production site is <https://campushallenbot.se>; see the
 one-connection/activity-discovery redesign is deployed; see the
 [production verification record](docs/production-validation.md) for checked
 behavior and remaining private browser acceptance.
-A private two-user live beta is explicitly authorized for **Thursday 22 October**;
-see [the beta plan and verification status](docs/multi-user-beta.md). New accounts
-remain live off until reviewed; the existing legacy friend must remain new-app off.
-**Broad public launch remains blocked.** The corrected live waitlist path is
-production-validated: the explicitly approved 27 October session was independently
-confirmed at position 9 after one POST. Active Pi undervoltage and unchecked
-router forwarding remain public-launch blockers. See the
-[release gate and operator guide](docs/release-readiness.md) and
-[old/new client audit and real test](docs/booking-client-audit.md).
-Connection 2 remains controlled for the 22 October 2026 18:45 CEST opening;
-new users remain live disabled. The beta identity guard and concurrency 3 are
-deployed; the two invitations are prepared, awaiting recipient onboarding.
-The original claim/history are preserved,
-and the separate manual approval is permanently consumed.
+**Connected accounts use ongoing live booking automatically.** No separate
+admin activation is required. Users choose and enable their own rules and can
+pause/resume automatic booking on their account page. See
+[automatic live booking](docs/automatic-live.md) for the current policy.
+The separate production worker runs live with concurrency 3; previews never book.
+The 22 October beta remains invite-only. Active Pi undervoltage and unchecked
+router forwarding remain broad public-launch limits. The previous waitlist test
+was independently verified; original claims/history and its consumed manual
+approval remain preserved. No automatic claim reset or cancellation is added.
 No real booking is needed to run tests or start the application.
 
 ## Local development

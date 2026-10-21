@@ -55,8 +55,8 @@ def reserve_identity(db, account, tokens, actor_id: int, *, expected_digest: str
     if identity_for(account, tokens) != expected_digest:
         raise ValueError("Campushallen identity changed during review; review again.")
     actor = db.get(User, actor_id)
-    if not actor or not actor.is_admin or not actor.is_active:
-        raise ValueError("Active admin identity review required.")
+    if not actor or not actor.is_active or (not actor.is_admin and actor.id != account.user_id):
+        raise ValueError("Only the account owner or an active admin can enable automatic booking.")
     message = identity_status(db, account, tokens)
     if message:
         raise ValueError(message)

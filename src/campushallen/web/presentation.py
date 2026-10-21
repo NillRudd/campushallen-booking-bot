@@ -112,6 +112,7 @@ def worker_label(status: str) -> str:
 
 
 SAFE_ERRORS = {
+    N_("Only the account owner or an active admin can enable automatic booking."),
     N_("Reconnect before identity review."),
     N_("Legacy booking system active — new live booking not enabled."),
     N_("This Campushallen identity already has another live connection."),

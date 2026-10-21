@@ -16,8 +16,9 @@ from campushallen.database.models import (
 )
 from campushallen.services.audit import Event, audit
 from campushallen.services.beta_review import review_connection
-from campushallen.services.identities import identity_for, identity_status, reserve_identity
+from campushallen.services.identities import identity_status
 from campushallen.services.invitations import create_invite, revoke_invite
+from campushallen.services.live_policy import activate_connected
 from campushallen.services.operations import backup_health, worker_health
 from campushallen.services.secrets import ReconnectRequired
 from campushallen.web.dependencies import DB, AdminUser, Form, render
@@ -162,59 +163,13 @@ def change_live(account_id: int, request: Request, db: DB, user: AdminUser, form
             or not owner.is_active
         ):
             raise HTTPException(409, _("Connect and enable the account before activation."))
-        # A spent controlled grant cannot silently become ongoing during validation.
-        controlled_verified = db.scalar(
-            select(BookingAttempt.id)
-            .where(
-                BookingAttempt.campushallen_account_id == account.id,
-                BookingAttempt.activity_id == account.live_booking_activity_id,
-                BookingAttempt.phase == "VERIFIED_BOOKED",
-                BookingAttempt.result == "BOOKED",
-                BookingAttempt.is_preview.is_(False),
-            )
-            .limit(1)
-        )
-        if (
-            account.live_booking_activity_id is not None
-            and not account.live_booking_ongoing
-            and not controlled_verified
-        ):
-            raise HTTPException(
-                409, _("Controlled validation requires operator review before ongoing activation.")
-            )
+        # Matching/credential warnings are diagnostic. Each rule is checked
+        # again by the engine; one missing match cannot disable the whole account.
         try:
-            expected_digest = identity_for(account, request.app.state.gateway.vault)
-        except (ValueError, KeyError, TypeError, ReconnectRequired):
-            raise HTTPException(409, _("Reconnect before identity review.")) from None
-        reviewed_rules, reviewed_plans, errors = review_connection(
-            db, account, request.app.state.engine, request.app.state.credential_vault
-        )
-        if errors:
-            raise HTTPException(409, _(errors[0]))
-        try:
-            reserve_identity(
-                db,
-                account,
-                request.app.state.gateway.vault,
-                user.id,
-                expected_digest=expected_digest,
-            )
-        except (ValueError, ReconnectRequired) as exc:
+            activate_connected(db, account, request.app.state.gateway.vault, actor_id=user.id)
+        except (ValueError, ReconnectRequired, KeyError, TypeError) as exc:
             db.rollback()
             raise HTTPException(409, safe_error(str(exc))) from None
-        # reserve_identity refreshes the row under the writer lock. Recheck
-        # flags after network discovery so a concurrent stop cannot be lost.
-        current_owner = db.get(User, account.user_id)
-        if (
-            not account.enabled
-            or account.requires_reconnect
-            or not current_owner
-            or not current_owner.is_active
-        ):
-            db.rollback()
-            raise HTTPException(409, _("Connect and enable the account before activation."))
-        account.live_booking_enabled = True
-        account.live_booking_ongoing = True
         event = Event.LIVE_BOOKING_ENABLED
     elif action == "disable":
         account.live_booking_enabled = False

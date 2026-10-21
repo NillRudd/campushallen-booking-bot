@@ -1,5 +1,11 @@
 # Production operations
 
+**Current policy update, 21 October:** the operator now requests automatic ongoing
+live booking after successful connection, with owner pause/resume and no separate
+admin activation. See [automatic live booking](automatic-live.md). Earlier
+controlled-scope and per-user admin-approval instructions below are historical.
+
+
 Current release status is maintained in [the beta preparation record](multi-user-beta.md)
 and [the release gate and operator guide](release-readiness.md). The identity guard
 is deployed and production concurrency is 3. Beta users remain off until onboarding
