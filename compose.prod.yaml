@@ -23,7 +23,7 @@ x-app: &app
     ALLOWED_HOSTS: '["campushallenbot.se"]'
     TRUSTED_TUNNEL_IPS: '["172.30.85.3"]'
     WORKER_POLL_SECONDS: "60"
-    WORKER_CONCURRENCY: "2"
+    WORKER_CONCURRENCY: "3"
     HEALTH_HOST: campushallenbot.se
   volumes:
     - ${DATA_DIR:?Set DATA_DIR}:/app/state

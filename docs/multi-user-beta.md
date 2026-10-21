@@ -85,7 +85,8 @@ stopped/reconciled source; an older image does not enforce this guard.
 
 Account operations use separate clients/tokens/credentials. Per-account locks
 serialize that account's mutations; different accounts run concurrently under
-the existing bounded semaphore (default 8, including discovery). A network request
+the bounded semaphore (production 3 for Niklas plus Beta A/B; development default
+8, including discovery). A network request
 does not hold a database claim transaction. Local waiting for API opening holds
 no thread, database transaction or concurrency permit. Each completed discovery
 now queues immediately rather than waiting for every account to finish discovery.
