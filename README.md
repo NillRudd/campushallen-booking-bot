@@ -22,7 +22,9 @@ router forwarding remain public-launch blockers. See the
 [release gate and operator guide](docs/release-readiness.md) and
 [old/new client audit and real test](docs/booking-client-audit.md).
 Connection 2 remains controlled for the 22 October 2026 18:45 CEST opening;
-new users remain live disabled. The original claim/history are preserved,
+new users remain live disabled. The beta identity guard and concurrency 3 are
+deployed; the two invitations are prepared, awaiting recipient onboarding.
+The original claim/history are preserved,
 and the separate manual approval is permanently consumed.
 No real booking is needed to run tests or start the application.
 

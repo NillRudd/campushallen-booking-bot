@@ -2,12 +2,15 @@
 
 **NOT READY FOR BROAD PUBLIC LAUNCH.** Two private beta invitations are explicitly
 authorized for Thursday 22 October; see [the current beta preparation record](multi-user-beta.md).
-The beta identity/concurrency changes must be deployed and each new connection
-reviewed before activation. The corrected live waitlist mutation path
+The beta identity guard and concurrency 3 are deployed as a9e7321; both beta
+recipients still need onboarding and per-connection review before activation.
+Niklas remains controlled live; the existing friend stays legacy live. The corrected live waitlist mutation path
 is independently production-validated. Active Pi undervoltage remains a release blocker.
 Router forwarding cannot be verified from the application host alone.
 
-This record supersedes earlier deployment status summaries. Historical evidence
+The [21 October beta record](multi-user-beta.md) is the latest deployed status.
+The 20 October deployment details below remain a historical validation snapshot.
+This record supersedes earlier pre-incident deployment summaries. Historical evidence
 remains in [the incident report](incident-2026-10-20-first-live-booking.md).
 The original provider-side reason for the failed request remains unknown: the
 old gateway discarded whether HTTP 401/403 came from POST or verification GET.

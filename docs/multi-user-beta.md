@@ -20,21 +20,70 @@ No legacy config, password, token or schedule is modified during this beta setup
 
 ## Release preparation status, 21 October
 
-Software changes are prepared locally; **production deployment and fresh Pi/API
-checks are pending authenticated SSH access**. The last verified deployed build
-is dbcf5a3, schema b2d934a8e710. Do not describe the new identity guard as deployed
-until the release/migration and inventory steps below have completed.
+**Deployed and ready to send the two private invitations.** The intended
+three-user new-worker topology is **not yet active**: Beta A and Beta B have not
+onboarded. The operator will send links after this preparation and confirms
+neither has another booking bot; the legacy friend will not onboard for now.
+Actual beta connections/rules/preferences still need individual review and
+activation after setup. No accounts or passwords were created for recipients.
 
-| Check | Current evidence / required next step |
+At **17:03 CEST on 21 October**, application/source/image tag
+`a9e7321675c9b7e2e55db107f76b97268838246a` is deployed, schema **c8b31d94a207**.
+Image ID is `sha256:22eaf5607b70581d85a44890fb9353321527f5627e9f50ab3b0a122f6903b2fb`.
+The source includes the identity guard from 9793760 and production concurrency 3.
+Documentation and test-only fixes may advance separately.
+
+| Check | Verified state / remaining work |
 | --- | --- |
-| Niklas live state | Previously healthy, finite target 4342668, allowance 3 / used 2 / remaining 1; refresh before Thursday |
-| Existing friend | Previously enabled/active/waiting; recheck without changes and inventory its real customer identity |
-| Beta A/B invitations | Pending production invitation creation; no links in Git, logs or reports |
-| Beta A/B onboarding | Pending private invitation delivery and independent registration/connection/rules/preview |
-| Beta A/B rule/target/waitlist verification | Pending actual user configuration; do not invent preferences or targets |
-| Beta A/B live activation | Off until explicit admin identity/rule review passes |
-| Full suite, browser, image smoke | 271 tests, Ruff/format (97 files), mypy (45 modules), 516 Swedish messages and Chrome browser smoke pass; exact ARM64 production smoke pending |
-| Pi current power/router | Fresh checks pending; previous power was active 0x50005; router forwarding unchecked |
+| Niklas | Connection 2, authenticated, one connection, recoverable encrypted credential, controlled live on; ongoing off |
+| Niklas rules | Product 1401 / Innebandy 85 Vallastaden, unit 1, fixed Tue/Thu 18:45 / Sun 12:00, all enabled, waitlist explicitly yes |
+| Niklas target | 4342668, 29 Oct 18:45 CET; opens 22 Oct 18:45 CEST; 15 free, no booking or claim, preview equals worker |
+| Niklas allowance | Lifetime 3, used 2, remaining 1; original claim and consumed reconciliation preserved |
+| Existing friend | Legacy timer enabled/active/waiting, fresh identity GET 200, distinct from Niklas; active legacy registry exclusion, no website connection |
+| Beta A | Single-use invitation 4 created, unused/unrevoked; onboarding, rules, waitlist choice, targets and explicit live activation pending |
+| Beta B | Single-use invitation 5 created, unused/unrevoked; onboarding, rules, waitlist choice, targets and explicit live activation pending |
+| New-user defaults | Live off; only connection 2 currently eligible; registration remains invite-only |
+| Worker | Healthy, both live flags, concurrency 3, fresh live heartbeat, target waiting at API opening |
+| Web/tunnel | Healthy; public Swedish HTTPS login passes at 1280px/390px, no overflow; secure/HttpOnly/Strict CSRF cookie and private/no-store response |
+| Multi-user tests | Three simultaneous independent logins/claims/history, permanent auth failure, temporary backoff, verification failure, slow discovery, alias races and restart/no-replay pass |
+| Full checks | 271 tests; Ruff/format 98 files; mypy 45 modules; 516/516 Swedish messages; Chrome browser smoke and exact ARM64 production smoke pass |
+| Pi power | **0x50005: current undervoltage/throttling**, plus historical flags; reliability risk remains |
+| Clock/resources | Europe/Stockholm, NTP synchronized; no container restarts/OOM, about 561 MiB available at the check |
+| Router | Read-only SSDP/IGD probe found no discoverable gateway; forwarding remains unverified. No Docker host ports published; no network changes |
+
+Invitation links are stored only in private files
+`~/Documents/CampushallenBot-Beta/beta-A-invitation.txt` and
+`beta-B-invitation.txt` (directory 0700, files 0600). They expire on
+**28 October at approximately 15:53 CET** and were created by the active Niklas
+admin through the same production invitation service used by Admin. No link or
+token is included here, in logs or in Git. Recipients choose their own passwords.
+
+Before migration, `campushallen-20261021T145516320021Z-6c0b0b.sqlite3` passed
+isolated restore, off-Pi integrity and matching separate recovery-key checks.
+After deployment, `campushallen-20261021T150310607811Z-f8ac12.sqlite3` passed the
+same checks and preserves both identity exclusions/reservations, the original
+claim/history, consumed approval, verified waitlist result and finite target.
+The daily backup timer remains enabled/waiting and its last scheduled run
+succeeded. Migration preserved all existing tokens, credentials, claims,
+reconciliations and live scope exactly. Legacy config/credential-file fingerprints
+and encryption/session/tunnel keys were unchanged. No host reboot was performed.
+
+After deployment, **23 guarded provider GETs returned 200**, with no login needed,
+no booking POST and no cancellation. Fresh selection and preview agree, and the
+worker independently stored the same next opening. The only BOOK_POST_STARTED
+in the database remains the separately approved 20 October waitlist test. Retained
+container-log scanning found no known secret-file values or scanned bearer,
+cookie, invite, private-key or credential-body patterns; this is not an exhaustive
+security assessment. Private evidence is outside Git in
+`~/Documents/CampushallenBot-Incidents/multi-user-beta-a9e7321/`.
+
+Remaining causes of a missed Thursday booking include **active Pi undervoltage/
+throttling**, incomplete beta onboarding/activation, provider/network latency or
+rejection, changes to availability or selection, and unknown router forwarding
+configuration. Tests cannot guarantee provider acceptance or timing under actual
+hardware/network load. No build or test was run on the Pi; images were built and
+smoke-tested locally well before Thursday's opening. The final preflight on
+Thursday and independent post-run verification remain future work.
 
 ## Identity enforcement and activation
 
@@ -48,7 +97,8 @@ writes the live flag directly. A changed provider identity cannot inherit the
 old reservation. The original activity claims and consumed manual approval are
 unchanged and still counted. Key rotation requires re-inventory and review.
 
-Before starting the new image's live worker, inventory the actual Niklas and
+For this deployment, the actual identities were inventoried and registered
+before starting the live worker. For future installations, inventory the Niklas and
 friend legacy customer IDs from their configured state, with read-only identity
 verification where available. Record Niklas legacy inactive and friend legacy
 active through `services.identities.register_external`, using the production
