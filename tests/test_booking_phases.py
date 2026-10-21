@@ -123,6 +123,7 @@ def incident(booking, tmp_path, monkeypatch):
 
     monkeypatch.setattr(CampushallenHttpClient, "__init__", init)
     monkeypatch.setattr("campushallen.services.account_auth.utcnow", lambda: opening)
+    monkeypatch.setattr("campushallen.services.engine.utcnow", lambda: opening)
     with b.sessions() as db:
         from campushallen.database.models import BookingRule
 

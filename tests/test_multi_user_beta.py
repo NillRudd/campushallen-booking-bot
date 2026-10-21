@@ -25,7 +25,7 @@ from campushallen.database.models import (
 from campushallen.services.account_auth import AccountAuthentication
 from campushallen.services.accounts import AccountGateway
 from campushallen.services.credentials import remember
-from campushallen.services.engine import BookingEngine
+from campushallen.services.engine import BookingEngine, StalePlan
 from campushallen.services.identities import (
     claim_identity_allowed,
     identity_for,
@@ -279,7 +279,7 @@ def test_unreviewed_identity_fails_closed_and_cannot_steal_other_users_rule(book
         db.delete(db.get(BookingIdentity, b.gateway.vault.identity_digest(b.accounts[0] * 100)))
         db.commit()
     assert b.engine.run(b.plan, dry_run=False).result == "DISABLED"
-    with pytest.raises(Exception, match="Account or rule changed"):
+    with pytest.raises(StalePlan, match="Account or rule changed"):
         b.engine.run(replace(b.plan, account_id=b.accounts[1]), dry_run=False)
     assert not b.gateway.posts
 
