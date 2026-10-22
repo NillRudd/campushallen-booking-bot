@@ -23,6 +23,8 @@ after an arbitrary failure count. Successful cached validation clears recovered
 temporary-error telemetry without requiring another login. Missing/unreadable credentials still need
 manual attention. The existing durable lease and compare-and-swap checks retain
 protection against concurrent refresh and account changes.
+The refresh lease is 180 seconds to allow room for the additional identity-read
+attempts; concurrency tests verify it exceeds the former 90-second window.
 
 After login and identity validation, the encrypted replacement token is committed
 to SQLite and applied to the original client. Discovery/bookings/verification

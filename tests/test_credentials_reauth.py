@@ -333,6 +333,10 @@ def test_concurrent_reauthentication_uses_one_credential_attempt(
     with ThreadPoolExecutor(max_workers=2) as pool:
         first = pool.submit(use, b)
         assert started.wait(timeout=5)
+        with b.sessions() as db:
+            assert db.get(CampushallenAccount, b.account_id).auth_lease_until > (
+                utcnow() + timedelta(seconds=120)
+            )
         try:
             with pytest.raises(ReconnectRequired):
                 use(b)

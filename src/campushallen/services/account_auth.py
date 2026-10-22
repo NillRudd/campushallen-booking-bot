@@ -153,7 +153,9 @@ class AccountAuthentication:
                 raise ReconnectRequired("Token expired or unavailable; reconnect this account.")
             ciphertext, version = credential.encrypted_password, credential.encryption_version
             original_state, owner = account.auth_state, account.user_id
-            lease_until = now + timedelta(seconds=90)
+            # One 30-second login plus three 30-second identity reads/backoff
+            # must fit inside the lease before another operation may take over.
+            lease_until = now + timedelta(seconds=180)
             # Compare the old ciphertext too: another process may already have refreshed it.
             claimed = db.execute(
                 update(CampushallenAccount)
