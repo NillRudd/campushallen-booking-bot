@@ -3,6 +3,16 @@
 Current release status is maintained in [the release gate and operator guide](release-readiness.md).
 Earlier incident-freeze and rollout descriptions below are historical snapshots.
 
+**22 October 21:34 CEST reliability release:** **c461797** is deployed with
+cached-token-first read recovery, one saved-password fallback per operation,
+GET-only preflight, three bounded read attempts and exact-provider-limit-only
+booking retries within the original claim. **345 tests**, lint/format, mypy,
+Chrome browser smoke and exact ARM64 production smoke pass. Services are healthy;
+cached production reads pass without password login. All rules, six claim
+timestamps, credentials/tokens, sessions and legacy units are preserved. Pre/post
+backups passed off-Pi integrity and matching-key isolated restore. See
+[the policy and full deployment evidence](booking-reliability.md).
+
 **22 October follow-up:** the ordinary scheduler successfully booked regular
 Innebandy places for **Niklas and linus99** for 29 October 18:45 CET, with two
 201 responses and fresh independent provider confirmation. Four new-worker

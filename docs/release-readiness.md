@@ -5,6 +5,12 @@ live booking after successful connection, with owner pause/resume and no separat
 admin activation. See [automatic live booking](automatic-live.md). Earlier
 controlled-scope and per-user admin-approval instructions below are historical.
 
+**Latest reliability release, 22 October 21:34 CEST: c461797.** Cached-token/read
+recovery, pre-opening auth and bounded exact-booking-limit retries are deployed.
+345 tests and all local/browser/exact ARM64 smoke checks pass; services are healthy.
+No old claim was reset/replayed and no legacy service was changed. See the
+[current authentication/retry policy and deployment evidence](booking-reliability.md).
+
 **Latest diagnostic release, 21 October 21:28 CEST: a95efd7.** Safe provider reason
 and count capture is deployed; no retry/buffer was introduced. The regular-place
 badminton 403 remains unexplained. See the

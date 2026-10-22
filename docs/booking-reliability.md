@@ -129,3 +129,55 @@ passes (47 modules), 524/524 Swedish messages compile, and full Chrome
 desktop/mobile browser smoke passes with mocked provider calls. One existing
 Starlette/httpx deprecation warning remains. Exact ARM64 image and production
 deployment evidence follow after those checks.
+
+## Deployed and verified, 22 October 21:34 CEST
+
+Application/source/image **c461797e36bb69be6a160c5a9dac80aa226b50b6**, image ID
+`sha256:50035f917482691c35a151d117c141c9029693294b970fb5634d5142003f4fc6`,
+is deployed on the Pi. The exact locally built ARM64 image passed production
+Compose smoke, migration/schema agreement, health, backup/restore and restart
+checks. The full **345-test** suite, Ruff/format, mypy and browser smoke passed;
+28 new test cases supplement the previous 317. No build/test suite ran on the Pi.
+Explicit production Alembic upgrade/check was a no-op at c8b31d94a207.
+
+The new worker is healthy, live with both flags and concurrency 3, with zero
+restarts/OOM and a fresh heartbeat. Initial logs show **12 cached-token
+validations**, no reauthentication start and no booking POST. Web/cloudflared
+are healthy. Public Swedish HTTPS login passes on desktop and 390px mobile with
+secure/HttpOnly/Strict CSRF cookie and private/no-store response.
+
+Separate cached-token-only provider validation returned **six GET 200s** for
+the two distinct identities. Both still hold their verified regular floorball
+booking for 29 October 18:45 CET; Niklas's 27 October waiting-list entry remains.
+No password login, booking test or cancellation was triggered by release checks.
+Password fallback, pre-opening recovery and limit retries are proven by mocks,
+not newly induced production failures or future outcomes certified in advance.
+
+Before starting services, the stopped/drained deployment compared all rules,
+claims, credentials, identity reservations, users, sessions, invitations,
+historical attempts and account token/live-scope state across migration. They
+were preserved exactly. All **six original claim timestamps** remain unchanged
+after restart, and each historical account/activity still has one POST-start.
+Original consumed reconciliation approval remains spent. Secret/encryption/tunnel
+keys were unchanged; no schema, account/rule selection or live-scope edits occurred.
+The friend's failed service and enabled timer were compared before/after and
+left unchanged, as was Niklas's disabled legacy timer.
+
+Pre/post online snapshots:
+
+- campushallen-20261022T191831411277Z-4f916b.sqlite3
+- campushallen-20261022T193403714434Z-1e7317.sqlite3
+
+Both were copied off Pi, passed integrity/FK checks and isolated restore on the
+Mac with the separately verified matching recovery key. The post-release copy
+contains all six preserved claims. Targeted retained-log scanning found no known
+secret-file values or scanned bearer/cookie/invite/private-key/credential-body
+patterns; this is not a comprehensive security assessment.
+
+Current Pi undervoltage/throttling remains **0x50005**. Router forwarding remains
+unverified. No reboot, router change or legacy credential refresh occurred.
+The next cached planned opening for both accounts is 25 October at 12:00 CET;
+preflight and actual future provider acceptance remain to be observed.
+
+Private evidence is outside Git under
+`~/Documents/CampushallenBot-Incidents/reliability-c461797/`.
