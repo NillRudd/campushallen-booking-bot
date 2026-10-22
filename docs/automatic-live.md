@@ -26,8 +26,11 @@ connection-wide preview prerequisite. Missing/ambiguous matches, absent future
 schedule data or one unresolved historical claim no longer prevent other safe
 rules from running. Those diagnostic warnings remain visible; each actual
 operation still reselects, validates identity/opening/time/facility, checks
-bookings and waitlist policy, acquires a durable claim, submits at most once and
-independently verifies. A previous claim is never reset/replayed automatically.
+bookings and waitlist policy, acquires a durable claim and independently verifies.
+The [22 October reliability policy](booking-reliability.md) permits at most three
+POSTs within that original operation only for an explicit provider booking-limit
+rejection followed by verified absence and a count below four. All unknown
+outcomes remain one POST; a previous claim is never reset/resumed automatically.
 
 Actual authenticated provider identity remains reserved to one new-app live
 connection. The registry is maintained atomically; owner and admin actions check

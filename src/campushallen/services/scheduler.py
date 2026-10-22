@@ -170,8 +170,28 @@ class Scheduler:
                 )
                 # Sleeping does not hold a thread, DB transaction, or concurrency permit.
                 # Short intervals make clock corrections and shutdown responsive.
+                prepared = False
                 while (remaining := (plan.slot.bookable_earliest - utcnow()).total_seconds()) > 0:
-                    await self.sleep(min(remaining, 30))
+                    if not prepared and remaining <= 60:
+                        lock = self.account_locks.setdefault(plan.account_id, asyncio.Lock())
+                        async with lock, self.semaphore:
+                            preflight = asyncio.create_task(
+                                asyncio.to_thread(self.engine.prepare_auth, plan)
+                            )
+                            try:
+                                await asyncio.shield(preflight)
+                            except asyncio.CancelledError:
+                                await preflight
+                                raise
+                        prepared = True
+                        continue
+                    await self.sleep(
+                        min(
+                            remaining,
+                            30,
+                            remaining - 60 if remaining > 60 and not prepared else remaining,
+                        )
+                    )
                     if not await asyncio.to_thread(self.still_enabled, plan):
                         self.resumable.add(job_key(plan))
                         return

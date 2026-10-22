@@ -29,17 +29,30 @@ def authenticated_gateway(database, tmp_path, monkeypatch):
     tokens, credentials = TokenVault(master), CredentialVault(master)
     gateway = AccountGateway(Settings(state_dir=tmp_path, _env_file=None), tokens)
     gateway.auth_service = AccountAuthentication(sessions, gateway, tokens, credentials)
-    server = SimpleNamespace(login_status=200, login_calls=0, reads=0, fail_validation=False)
+    server = SimpleNamespace(
+        login_status=200,
+        login_calls=0,
+        reads=0,
+        fail_validation=False,
+        login_exception=None,
+        login_body=None,
+        identity_status=200,
+    )
 
     def respond(request):
         if request.url.path.endswith("/auth/login"):
             server.login_calls += 1
+            if server.login_exception:
+                raise server.login_exception("private-network-error", request=request)
             return httpx.Response(
                 server.login_status,
-                json={"username": "100", "access_token": "fresh-token", "expires_in": 3600},
+                json=server.login_body
+                or {"username": "100", "access_token": "fresh-token", "expires_in": 3600},
             )
         assert request.method == "GET", "Only mocked authentication may issue POST in this fixture"
         server.reads += 1
+        if server.identity_status != 200:
+            return httpx.Response(server.identity_status, json={})
         if server.fail_validation or request.headers.get("Authorization") not in (
             "Bearer fresh-token",
             "Bearer valid-token",
@@ -227,7 +240,7 @@ def test_rejected_password_latches_and_never_enters_poll_loop(authenticated_gate
         assert account.last_auth_failure_at and account.auth_failure_count == 1
 
 
-def test_temporary_errors_back_off_then_stop_after_bounded_failures(authenticated_gateway):
+def test_temporary_errors_back_off_without_invalid_password_latch(authenticated_gateway):
     b = authenticated_gateway
     expire(b)
     b.server.login_status = 503
@@ -246,7 +259,7 @@ def test_temporary_errors_back_off_then_stop_after_bounded_failures(authenticate
                 account.auth_retry_at = utcnow() - timedelta(seconds=1)
                 db.commit()
             else:
-                assert account.requires_reconnect
+                assert not account.requires_reconnect and account.auth_retry_at > utcnow()
     assert b.server.login_calls == 5
     with pytest.raises(ReconnectRequired):
         use(b)

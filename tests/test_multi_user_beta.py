@@ -116,6 +116,8 @@ def test_three_accounts_at_184500_use_independent_auth_claims_and_history(
                 },
             )
         header = request.headers["Authorization"]
+        if header.startswith("Bearer old-"):
+            return httpx.Response(401, json={})
         aid = int(header.removeprefix("Bearer new-"))
         assert aid in b.accounts
         headers.append((aid, request.method))

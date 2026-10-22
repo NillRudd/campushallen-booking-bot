@@ -1,5 +1,11 @@
 # Booking rejection investigation, 21 October 2026
 
+**22 October policy update:** the operator has now confirmed a maximum of four
+concurrent bookings and authorized a bounded retry for the exact provider limit
+code only. See [the new reliability policy](booking-reliability.md). The earlier
+uncertainty and no-retry conclusion below describe evidence available on 21
+October; the badminton response's missing code still cannot be reconstructed.
+
 **The booking-count hypothesis is plausible but unproved.** There were four
 known provider entries before opening: three regular bookings and one waiting-list
 entry. The normal upcoming list subsequently returned three. Go Active recognizes

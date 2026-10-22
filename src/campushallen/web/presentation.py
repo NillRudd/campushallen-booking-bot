@@ -156,6 +156,7 @@ def safe_error(message: str) -> str:
 
 
 REASONS = {
+    N_("Known booking-limit rejection; target absent and count below four; bounded retry."),
     N_("Waiting-list entry independently verified."),
     N_("Live operation phase recorded; inspect verification outcome."),
     N_("A previous live attempt exists; inspect booking history before any manual retry."),
@@ -187,6 +188,9 @@ REASONS = {
 
 
 def reason(message: str) -> str:
+    post_attempt = re.fullmatch(r"Booking POST attempt ([1-3])/3\.", message)
+    if post_attempt:
+        return _("Booking POST attempt %(attempt)s/3.", attempt=post_attempt[1])
     if rejection := SAFE_REJECTION_MESSAGES.get(message):
         return _(
             "Provider rejection: %(category)s (errorCode: %(code)s).",
@@ -283,6 +287,7 @@ def rule_errors(exc: ValidationError) -> str:
 
 
 PHASE_LABELS = {
+    "BOOK_RETRY_READY": N_("Verified booking-limit rejection; retry ready"),
     "AUTH_VALIDATED": N_("Authentication confirmed before booking"),
     "VERIFIED_WAITLISTED": N_("Waiting-list place independently confirmed"),
     "PREBOOK_AUTH_FAILED": N_("Authentication failed before booking"),

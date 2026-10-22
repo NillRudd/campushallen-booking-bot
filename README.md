@@ -162,13 +162,16 @@ encryption key may be able to recover stored credentials.** This is optional per
 account. A running application needs plaintext briefly to authenticate; encryption
 at rest does not prevent a fully compromised host from reading it.
 
-The worker validates the current token before account operations. Expired/rejected
-tokens trigger at most one remembered-password login for that operation. Invalid
-credentials latch the account into reconnection-required state, avoiding a retry
-loop. Temporary failures back off, with manual intervention after five consecutive
-failures. Successful manual reconnection resets the latch. Accounts without saved
-credentials require manual reconnection when tokens expire. The existing refresh
-token endpoint remains unimplemented; this feature uses a new password login.
+The worker tries its cached token first, validating it with a cheap identity GET.
+An explicit authentication rejection triggers at most one saved-password login
+per operation and retries the original GET, including discovery or verification.
+The replacement token persists across restarts. Invalid-password rejection
+latches reconnection-required; temporary failures instead back off for 5–60
+seconds without declaring the password invalid. A GET-only authentication
+preflight runs about 60 seconds before a known opening. Final selection and
+booking checks still run at opening. Temporary GET failures get at most three
+attempts with short bounded waits. Accounts without saved credentials need manual
+reconnection after rejection. The refresh-token endpoint remains unimplemented.
 
 `.env`, local YAML, databases, state, logs, tokens, and keys are ignored by Git
 and excluded from the Docker build context. Do not share the entire working
@@ -262,7 +265,14 @@ Live requests get a durable unique `(account, activity)` claim before the POST.
 The engine verifies success with an independent bookings GET. A timeout, crash,
 or failed verification leaves the claim in place: inspect Campushallen manually
 before any retry. There is deliberately no automatic claim-reset or cancellation
-feature. Dry-run records do not create live claims. Outcomes include `BOOKED`,
+feature. Only the exact provider `TOO_MANY_CONCURRENT_BOOKINGS` rejection permits
+a bounded retry: independently verify absence, refresh the current count below
+the operator-confirmed maximum of four, reselect and recheck owner/rule/identity,
+then retry within the original claim, at most three POSTs total. Generic 403,
+POST authentication failures, redirects, timeouts and unknown results never use
+that policy. A restart never resumes a claimed operation. See
+[authentication and retry reliability](docs/booking-reliability.md).
+Dry-run records do not create live claims. Outcomes include `BOOKED`,
 `ALREADY_BOOKED`, `TARGET_NOT_FOUND`, `AMBIGUOUS_TARGET`, `SUSPICIOUS_TARGET`,
 `SKIPPED_WAITLIST_ONLY`, `AUTH_FAILED`, `BOOKING_FAILED`, `VERIFICATION_FAILED`,
 `DRY_RUN`, `NOT_OPEN`, `DISABLED`, `CLAIMED`, and `UNSUPPORTED`.

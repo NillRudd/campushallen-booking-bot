@@ -4,16 +4,21 @@ No web dependency; external operations are injectable through AccountGateway.
 """
 
 import logging
+import time
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import httpx
-from sqlalchemy import delete, or_, select, update
+from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
-from campushallen.api import GroupActivitySlot, select_group_activity_for_date
+from campushallen.api import (
+    CampushallenHttpClient,
+    GroupActivitySlot,
+    select_group_activity_for_date,
+)
 from campushallen.booking import _booked_group_activity_ids, _verified_booking_for_activity
 from campushallen.database.models import (
     BookingAttempt,
@@ -40,6 +45,7 @@ from .notifications import (
 )
 from .operations import snapshot
 from .provider_errors import provider_rejection
+from .provider_reads import authentication_rejected
 from .rules import domain_rule
 from .secrets import ReconnectRequired
 
@@ -442,136 +448,13 @@ class BookingEngine:
                         endpoint_category="bookings",
                     )
                     request_started = True
-                    # Commit intent before transport. A crash from here leaves a durable
-                    # claim and UNKNOWN evidence, never permission for a second POST.
-                    self.record(
+                    return self._request_and_verify(
                         plan,
-                        Outcome.CLAIMED,
-                        phase="BOOK_POST_STARTED",
-                        endpoint_category="booking",
-                        verification_outcome="UNKNOWN",
+                        client,
+                        customer_id,
+                        rule.allow_waitlist,
+                        manual_approval_id=manual_approval_id,
                     )
-                    rejection_message = None
-                    try:
-                        client.book_group_activity(
-                            customer_id, slot.id, allow_waiting_list=rule.allow_waitlist
-                        )
-                        post_phase, post_status = (
-                            "BOOK_POST_ACCEPTED",
-                            getattr(client, "booking_http_status", None),
-                        )
-                    except httpx.HTTPStatusError as exc:
-                        post_status = exc.response.status_code
-                        if 400 <= post_status < 500:
-                            rejection = provider_rejection(exc.response)
-                            rejection_message = rejection.message
-                            # This string consists exclusively of local allowlisted constants.
-                            LOGGER.warning(
-                                rejection_message,
-                                extra={
-                                    "account_id": plan.account_id,
-                                    "rule_id": plan.rule_id,
-                                    "activity_id": slot.id,
-                                    "http_status": post_status,
-                                },
-                            )
-                        post_phase = (
-                            "BOOK_POST_AUTH_REJECTED"
-                            if post_status in (401, 403)
-                            and rejection_message
-                            and rejection.category
-                            in ("UNKNOWN_PROVIDER_REJECTION", "AUTH_REJECTED")
-                            else "BOOK_POST_TIMEOUT_OR_UNCERTAIN"
-                            if post_status >= 500
-                            else "BOOK_POST_REJECTED"
-                        )
-                    except (httpx.HTTPError, ValueError, KeyError, TypeError):
-                        post_phase, post_status = (
-                            "BOOK_POST_TIMEOUT_OR_UNCERTAIN",
-                            getattr(client, "booking_http_status", None),
-                        )
-                    self.record(
-                        plan,
-                        Outcome.CLAIMED,
-                        rejection_message,
-                        phase=post_phase,
-                        http_status=post_status,
-                        endpoint_category="booking",
-                        verification_outcome="UNKNOWN",
-                    )
-                    # Every path after transport is GET-only. In particular 401/403
-                    # semantics do not prove nonacceptance, so we never replay a POST.
-                    if post_status in (401, 403):
-                        try:
-                            customer_id = self.gateway.reauthenticate(account.id, client)
-                        except ReconnectRequired:
-                            pass  # Still try the independent read with the available token.
-                    try:
-                        try:
-                            bookings = client.customer_group_activity_bookings(customer_id)
-                        except httpx.HTTPStatusError as exc:
-                            if exc.response.status_code not in (401, 403):
-                                raise
-                            self.record(
-                                plan,
-                                Outcome.CLAIMED,
-                                phase="VERIFY_AUTH_FAILED",
-                                http_status=exc.response.status_code,
-                                endpoint_category="bookings",
-                                verification_outcome="UNKNOWN",
-                            )
-                            customer_id = self.gateway.reauthenticate(account.id, client)
-                            bookings = client.customer_group_activity_bookings(customer_id)
-                        verified = _verified_booking_for_activity(bookings, slot.id)
-                        waitlisted = bool(verified and verified.get("type") == "waitingListBooking")
-                        return self.record(
-                            plan,
-                            Outcome.BOOKED if verified else Outcome.VERIFICATION_FAILED,
-                            "Waiting-list entry independently verified."
-                            if waitlisted
-                            else "Booking independently verified."
-                            if verified
-                            else "Request sent but booking could not be verified. Check Campushallen before retrying.",
-                            phase="VERIFIED_WAITLISTED"
-                            if waitlisted
-                            else "VERIFIED_BOOKED"
-                            if verified
-                            else "VERIFY_FAILED",
-                            endpoint_category="bookings",
-                            http_status=200,
-                            verification_outcome="WAITLISTED"
-                            if waitlisted
-                            else "BOOKED"
-                            if verified
-                            else "NOT_BOOKED",
-                        )
-                    except (
-                        ReconnectRequired,
-                        httpx.HTTPError,
-                        ValueError,
-                        KeyError,
-                        TypeError,
-                    ) as exc:
-                        status = (
-                            exc.response.status_code
-                            if isinstance(exc, httpx.HTTPStatusError)
-                            else exc.http_status
-                            if isinstance(exc, ReconnectRequired)
-                            else None
-                        )
-                        return self.record(
-                            plan,
-                            Outcome.VERIFICATION_FAILED,
-                            "Request outcome is uncertain; check Campushallen before retrying.",
-                            phase="VERIFY_AUTH_FAILED"
-                            if isinstance(exc, ReconnectRequired) or status in (401, 403)
-                            else "VERIFY_FAILED",
-                            http_status=status,
-                            endpoint_category=exc.endpoint_category
-                            if isinstance(exc, ReconnectRequired)
-                            else "bookings",
-                            verification_outcome="UNKNOWN",
-                        )
             except ReconnectRequired as exc:
                 status, endpoint = exc.http_status, exc.endpoint_category
                 if not getattr(self.gateway, "auth_service", None):
@@ -593,6 +476,305 @@ class BookingEngine:
         return self.record(
             plan, result, message, phase=phase, http_status=status, endpoint_category=endpoint
         )
+
+    def prepare_auth(self, plan: Plan) -> None:
+        """GET-only preflight; never claims a target or marks it processed."""
+        with self.sessions() as db:
+            account = db.get(CampushallenAccount, plan.account_id)
+            rule = db.get(BookingRule, plan.rule_id)
+            if (
+                not account
+                or not account.enabled
+                or not account.live_booking_enabled
+                or not rule
+                or not rule.enabled
+                or rule.campushallen_account_id != account.id
+                or not db.get(User, account.user_id).is_active
+            ):
+                return
+        try:
+            with self.gateway.client(account) as (client, customer):
+                client.customer_group_activity_bookings(customer)
+            phase = "auth_preflight_ready"
+        except (ReconnectRequired, httpx.HTTPError, ValueError, KeyError, TypeError):
+            phase = "auth_preflight_failed"
+        LOGGER.info(
+            "Pre-opening authentication check",
+            extra={"account_id": plan.account_id, "rule_id": plan.rule_id, "phase": phase},
+        )
+
+    def _retry_target_allowed(
+        self,
+        plan: Plan,
+        client: CampushallenHttpClient,
+        customer: int,
+        allow_waitlist: bool,
+        claim_time: datetime,
+    ) -> bool:
+        """Refresh selectors, then recheck owner/identity/claim/intent budget under writer lock.
+
+        Only the original stack which acquired the claim calls this. Restarts or
+        competing engines fail claim_live before reaching the retry loop.
+        """
+        assert plan.slot is not None
+        with self.sessions() as db:
+            rule = db.get(BookingRule, plan.rule_id)
+            if not rule or not rule.enabled or rule.allow_waitlist != allow_waitlist:
+                return False
+            if (
+                rule.campushallen_account_id != plan.account_id
+                or rule.booking_type != "group_activity"
+            ):
+                return False
+            account = db.get(CampushallenAccount, plan.account_id)
+            if not account or not account.enabled or not account.live_booking_enabled:
+                return False
+            selection = select_group_activity_for_date(
+                client, domain_rule(rule), plan.target_date, self.timezone
+            )
+            slot = selection.slot
+            if not slot or slot.id != plan.slot.id or slot.starts_at != plan.slot.starts_at:
+                return False
+            now = utcnow()
+            if not slot.bookable_earliest or now < slot.bookable_earliest or now >= slot.starts_at:
+                return False
+            if rule.start_time and slot.starts_at.time() != rule.start_time:
+                return False
+            if slot.left_to_book <= 0 and not (slot.has_waiting_list and allow_waitlist):
+                return False
+            db.rollback()
+            db.execute(
+                update(CampushallenAccount)
+                .where(CampushallenAccount.id == plan.account_id)
+                .values(live_booking_claim_limit=CampushallenAccount.live_booking_claim_limit)
+            )
+            account = db.get(CampushallenAccount, plan.account_id)
+            rule = db.get(BookingRule, plan.rule_id)
+            claim = db.get(BookingClaim, (plan.account_id, plan.slot.id))
+            posts = db.scalar(
+                select(func.count())
+                .select_from(BookingAttempt)
+                .where(
+                    BookingAttempt.campushallen_account_id == plan.account_id,
+                    BookingAttempt.activity_id == plan.slot.id,
+                    BookingAttempt.phase == "BOOK_POST_STARTED",
+                )
+            )
+            allowed = bool(
+                account
+                and rule
+                and rule.enabled
+                and rule.campushallen_account_id == account.id
+                and rule.allow_waitlist == allow_waitlist
+                and account.enabled
+                and account.live_booking_enabled
+                and not account.requires_reconnect
+                and db.get(User, account.user_id).is_active
+                and (
+                    account.live_booking_ongoing
+                    or (
+                        account.live_booking_claim_limit > 0
+                        and used_claims(db, account.id) <= account.live_booking_claim_limit
+                        and account.live_booking_activity_id in (None, plan.slot.id)
+                    )
+                )
+                and claim
+                and claim.created_at == claim_time
+                and posts < 3
+                and claim_identity_allowed(
+                    db, account.id, self.gateway.vault.identity_digest(customer)
+                )
+            )
+            db.rollback()
+            return allowed
+
+    def _request_and_verify(
+        self,
+        plan: Plan,
+        client: CampushallenHttpClient,
+        customer: int,
+        allow_waitlist: bool,
+        *,
+        manual_approval_id: int | None,
+    ) -> BookingAttempt:
+        assert plan.slot is not None
+        with self.sessions() as db:
+            claim = db.get(BookingClaim, (plan.account_id, plan.slot.id))
+            assert claim is not None
+            claim_time = claim.created_at
+        for attempt in range(1, 4):
+            self.record(
+                plan,
+                Outcome.CLAIMED,
+                f"Booking POST attempt {attempt}/3.",
+                phase="BOOK_POST_STARTED",
+                endpoint_category="booking",
+                verification_outcome="UNKNOWN",
+            )
+            LOGGER.info(
+                "Booking POST attempt",
+                extra={
+                    "account_id": plan.account_id,
+                    "activity_id": plan.slot.id,
+                    "phase": "booking_post_attempt",
+                    "post_attempt": attempt,
+                },
+            )
+            rejection = None
+            status = None
+            client.booking_http_status = None
+            try:
+                policy = getattr(client, "read_policy", None)
+                if policy is not None:
+                    policy.on_auth_rejection = lambda status: self.record(
+                        plan,
+                        Outcome.CLAIMED,
+                        phase="VERIFY_AUTH_FAILED",
+                        http_status=status,
+                        endpoint_category="bookings",
+                        verification_outcome="UNKNOWN",
+                    )
+                client.book_group_activity(
+                    customer, plan.slot.id, allow_waiting_list=allow_waitlist
+                )
+                phase, status = "BOOK_POST_ACCEPTED", getattr(client, "booking_http_status", None)
+            except httpx.HTTPStatusError as exc:
+                status = exc.response.status_code
+                rejection = provider_rejection(exc.response) if 400 <= status < 500 else None
+                phase = (
+                    "BOOK_POST_AUTH_REJECTED"
+                    if status in (401, 403)
+                    and (
+                        not rejection
+                        or rejection.category in ("UNKNOWN_PROVIDER_REJECTION", "AUTH_REJECTED")
+                    )
+                    else "BOOK_POST_TIMEOUT_OR_UNCERTAIN"
+                    if status >= 500 or 300 <= status < 400
+                    else "BOOK_POST_REJECTED"
+                )
+            except (httpx.HTTPError, ValueError, KeyError, TypeError):
+                phase, status = (
+                    "BOOK_POST_TIMEOUT_OR_UNCERTAIN",
+                    getattr(client, "booking_http_status", None),
+                )
+            self.record(
+                plan,
+                Outcome.CLAIMED,
+                rejection.message if rejection else None,
+                phase=phase,
+                http_status=status,
+                endpoint_category="booking",
+                verification_outcome="UNKNOWN",
+            )
+            if rejection:
+                LOGGER.warning(
+                    rejection.message,
+                    extra={
+                        "account_id": plan.account_id,
+                        "activity_id": plan.slot.id,
+                        "http_status": status,
+                    },
+                )
+            try:
+                # A 401 permits auth/read recovery, not a second mutation. Generic
+                # 403 does not prove an expired token and causes no password login.
+                if status == 401 or (rejection and rejection.category == "AUTH_REJECTED"):
+                    try:
+                        if self.gateway.reauthenticate(plan.account_id, client) != customer:
+                            raise ReconnectRequired("Provider identity changed.")
+                    except ReconnectRequired:
+                        pass
+                try:
+                    bookings = client.customer_group_activity_bookings(customer)
+                except httpx.HTTPStatusError as exc:
+                    if not authentication_rejected(exc.response):
+                        raise
+                    self.record(
+                        plan,
+                        Outcome.CLAIMED,
+                        phase="VERIFY_AUTH_FAILED",
+                        http_status=exc.response.status_code,
+                        endpoint_category="bookings",
+                        verification_outcome="UNKNOWN",
+                    )
+                    if self.gateway.reauthenticate(plan.account_id, client) != customer:
+                        raise ReconnectRequired("Provider identity changed.")
+                    bookings = client.customer_group_activity_bookings(customer)
+                verified = _verified_booking_for_activity(bookings, plan.slot.id)
+                retry = False
+                if (
+                    not verified
+                    and rejection
+                    and rejection.code == "TOO_MANY_CONCURRENT_BOOKINGS"
+                    and attempt < 3
+                    and manual_approval_id is None
+                ):
+                    # User-confirmed maximum is four. Never guess that a generic
+                    # 403/5xx/timeout was a non-mutation. Only this exact code enters.
+                    for check in range(3):
+                        time.sleep((0.25, 0.5, 1.0)[check])
+                        bookings = client.customer_group_activity_bookings(customer)
+                        verified = _verified_booking_for_activity(bookings, plan.slot.id)
+                        if verified:
+                            break
+                        if len(bookings) < 4 and self._retry_target_allowed(
+                            plan, client, customer, allow_waitlist, claim_time
+                        ):
+                            retry = True
+                            break
+                    if retry:
+                        self.record(
+                            plan,
+                            Outcome.CLAIMED,
+                            "Known booking-limit rejection; target absent and count below four; bounded retry.",
+                            phase="BOOK_RETRY_READY",
+                            endpoint_category="bookings",
+                            http_status=200,
+                            verification_outcome="NOT_BOOKED",
+                        )
+                        continue
+                waitlisted = bool(verified and verified.get("type") == "waitingListBooking")
+                return self.record(
+                    plan,
+                    Outcome.BOOKED if verified else Outcome.VERIFICATION_FAILED,
+                    "Waiting-list entry independently verified."
+                    if waitlisted
+                    else "Booking independently verified."
+                    if verified
+                    else "Request sent but booking could not be verified. Check Campushallen before retrying.",
+                    phase="VERIFIED_WAITLISTED"
+                    if waitlisted
+                    else "VERIFIED_BOOKED"
+                    if verified
+                    else "VERIFY_FAILED",
+                    endpoint_category="bookings",
+                    http_status=200,
+                    verification_outcome="WAITLISTED"
+                    if waitlisted
+                    else "BOOKED"
+                    if verified
+                    else "NOT_BOOKED",
+                )
+            except (ReconnectRequired, httpx.HTTPError, ValueError, KeyError, TypeError) as exc:
+                http_status = (
+                    exc.response.status_code
+                    if isinstance(exc, httpx.HTTPStatusError)
+                    else exc.http_status
+                    if isinstance(exc, ReconnectRequired)
+                    else None
+                )
+                return self.record(
+                    plan,
+                    Outcome.VERIFICATION_FAILED,
+                    "Request outcome is uncertain; check Campushallen before retrying.",
+                    phase="VERIFY_AUTH_FAILED"
+                    if isinstance(exc, ReconnectRequired) or http_status in (401, 403)
+                    else "VERIFY_FAILED",
+                    http_status=http_status,
+                    endpoint_category="bookings",
+                    verification_outcome="UNKNOWN",
+                )
+        raise AssertionError("Booking attempt budget exhausted")
 
     def claim_live(
         self,

@@ -2,8 +2,9 @@
 
 The official Go Active frontend reads response.data.errorCode (and a free-form
 rule), not HTTP status alone. Its public Swedish error catalog supplies these
-codes. A recognized code explains a rejection; it never authorizes a POST retry
-or proves that no mutation happened. Independent verification remains mandatory.
+codes. Classification alone never authorizes a POST retry. The engine's separate
+limit-only policy requires explicit operator-approved semantics, independent
+absence/count reads and the original durable claim. Verification remains mandatory.
 """
 
 import json

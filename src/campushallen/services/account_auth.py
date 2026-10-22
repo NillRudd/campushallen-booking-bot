@@ -1,9 +1,10 @@
 """Bounded account reauthentication with a durable lease, latch, and backoff.
 
-Only the initial token validation GET may be retried after login. Booking requests
-are never replayed, even if an authentication error happens during the operation.
+Read authentication may recover once anywhere within an operation. This module
+does not replay mutations; the booking engine owns its explicit limit-only policy.
 """
 
+import logging
 from datetime import timedelta
 from typing import Any
 
@@ -23,7 +24,10 @@ from .notifications import (
     NotificationService,
     deliver,
 )
+from .provider_reads import authentication_rejected
 from .secrets import CredentialVault, ReconnectRequired, TokenVault
+
+LOGGER = logging.getLogger(__name__)
 
 
 class AccountAuthentication:
@@ -59,15 +63,59 @@ class AccountAuthentication:
                 )
             try:
                 state = self.tokens.open(account.auth_state)
-                expired = bool(
-                    state.get("expires_at") and float(state["expires_at"]) <= now.timestamp()
-                )
-                if not expired and not force:
+                # Another operation may already have persisted a replacement token.
+                # Validate that newer cache before spending this operation's login.
+                if (
+                    not force
+                    or client.client.headers.get("Authorization")
+                    != f"Bearer {state['access_token']}"
+                ):
                     client.client.headers["Authorization"] = f"Bearer {state['access_token']}"
-                    client.get_customer(int(state["customer_id"]))
+                    # Avoid recursive read-auth recovery while validating the token itself.
+                    policy = getattr(client, "read_policy", None)
+                    callback = policy.reauthenticate if policy is not None else None
+                    if policy is not None:
+                        policy.reauthenticate = None
+                    try:
+                        client.get_customer(int(state["customer_id"]))
+                    except (ValueError, TypeError, KeyError):
+                        self._network_failure(db, account)
+                        raise TemporaryAuthenticationError(
+                            "Campushallen returned an invalid identity response."
+                        ) from None
+                    finally:
+                        if policy is not None:
+                            policy.reauthenticate = callback
+                    LOGGER.info(
+                        "Cached token validated",
+                        extra={"account_id": account_id, "phase": "cached_token_used"},
+                    )
+                    if account.auth_error_code == "TEMPORARY_AUTH_FAILURE":
+                        # Clear outage telemetry only if this exact cache and account
+                        # are still current; never undo disconnect/disable or a lease.
+                        db.execute(
+                            update(CampushallenAccount)
+                            .where(
+                                CampushallenAccount.id == account_id,
+                                CampushallenAccount.auth_state == account.auth_state,
+                                CampushallenAccount.enabled.is_(True),
+                                CampushallenAccount.requires_reconnect.is_(False),
+                                CampushallenAccount.auth_error_code == "TEMPORARY_AUTH_FAILURE",
+                            )
+                            .values(
+                                auth_status="connected",
+                                auth_error_code=None,
+                                auth_failure_count=0,
+                                auth_retry_at=None,
+                                last_auth_success_at=utcnow(),
+                            )
+                        )
+                        db.commit()
                     return state
+            except TemporaryAuthenticationError:
+                raise
             except httpx.HTTPStatusError as exc:
-                if exc.response.status_code not in (401, 403):
+                if not authentication_rejected(exc.response):
                     self._network_failure(db, account)
                     raise ReconnectRequired(
                         "Campushallen is temporarily unavailable.",
@@ -86,6 +134,10 @@ class AccountAuthentication:
                     "Automatic reconnection already attempted for this operation."
                 )
             setattr(client, "_operation_reauth_used", True)
+            LOGGER.info(
+                "Cached token rejected or expired",
+                extra={"account_id": account_id, "phase": "token_rejected"},
+            )
             credential = credential_for(db, account_id)
             if not credential:
                 account.requires_reconnect = True
@@ -132,6 +184,10 @@ class AccountAuthentication:
             # Never let the login helper autoflush changes to a concurrently disabled account.
             db.expunge(account)
         try:
+            LOGGER.info(
+                "Password reauthentication started",
+                extra={"account_id": account_id, "phase": "reauth_started"},
+            )
             password = self.credentials.open(account_id, ciphertext, version)
             self.gateway.connect(account, password)
             del password
@@ -181,21 +237,25 @@ class AccountAuthentication:
                 raise ReconnectRequired("Account settings changed during reconnection; try again.")
             audit(db, Event.REAUTH_SUCCESS, user_id=owner, account_id=account_id)
             db.commit()
-        return self.tokens.open(account.auth_state)
+        LOGGER.info(
+            "Password reauthentication succeeded",
+            extra={"account_id": account_id, "phase": "reauth_succeeded"},
+        )
+        # Apply the persisted token to this operation too, before its original GET resumes.
+        refreshed = self.tokens.open(account.auth_state)
+        client.client.headers["Authorization"] = f"Bearer {refreshed['access_token']}"
+        return refreshed
 
     def _network_failure(self, db, account) -> None:
         account.auth_failure_count += 1
         account.auth_status = "authentication_error"
         account.auth_error_code = "TEMPORARY_AUTH_FAILURE"
         account.last_auth_failure_at = utcnow()
-        account.requires_reconnect = account.auth_failure_count >= 5
-        account.auth_retry_at = (
-            None
-            if account.requires_reconnect
-            else utcnow() + timedelta(seconds=min(60 * 2 ** (account.auth_failure_count - 1), 900))
+        # Temporary outages never imply a known-invalid saved password.
+        account.requires_reconnect = False
+        account.auth_retry_at = utcnow() + timedelta(
+            seconds=min(5 * 2 ** min(account.auth_failure_count - 1, 4), 60)
         )
-        if account.requires_reconnect:
-            audit(db, Event.RECONNECT_REQUIRED, user_id=account.user_id, account_id=account.id)
         db.commit()
 
     def _failed(self, account_id, lease_until, *, permanent: bool) -> None:

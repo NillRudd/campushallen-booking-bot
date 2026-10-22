@@ -22,6 +22,8 @@ class WorkerLogFormatter(logging.Formatter):
             "http_status",
             "verification_outcome",
             "next_action_at",
+            "read_attempt",
+            "post_attempt",
         ):
             if hasattr(record, name):
                 data[name] = getattr(record, name)

@@ -303,7 +303,7 @@ def test_scheduler_waits_using_api_opening_without_blocking_threads(booking, mon
     clock = [utcnow()]
     opening = clock[0] + timedelta(seconds=65)
     plan = replace(b.plan, slot=replace(b.slot, bookable_earliest=opening))
-    sleeps, calls = [], []
+    sleeps, calls, preflights = [], [], []
 
     async def fake_sleep(seconds):
         sleeps.append(seconds)
@@ -317,8 +317,10 @@ def test_scheduler_waits_using_api_opening_without_blocking_threads(booking, mon
 
     monkeypatch.setattr(scheduler_module, "utcnow", lambda: clock[0])
     monkeypatch.setattr(b.engine, "run", run)
+    monkeypatch.setattr(b.engine, "prepare_auth", lambda plan: preflights.append(clock[0]))
     asyncio.run(Scheduler(b.engine, sleep=fake_sleep).execute(plan, wait=True))
-    assert sleeps == [30, 30, 5]
+    assert sleeps == [5, 30, 30]
+    assert preflights == [opening - timedelta(seconds=60)]
     assert calls == [plan]
 
 

@@ -2520,3 +2520,16 @@ msgstr "Bokningar lästa före försöket: %(total)s totalt, %(regular)s vanliga
 #: src/campushallen/web/presentation.py
 msgid "Booking request rejected (HTTP 401/403); inspect provider reason"
 msgstr "Bokningsanropet nekades (HTTP 401/403); se Campushallens felorsak"
+
+#: src/campushallen/web/presentation.py
+msgid "Known booking-limit rejection; target absent and count below four; bounded retry."
+msgstr "Campushallen nekade på grund av bokningsgränsen; passet saknas i bokningarna och antalet är under fyra; ett begränsat nytt försök tillåts."
+
+#: src/campushallen/web/presentation.py
+#, python-format
+msgid "Booking POST attempt %(attempt)s/3."
+msgstr "Bokningsförsök %(attempt)s/3."
+
+#: src/campushallen/web/presentation.py
+msgid "Verified booking-limit rejection; retry ready"
+msgstr "Bekräftat avslag på grund av bokningsgränsen; nytt försök förberett"

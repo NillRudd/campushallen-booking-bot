@@ -13,6 +13,7 @@ from campushallen.config import AppConfig, AuthConfig, BookingConfig, LoggingCon
 from campushallen.database.models import CampushallenAccount
 from campushallen.settings import Settings
 
+from .provider_reads import ProviderReads, authentication_rejected
 from .secrets import ReconnectRequired, TokenVault
 
 if TYPE_CHECKING:
@@ -40,15 +41,22 @@ class AccountGateway:
 
     def connect(self, account: CampushallenAccount, password: str) -> None:
         client = CampushallenHttpClient(api_config(self.settings), load_saved_auth=False)
+        client.read_policy = ProviderReads(account.id)
         endpoint = "login"
         try:
             data = client.login(account.username, password)
             if not data.get("access_token"):
-                raise ReconnectRequired("Authentication failed; reconnect this account.")
+                from .account_auth import TemporaryAuthenticationError
+
+                raise TemporaryAuthenticationError("Login returned an invalid response.")
             try:
                 customer_id = int(data["username"])
             except (AttributeError, ValueError, TypeError, KeyError):
-                raise ReconnectRequired("Login returned no customer identifier.") from None
+                from .account_auth import TemporaryAuthenticationError
+
+                raise TemporaryAuthenticationError(
+                    "Login returned no customer identifier."
+                ) from None
             # Verify the identity before keeping any state. Never store password.
             endpoint = "customer"
             client.get_customer(customer_id)
@@ -72,7 +80,7 @@ class AccountGateway:
         except httpx.HTTPStatusError as exc:
             from .account_auth import TemporaryAuthenticationError
 
-            if exc.response.status_code == 429 or exc.response.status_code >= 500:
+            if endpoint != "login" or not authentication_rejected(exc.response):
                 raise TemporaryAuthenticationError(
                     "Campushallen is temporarily unavailable.",
                     http_status=exc.response.status_code,
@@ -88,8 +96,10 @@ class AccountGateway:
 
             raise TemporaryAuthenticationError("Campushallen is temporarily unavailable.") from None
         except (AttributeError, ValueError, TypeError, KeyError):
-            raise ReconnectRequired(
-                "Campushallen login failed. Check your credentials and try again."
+            from .account_auth import TemporaryAuthenticationError
+
+            raise TemporaryAuthenticationError(
+                "Campushallen returned an invalid login response."
             ) from None
         finally:
             client.close()
@@ -98,9 +108,21 @@ class AccountGateway:
     def client(self, account: CampushallenAccount) -> Iterator[tuple[CampushallenHttpClient, int]]:
         if self.auth_service:
             client = CampushallenHttpClient(api_config(self.settings), load_saved_auth=False)
+            reads = ProviderReads(account.id)
+            client.read_policy = reads
             try:
                 state = self.auth_service.ensure(account.id, client)
                 client.client.headers["Authorization"] = f"Bearer {state['access_token']}"
+                customer_id = int(state["customer_id"])
+
+                def recover() -> None:
+                    refreshed = self.reauthenticate(account.id, client)
+                    if refreshed != customer_id:
+                        raise ReconnectRequired(
+                            "Provider identity changed; reconnect this account."
+                        )
+
+                reads.reauthenticate = recover
                 yield client, int(state["customer_id"])
             finally:
                 client.close()

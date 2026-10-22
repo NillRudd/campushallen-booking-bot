@@ -2296,3 +2296,16 @@ msgstr ""
 #: src/campushallen/web/presentation.py
 msgid "Booking request rejected (HTTP 401/403); inspect provider reason"
 msgstr ""
+
+#: src/campushallen/web/presentation.py
+msgid "Known booking-limit rejection; target absent and count below four; bounded retry."
+msgstr ""
+
+#: src/campushallen/web/presentation.py
+#, python-format
+msgid "Booking POST attempt %(attempt)s/3."
+msgstr ""
+
+#: src/campushallen/web/presentation.py
+msgid "Verified booking-limit rejection; retry ready"
+msgstr ""

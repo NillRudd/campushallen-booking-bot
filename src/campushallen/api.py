@@ -132,6 +132,8 @@ class CampushallenHttpClient:
 
     def __init__(self, config: AppConfig, *, load_saved_auth: bool = True) -> None:
         self.config = config
+        self.read_policy: Any = None
+        self.booking_http_status: int | None = None
         self.client = httpx.Client(
             base_url=API_BASE_URL,
             follow_redirects=True,
@@ -169,8 +171,15 @@ class CampushallenHttpClient:
             self.client.headers["Authorization"] = f"Bearer {access_token}"
 
     def get(self, url: str, params: dict[str, Any] | None = None) -> ApiProbeResult:
-        response = self.client.get(url, params=params)
+        response = self._get(url, params=params)
         return self._result("GET", str(response.url), response)
+
+    def _get(self, url: str, **kwargs: Any) -> httpx.Response:
+        # Only account gateways install a read policy. Legacy behavior is unchanged.
+        policy = getattr(self, "read_policy", None)
+        if policy is not None:
+            return policy(lambda: self.client.get(url, **kwargs))
+        return self.client.get(url, **kwargs)
 
     def login(self, username: str, password: str) -> dict[str, Any]:
         response = self.client.post(
@@ -190,15 +199,21 @@ class CampushallenHttpClient:
         return response.json()
 
     def get_customer(self, customer_id: int) -> dict[str, Any]:
-        response = self.client.get(f"/customers/{customer_id}")
+        response = self._get(f"/customers/{customer_id}")
         response.raise_for_status()
-        return response.json()
+        data = response.json()
+        if not isinstance(data, dict) or int(data.get("id", 0)) != customer_id:
+            raise ValueError("Invalid customer response shape or identity")
+        return data
 
     def customer_group_activity_bookings(self, customer_id: int, start_time_point: datetime | None = None) -> list[dict[str, Any]]:
         params = {"startTimePoint": _api_datetime(start_time_point)} if start_time_point else None
-        response = self.client.get(f"/customers/{customer_id}/bookings/groupactivities", params=params)
+        response = self._get(f"/customers/{customer_id}/bookings/groupactivities", params=params)
         response.raise_for_status()
-        return list(response.json())
+        payload = response.json()
+        if not isinstance(payload, list) or any(not isinstance(item, dict) for item in payload):
+            raise ValueError("Invalid bookings response shape")
+        return payload
 
     def book_group_activity(
         self,
@@ -214,7 +229,11 @@ class CampushallenHttpClient:
         }
         if recaptcha_token:
             body["recaptchaToken"] = recaptcha_token
-        response = self.client.post(f"/customers/{customer_id}/bookings/groupactivities", json=body)
+        response = self.client.post(
+            f"/customers/{customer_id}/bookings/groupactivities", json=body,
+            # A redirect must not cause an unclaimed second mutation in the worker.
+            follow_redirects=self.read_policy is None,
+        )
         self.booking_http_status = response.status_code
         response.raise_for_status()
         return response.json()
@@ -243,7 +262,7 @@ class CampushallenHttpClient:
         return {"status": response.status_code}
 
     def service_products(self, web_category_id: int = SERVICE_WEB_CATEGORY_ID) -> list[ServiceProduct]:
-        response = self.client.get("/products/services", params={"webCategory": web_category_id})
+        response = self._get("/products/services", params={"webCategory": web_category_id})
         response.raise_for_status()
         products: list[ServiceProduct] = []
         for item in response.json():
@@ -267,7 +286,7 @@ class CampushallenHttpClient:
         period_start: datetime,
         period_end: datetime,
     ) -> list[dict[str, Any]]:
-        response = self.client.get(
+        response = self._get(
             f"/products/services/{product_id}/suggestions",
             params={
                 "businessUnit": business_unit_id,
@@ -287,7 +306,7 @@ class CampushallenHttpClient:
         web_category_id: int = GROUP_ACTIVITY_WEB_CATEGORY_ID,
         business_unit_id: int = 1,
     ) -> list[dict[str, Any]]:
-        response = self.client.get(
+        response = self._get(
             f"/apps/{APP_ID}/groupactivities",
             params={
                 "businessUnit": business_unit_id,

@@ -64,6 +64,7 @@ def incident(booking, tmp_path, monkeypatch):
         before_bookings=[],
         after_bookings=[],
         verified_type="groupActivityBooking",
+        discovery_token_rejected=False,
     )
     customer = b.accounts[0] * 100
 
@@ -109,6 +110,11 @@ def incident(booking, tmp_path, monkeypatch):
             )
         assert request.method == "GET", "No other mutations allowed"
         if "/apps/" in request.url.path:
+            if (
+                server.discovery_token_rejected
+                and request.headers.get("Authorization") != "Bearer fresh-test-token"
+            ):
+                return httpx.Response(401)
             return httpx.Response(
                 200,
                 json=FakeClient(b.gateway, b.accounts[0]).group_activities(
@@ -160,7 +166,7 @@ def incident(booking, tmp_path, monkeypatch):
         ("normal", "BOOKED", "VERIFIED_BOOKED", 0),
         ("preinvalid", "BOOKED", "VERIFIED_BOOKED", 1),
         ("post401", "VERIFICATION_FAILED", "BOOK_POST_AUTH_REJECTED", 1),
-        ("post403", "VERIFICATION_FAILED", "BOOK_POST_AUTH_REJECTED", 1),
+        ("post403", "VERIFICATION_FAILED", "BOOK_POST_AUTH_REJECTED", 0),
         ("post400", "VERIFICATION_FAILED", "BOOK_POST_REJECTED", 0),
         ("post500", "VERIFICATION_FAILED", "BOOK_POST_TIMEOUT_OR_UNCERTAIN", 0),
         ("verify401", "BOOKED", "VERIFY_AUTH_FAILED", 1),
@@ -277,12 +283,13 @@ def test_201_is_independently_verified_for_regular_and_waitlist(incident, kind):
     assert b.server.posts == 1 and b.server.logins == 0
 
 
-def test_explicit_limit_at_opening_with_four_then_three_never_blindly_retries(
+def test_explicit_limit_four_then_three_has_three_total_attempts_and_no_restart_replay(
     incident, caplog, monkeypatch
 ):
-    """A simulated rule code/count change is evidence for diagnostics, not retry permission."""
+    """The user-authorized exact-code retry stays within the original claim and budget."""
     b = incident
     b.opening = b.opening.replace(hour=19, minute=15)
+    monkeypatch.setattr("campushallen.services.engine.time.sleep", lambda seconds: None)
     b.plan = replace(b.plan, slot=replace(b.plan.slot, bookable_earliest=b.opening))
     b.gateway.slots = [b.plan.slot]
     monkeypatch.setattr("campushallen.services.engine.utcnow", lambda: b.opening)
@@ -314,12 +321,14 @@ def test_explicit_limit_at_opening_with_four_then_three_never_blindly_retries(
         assert "BOOKING_LIMIT_REACHED" in rejection.message
         assert "TOO_MANY_CONCURRENT_BOOKINGS" in rejection.message
         assert "private-provider-body" not in str([e.message for e in events])
-    # A later read reports three; neither elapsed time nor that count removes the claim.
+    # The provider keeps rejecting despite a count of three: exhaust the total budget.
+    assert b.server.posts == 3
+    # A restart must never spend that budget again.
     later = b.opening + timedelta(seconds=2)
     assert len(b.server.after_bookings) == 3
     restarted = BookingEngine(b.sessions, b.engine.gateway)
     restarted.run(b.plan, dry_run=False, now=later)
-    assert b.server.posts == 1
+    assert b.server.posts == 3
     assert "private-provider-body" not in caplog.text
     assert "TOO_MANY_CONCURRENT_BOOKINGS" in caplog.text
 
