@@ -3,6 +3,14 @@
 Current release status is maintained in [the release gate and operator guide](release-readiness.md).
 Earlier incident-freeze and rollout descriptions below are historical snapshots.
 
+**22 October follow-up:** the ordinary scheduler successfully booked regular
+Innebandy places for **Niklas and linus99** for 29 October 18:45 CET, with two
+201 responses and fresh independent provider confirmation. Four new-worker
+POSTs since the previous check all returned 201 and verified at execution; no
+new booking 403 was recorded. The friend's separate legacy service failed with
+discovery HTTP 401 before opening. See the
+[complete read-only diagnostic record](production-diagnostics-2026-10-22.md).
+
 **21 October, 21:28 CEST:** diagnostic release **a95efd7** is deployed, schema
 c8b31d94a207. It preserves known provider errorCode values and pre-POST counts
 without adding a retry/buffer or changing live policy. The badminton 403 remains

@@ -9,6 +9,10 @@ See [the follow-up investigation](booking-403-investigation.md) for installed
 legacy timing, reconstructed booking counts, the unproved booking-limit
 hypothesis and safe provider-error capture. No retry or opening buffer is justified.
 
+The [22 October follow-up](production-diagnostics-2026-10-22.md) independently
+confirms successful regular floorball bookings for two users at the next opening.
+No new booking 403 occurred; the original badminton rejection remains unexplained.
+
 ## Intended activity and actual sequence
 
 Niklas connection 2, rule 4: **4343863, Badminton 70 Vallastaden**, product 3678,

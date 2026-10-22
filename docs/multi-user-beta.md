@@ -5,6 +5,12 @@ live booking after successful connection, with owner pause/resume and no separat
 admin activation. See [automatic live booking](automatic-live.md). Earlier
 controlled-scope and per-user admin-approval instructions below are historical.
 
+**Actual Thursday result:** Niklas and linus99 both received regular places for
+29 October 18:45 CET through the normal scheduler at the 22 October opening;
+fresh provider GETs confirm both. The separate legacy friend's service failed
+with HTTP 401 during discovery. See the
+[22 October diagnostic record](production-diagnostics-2026-10-22.md).
+
 
 The operator explicitly approved two new beta participants. This is a private,
 invite-only beta, not broad public launch. The existing waitlist mutation proof
